@@ -1,83 +1,49 @@
-# Plugin Starter Template [![CircleCI branch](https://img.shields.io/circleci/project/github/mattermost/mattermost-plugin-starter-template/master.svg)](https://circleci.com/gh/mattermost/mattermost-plugin-starter-template)
+<img src="https://github.com/jfrerich/mattermost-plugin-bookmarks/blob/master/assets/profile.png?raw=true" width="75" height="75" alt="bookmarks">
 
-This plugin serves as a starting point for writing a Mattermost plugin. Feel free to base your own plugin off this repository.
+# Mattermost Bookmarks Plugin
 
-To learn more about plugins, see [our plugin documentation](https://developers.mattermost.com/extend/plugins/).
+The bookmarks plugin provides advanced options for users to bookmark posts in [Mattermost](https://mattermost.com).
 
-## Getting Started
-Use GitHub's template feature to make a copy of this repository by clicking the "Use this template" button then clone outside of `$GOPATH`.
+Mattermost allows to users flag a post (similar to bookmarking), but you cannot arrange, group, sort, or view a condensed list of the flags. The bookmarks plugin utilizes a labeling method for bookmarking posts.  A single post can have multiple labels attached to it.
 
-Alternatively shallow clone the repository to a directory outside of `$GOPATH` matching your plugin name:
-```
-git clone --depth 1 https://github.com/mattermost/mattermost-plugin-starter-template com.example.my-plugin
-```
+## Slash Commands
 
-Note that this project uses [Go modules](https://github.com/golang/go/wiki/Modules). Be sure to locate the project outside of `$GOPATH`, or allow the use of Go modules within your `$GOPATH` with an `export GO111MODULE=on`.
+### Currently Implemented
 
-Edit `plugin.json` with your `id`, `name`, and `description`:
-```
-{
-    "id": "com.example.my-plugin",
-    "name": "My Plugin",
-    "description": "A plugin to enhance Mattermost."
-}
-```
+### Future Implementations
 
-Build your plugin:
-```
-make
-```
+**`/bookmark add`**
+* `/bookmark add <post_id> <labels>` - bookmark a post_id with optional labels. if labels omitted, `unlabeled` autoadded
+* `/bookmark add label <label>` - create a new label
 
-This will produce a single plugin file (with support for multiple architectures) for upload to your Mattermost server:
+**`/bookmark list`**
 
-```
-dist/com.example.my-plugin.tar.gz
-```
+* `/bookmark list bookmarks <label>` - list bookmarks with optional labels for filtering
+* `/bookmark list labels` - list all labels
 
-There is a build target to automate deploying and enabling the plugin to your server, but it requires login credentials:
-```
-export MM_SERVICESETTINGS_SITEURL=http://localhost:8065
-export MM_ADMIN_USERNAME=admin
-export MM_ADMIN_PASSWORD=password
-make deploy
-```
+**`/bookmark remove`**
 
-or configuration of a [personal access token](https://docs.mattermost.com/developer/personal-access-tokens.html):
-```
-export MM_SERVICESETTINGS_SITEURL=http://localhost:8065
-export MM_ADMIN_TOKEN=j44acwd8obn78cdcx7koid4jkr
-make deploy
-```
+* `/bookmark remove <post_id> <labels>` - remove labels from bookmarked post_id. if labels omitted remove post_id from bookmarks
+* `/bookmark remove label <label>` - remove label from all bookmarks
 
-Alternatively, if you are running your `mattermost-server` out of a sibling directory by the same name, use the `deploy` target alone to  unpack the files into the right directory. You will need to restart your server and manually enable your plugin.
+**`/bookmark rename`**
 
-In production, deploy and upload your plugin via the [System Console](https://about.mattermost.com/default-plugin-uploads).
+* `/bookmark rename <label-old> <label-new>`- rename a label
 
-## Q&A
+* `/bookmark list groups`
+    * list all groups
 
-### How do I make a server-only or web app-only plugin?
 
-Simply delete the `server` or `webapp` folders and remove the corresponding sections from `plugin.json`. The build scripts will skip the missing portions automatically.
+## UI Enhancements
 
-### How do I include assets in the plugin bundle?
+The following UI Enhancements are planned for future release.
 
-Place them into the `assets` directory. To use an asset at runtime, build the path to your asset and open as a regular file:
+* post action menu
+*   * `bookmark/add` (submenu) - same action as /edit but when post_id has not not been bookmarked
+    * `bookmark/labels` (submenu) - shows submenus to quickly add / remove labels from current post
+    * `bookmark/edit` (submenu) - open modal showing previously saved bookmark
+*   * `quickmark` - quickly bookmark the current post without labels (similar to Mattermost flag option)
 
-```go
-bundlePath, err := p.API.GetBundlePath()
-if err != nil {
-    return errors.Wrap(err, "failed to get bundle path")
-}
+### Future Implementations
 
-profileImage, err := ioutil.ReadFile(filepath.Join(bundlePath, "assets", "profile_image.png"))
-if err != nil {
-    return errors.Wrap(err, "failed to read profile image")
-}
-
-if appErr := p.API.SetProfileImage(userID, profileImage); appErr != nil {
-    return errors.Wrap(err, "failed to set profile image")
-}
-```
-
-### How do I build the plugin with unminified JavaScript?
-Use `make debug-dist` and `make debug-deploy` in place of `make dist` and `make deploy` to configure webpack to generate unminified Javascript.
+To learn more about plugins, see [Mattermost plugin documentation](https://developers.mattermost.com/extend/plugins/).
