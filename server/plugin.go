@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
 	"sync"
 
+	"github.com/pkg/errors"
+
+	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
 
@@ -18,11 +19,38 @@ type Plugin struct {
 	// configuration is the active plugin configuration. Consult getConfiguration and
 	// setConfiguration for usage.
 	configuration *configuration
+
+	// BotId of the created bot account.
+	BotUserID string
 }
 
-// ServeHTTP demonstrates a plugin that handles HTTP requests by greeting the world.
-func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Hello, world!")
+// OnActivate runs when the plugin activates and ensures the plugin is properly
+// configured.
+func (p *Plugin) OnActivate() error {
+
+	bot := &model.Bot{
+		Username:    "bookmarks",
+		DisplayName: "Bookmarks",
+		Description: "Created by the Bookmarks plugin.",
+	}
+	options := []plugin.EnsureBotOption{
+		plugin.ProfileImagePath("assets/profile.png"),
+	}
+
+	botID, err := p.Helpers.EnsureBot(bot, options...)
+	if err != nil {
+		return errors.Wrap(err, "failed to ensure Bookmarks bot")
+	}
+	p.BotUserID = botID
+
+	return p.API.RegisterCommand(getCommand())
 }
 
-// See https://developers.mattermost.com/extend/plugins/server/reference/
+// GetSiteURL returns the SiteURL from the config settings
+func (p *Plugin) GetSiteURL() string {
+	ptr := p.API.GetConfig().ServiceSettings.SiteURL
+	if ptr == nil {
+		return ""
+	}
+	return *ptr
+}

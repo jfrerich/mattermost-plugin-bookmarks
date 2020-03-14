@@ -10,29 +10,27 @@ Mattermost allows to users flag a post (similar to bookmarking), but you cannot 
 
 ### Currently Implemented
 
+* `/bookmarks add <post_id | post_permalink>` - bookmark a post by providing post_id or the post permalink
+* `/bookmarks view` - view all bookmarks
+* `/bookmarks remove <post_id>` - remove a bookmark from your bookmarks
+
+### ScreenShots
+
+![bookmarks view output](./assets/bookmarksView.png)
+
 ### Future Implementations
 
-**`/bookmark add`**
-* `/bookmark add <post_id> <labels>` - bookmark a post_id with optional labels. if labels omitted, `unlabeled` autoadded
-* `/bookmark add label <label>` - create a new label
-
-**`/bookmark list`**
-
-* `/bookmark list bookmarks <label>` - list bookmarks with optional labels for filtering
-* `/bookmark list labels` - list all labels
-
-**`/bookmark remove`**
-
-* `/bookmark remove <post_id> <labels>` - remove labels from bookmarked post_id. if labels omitted remove post_id from bookmarks
-* `/bookmark remove label <label>` - remove label from all bookmarks
-
-**`/bookmark rename`**
-
-* `/bookmark rename <label-old> <label-new>`- rename a label
-
-* `/bookmark list groups`
-    * list all groups
-
+* `/bookmarks add <post_id | post_permalink> <title> <labels>` - bookmark a post with optional labels. 
+    * if labels omitted, `unlabeled` autoadded
+    * provide optional title (currently , title created from first 30
+        characters of post)
+* `/bookmarks label <post_id> <labels>` - add labels to a bookmark
+    * if labels omitted, unlabeled autoadded
+* `/bookmarks label add <labels>` - create a new label
+* `/bookmarks label list` - list all labels (include number of bookmarks per label)
+* `/bookmarks view <label>` - view bookmarks with optional labels for filtering
+* `/bookmarks remove label <label>` - remove label from all bookmarks
+* `/bookmarks rename <label-old> <label-new>`- rename a label
 
 ## UI Enhancements
 
