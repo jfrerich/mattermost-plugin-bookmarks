@@ -64,7 +64,7 @@ func (p *Plugin) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookmar
 
 	// user doesn't have any bookmarks add first bookmark and return
 	if bmarks == nil {
-		bmarks := bmarks.new()
+		bmarks = bmarks.new()
 		bmarks.add(bmark)
 		if err = p.storeBookmarks(userID, bmarks); err != nil {
 			return nil, errors.New(err.Error())
@@ -76,7 +76,7 @@ func (p *Plugin) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookmar
 	if bmarks.exists(bmark) {
 		// grab the saved bookmark from the store (includes original createdAt and
 		// last modifiedAt times)
-		bmark := bmarks.get(bmark)
+		bmark = bmarks.get(bmark)
 		bmarks.updateTimes(bmark)
 		if err = p.storeBookmarks(userID, bmarks); err != nil {
 			return nil, errors.New(err.Error())
@@ -94,7 +94,13 @@ func (p *Plugin) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookmar
 
 // getBookmarksForUser returns unordered array of bookmarks for a user
 func (p *Plugin) getBookmarksForUser(userID string) (*Bookmarks, error) {
+	key := getBookmarksKey(userID)
+
+	fmt.Printf("userID = %+v\n", userID)
+	fmt.Printf("key = %+v\n", key)
+
 	originalJSONBookmarks, appErr := p.API.KVGet(getBookmarksKey(userID))
+	fmt.Printf("appErr = %+v\n", appErr)
 	if appErr != nil {
 		return nil, appErr
 	}

@@ -11,7 +11,7 @@ type Bookmarks struct {
 
 // Bookmark contains information about an individual bookmark
 type Bookmark struct {
-	PostID     string  `json:"posid"`            // PostID is the ID for the bookmarked post and doubles as the Bookmark ID
+	PostID     string  `json:"postid"`           // PostID is the ID for the bookmarked post and doubles as the Bookmark ID
 	Title      string  `json:"title"`            // Title given to the bookmark
 	CreateAt   int64   `json:"createAt"`         // The original creation time of the bookmark
 	ModifiedAt int64   `json:"modifiedAt"`       // The original creation time of the bookmark
