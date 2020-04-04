@@ -12,12 +12,32 @@ const (
 	StoreBookmarksKey = "bookmarks"
 )
 
+// KVStore represents KVStore operations for bookmarks
+type KVStore interface {
+	storeBookmarkForUser(userID string, bmark *Bookmark) error
+	storeBookmarks(userID string, bmarks *Bookmarks) error
+	getBookmark(userID, bmarkID string) (*Bookmark, error)
+	addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookmarks, error)
+	deleteBookmarkForUser(userID, bmarkID string) error
+	getBookmarksForUser(userID string) (*Bookmarks, error)
+	getBookmarksKey(userID string) string
+}
+
+type kvstore struct {
+	plugin *Plugin
+}
+
+// NewStore creates a new kvstore
+func NewStore(p *Plugin) *kvstore {
+	return &kvstore{plugin: p}
+}
+
 // storeBookmarkForUser adds a bookmark for the user
-func (p *Plugin) storeBookmarkForUser(userID string, bmark *Bookmark) error {
-	_, err := p.addToBookmarksForUser(userID, bmark)
+func (s *kvstore) storeBookmarkForUser(userID string, bmark *Bookmark) error {
+	_, err := s.addToBookmarksForUser(userID, bmark)
 	fmt.Printf("err = %+v\n", err)
 	if err != nil {
-		p.deleteBookmarkForUser(userID, bmark.PostID)
+		s.deleteBookmarkForUser(userID, bmark.PostID)
 		return errors.New(err.Error())
 	}
 
@@ -25,13 +45,13 @@ func (p *Plugin) storeBookmarkForUser(userID string, bmark *Bookmark) error {
 }
 
 // storeBookmarks stores all the users bookmarks
-func (p *Plugin) storeBookmarks(userID string, bmarks *Bookmarks) error {
+func (s *kvstore) storeBookmarks(userID string, bmarks *Bookmarks) error {
 	jsonBookmark, jsonErr := json.Marshal(bmarks)
 	if jsonErr != nil {
 		return jsonErr
 	}
 
-	appErr := p.API.KVSet(getBookmarksKey(userID), jsonBookmark)
+	appErr := s.plugin.API.KVSet(getBookmarksKey(userID), jsonBookmark)
 	if appErr != nil {
 		return errors.New(appErr.Error())
 	}
@@ -40,8 +60,8 @@ func (p *Plugin) storeBookmarks(userID string, bmarks *Bookmarks) error {
 }
 
 // getBookmark returns a bookmark with the specified bookmarkID
-func (p *Plugin) getBookmark(userID, bmarkID string) (*Bookmark, error) {
-	bmarks, err := p.getBookmarksForUser(userID)
+func (s *kvstore) getBookmark(userID, bmarkID string) (*Bookmark, error) {
+	bmarks, err := s.getBookmarksForUser(userID)
 	if err != nil {
 		fmt.Printf("Error = %+v\n", err)
 	}
@@ -56,8 +76,8 @@ func (p *Plugin) getBookmark(userID, bmarkID string) (*Bookmark, error) {
 }
 
 // addToBookmarksForUser stores the bookmark in a map,
-func (p *Plugin) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookmarks, error) {
-	bmarks, err := p.getBookmarksForUser(userID)
+func (s *kvstore) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookmarks, error) {
+	bmarks, err := s.getBookmarksForUser(userID)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
@@ -66,7 +86,7 @@ func (p *Plugin) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookmar
 	if bmarks == nil {
 		bmarks = bmarks.new()
 		bmarks.add(bmark)
-		if err = p.storeBookmarks(userID, bmarks); err != nil {
+		if err = s.storeBookmarks(userID, bmarks); err != nil {
 			return nil, errors.New(err.Error())
 		}
 		return bmarks, nil
@@ -78,7 +98,7 @@ func (p *Plugin) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookmar
 		// last modifiedAt times)
 		bmark = bmarks.get(bmark)
 		bmarks.updateTimes(bmark)
-		if err = p.storeBookmarks(userID, bmarks); err != nil {
+		if err = s.storeBookmarks(userID, bmarks); err != nil {
 			return nil, errors.New(err.Error())
 		}
 		return bmarks, nil
@@ -86,30 +106,32 @@ func (p *Plugin) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookmar
 
 	// bookmark doesn't exist. Add it
 	bmarks.add(bmark)
-	if err = p.storeBookmarks(userID, bmarks); err != nil {
+	if err = s.storeBookmarks(userID, bmarks); err != nil {
 		return nil, errors.New(err.Error())
 	}
 	return bmarks, nil
 }
 
 // getBookmarksForUser returns unordered array of bookmarks for a user
-func (p *Plugin) getBookmarksForUser(userID string) (*Bookmarks, error) {
+func (s *kvstore) getBookmarksForUser(userID string) (*Bookmarks, error) {
 	key := getBookmarksKey(userID)
 
 	fmt.Printf("userID = %+v\n", userID)
 	fmt.Printf("key = %+v\n", key)
 
-	originalJSONBookmarks, appErr := p.API.KVGet(getBookmarksKey(userID))
+	originalJSONBookmarks, appErr := s.plugin.API.KVGet(getBookmarksKey(userID))
 	fmt.Printf("appErr = %+v\n", appErr)
 	if appErr != nil {
 		return nil, appErr
 	}
 
+	fmt.Println("1. IN HERE!")
 	if originalJSONBookmarks == nil {
 		var bmarks *Bookmarks
 		return bmarks, nil
 	}
 
+	fmt.Println("2. IN HERE!")
 	var bmarks *Bookmarks
 	jsonErr := json.Unmarshal(originalJSONBookmarks, &bmarks)
 	if jsonErr != nil {
@@ -120,8 +142,8 @@ func (p *Plugin) getBookmarksForUser(userID string) (*Bookmarks, error) {
 }
 
 // deleteBookmarkForUser deletes a bookmark from the store
-func (p *Plugin) deleteBookmarkForUser(userID, bmarkID string) error {
-	bmarks, err := p.getBookmarksForUser(userID)
+func (s *kvstore) deleteBookmarkForUser(userID, bmarkID string) error {
+	bmarks, err := s.getBookmarksForUser(userID)
 	if err != nil {
 		return errors.New(err.Error())
 	}
@@ -132,7 +154,7 @@ func (p *Plugin) deleteBookmarkForUser(userID, bmarkID string) error {
 	}
 
 	bmarks.delete(bmarkID)
-	p.storeBookmarks(userID, bmarks)
+	s.storeBookmarks(userID, bmarks)
 
 	return errors.New("unable to delete bookmark")
 }

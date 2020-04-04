@@ -57,7 +57,7 @@ func TestPlugin_getBookmarksForUser(t *testing.T) {
 	plugin.SetAPI(api)
 
 	api.On("KVGet", "bookmarks_randomUser").Return(nil, nil)
-	bmarks, _ := plugin.getBookmarksForUser("randomUser")
+	bmarks, _ := plugin.kvstore.getBookmarksForUser("randomUser")
 	fmt.Printf("bmarks = %+v\n", bmarks)
 
 }
@@ -83,65 +83,47 @@ func TestPlugin_getBookmarksForUser(t *testing.T) {
 // fmt.Printf("bmarks = %+v\n", bmarks)
 // assert.NotZero(t, int64(bmarks.ByID[getBookmarksKey("userID1")].CreateAt))
 
-func TestPlugin_storeBookmarks(t *testing.T) {
-	plugin := Plugin{}
-	api := &plugintest.API{}
-	plugin.SetAPI(api)
+func TestStoreBookmarks(t *testing.T) {
 
+	// intialize test Bookmarks
 	u1 := "userID1"
-	b1 := &Bookmark{
-		PostID: "ID1", Title: "Title1",
-	}
-	b2 := &Bookmark{
-		PostID: "ID2", Title: "Title2",
-	}
+	// u2 := "userID2"
+
+	b1 := &Bookmark{PostID: "ID1", Title: "Title1"}
+	b2 := &Bookmark{PostID: "ID2", Title: "Title2"}
+	// b3 := &Bookmark{PostID: "ID3", Title: "Title3"}
+
+	api := &plugintest.API{}
+
+	// Add Bookmarks
 	bmarks := Bookmarks{}
 	bmarks = *bmarks.new()
-	// bmarks.ByID = make(map[string]*Bookmark)
 	bmarks.add(b1)
 	bmarks.add(b2)
 
 	bmarksD, _ := json.MarshalIndent(bmarks, "", "    ")
 	fmt.Printf("bmarks = %+v\n", string(bmarksD))
 
+	var plugin Plugin
+	plugin.SetAPI(api)
+
+	// Markshal the bmarks and mock api call
 	jsonBookmarks, err := json.Marshal(bmarks)
 	api.On("KVSet", "bookmarks_userID1", jsonBookmarks).Return(nil)
+
+	// store bmarks using API
+	err = plugin.kvstore.storeBookmarks(u1, &bmarks)
+	assert.Nil(t, err)
 
 	jsonBookmarksD, _ := json.MarshalIndent(jsonBookmarks, "", "    ")
 	fmt.Printf("jsonBookmarks = %+v\n", string(jsonBookmarksD))
 
-	err = plugin.storeBookmarks(u1, &bmarks)
-	assert.Nil(t, err)
+	api.On("KVGet", "bookmarks_userID1").Return(jsonBookmarks, nil)
+	getBmarks, err := plugin.kvstore.getBookmarksForUser(u1)
 
-	api.On("KVGet", "bookmarks_userID1", jsonBookmarks).Return(bmarks, nil)
-	getBmarks, err := plugin.getBookmarksForUser(u1)
+	fmt.Printf("getBmarks = %+v\n", getBmarks)
 
-	// bmarks, _ := plugin.addToBookmarksForUser("userID1", b1)
-	// fmt.Printf("bmarks = %+v\n", bmarks)
-	assert.Equal(t, bmarks, getBmarks)
-
-	// var b1 *Bookmark
-
-	// b1.PostID = "ID1"
-	// b1.Title = "Title1"
-
-	// bmarks.new()
-	// fmt.Println("test.go")
-	// fmt.Printf("bmarks = %+v\n", bmarks)
-	// bmarks.add(b1)
-	// bmarks =
-	// 	&Bookmarks{
-	// 		ByID: {
-	// 			ID1: &Bookmark{
-	// 				PostID: "ID1", Title: "Title1",
-	// 			},
-	// 		},
-	// 	}
-
-	// bmarks.new()
-	// bmarks.ByID[u1] = b1
-
-	// fmt.Printf("b1 = %+v\n", b1)
+	assert.Equal(t, &bmarks, getBmarks)
 
 }
 
