@@ -28,22 +28,23 @@ func (b *Bookmarks) add(bmark *Bookmark) {
 	b.ByID[bmark.PostID] = bmark
 }
 
-func (b *Bookmarks) get(bmark *Bookmark) *Bookmark {
-	return b.ByID[bmark.PostID]
+func (b *Bookmarks) get(bmarkID string) *Bookmark {
+	return b.ByID[bmarkID]
 }
 
 func (b *Bookmarks) delete(bmarkID string) {
 	delete(b.ByID, bmarkID)
 }
 
-func (b *Bookmarks) exists(bmark *Bookmark) bool {
-	if _, ok := b.ByID[bmark.PostID]; ok {
+func (b *Bookmarks) exists(bmarkID string) bool {
+	if _, ok := b.ByID[bmarkID]; ok {
 		return true
 	}
 	return false
 }
 
-func (b *Bookmarks) updateTimes(bmark *Bookmark) *Bookmark {
+func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
+	bmark := b.get(bmarkID)
 	if bmark.CreateAt == 0 {
 		bmark.CreateAt = model.GetMillis()
 		bmark.ModifiedAt = bmark.CreateAt

@@ -93,11 +93,10 @@ func (s *kvstore) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookma
 	}
 
 	// bookmark already exists, update ModifiedAt and save
-	if bmarks.exists(bmark) {
+	if bmarks.exists(bmark.PostID) {
 		// grab the saved bookmark from the store (includes original createdAt and
 		// last modifiedAt times)
-		bmark = bmarks.get(bmark)
-		bmarks.updateTimes(bmark)
+		bmarks.updateTimes(bmark.PostID)
 		if err = s.storeBookmarks(userID, bmarks); err != nil {
 			return nil, errors.New(err.Error())
 		}
