@@ -148,12 +148,17 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 		return responsef("Unable to retreive bookmarks for user %s", args.UserId)
 	}
 
+	if bookmarks == nil {
+		return responsef("You do not have any saved bookmarks")
+	}
+
+	team, appErr := p.API.GetTeam(args.TeamId)
+	if appErr != nil {
+		return responsef("Unable to get team")
+	}
+
 	text := "#### Bookmarks List\n"
 	for _, bmark := range bookmarks.ByID {
-		team, appErr := p.API.GetTeam(args.TeamId)
-		if appErr != nil {
-			return responsef("Unable to get team")
-		}
 		text = text + p.bmarkBullet(bmark, team)
 	}
 

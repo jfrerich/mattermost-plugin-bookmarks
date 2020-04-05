@@ -119,18 +119,15 @@ func (s *kvstore) getBookmarksForUser(userID string) (*Bookmarks, error) {
 	fmt.Printf("key = %+v\n", key)
 
 	originalJSONBookmarks, appErr := s.plugin.API.KVGet(getBookmarksKey(userID))
-	fmt.Printf("appErr = %+v\n", appErr)
 	if appErr != nil {
 		return nil, appErr
 	}
 
-	fmt.Println("1. IN HERE!")
 	if originalJSONBookmarks == nil {
 		var bmarks *Bookmarks
 		return bmarks, nil
 	}
 
-	fmt.Println("2. IN HERE!")
 	var bmarks *Bookmarks
 	jsonErr := json.Unmarshal(originalJSONBookmarks, &bmarks)
 	if jsonErr != nil {
