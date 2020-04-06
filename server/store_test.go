@@ -50,13 +50,13 @@ func wantedBookmarks(userID1 string, bookmarks []*Bookmark) *Bookmarks {
 	return bmarks
 }
 
-func TestPlugin_getBookmarksForUser(t *testing.T) {
+func TestPlugin_getBookmarks(t *testing.T) {
 	plugin := Plugin{}
 	api := &plugintest.API{}
 	plugin.SetAPI(api)
 
 	api.On("KVGet", "bookmarks_randomUser").Return(nil, nil)
-	bmarks, _ := plugin.kvstore.getBookmarksForUser("randomUser")
+	bmarks, _ := plugin.kvstore.getBookmarks("randomUser")
 	fmt.Printf("bmarks = %+v\n", bmarks)
 
 }
@@ -73,12 +73,12 @@ func TestPlugin_getBookmarksForUser(t *testing.T) {
 // }
 //
 // p := &pluginTest{}
-// _, _ = p.plugin.getBookmarksForUser("randomUser")
+// _, _ = p.plugin.getBookmarks("randomUser")
 //
 
 // assert.Nil(err)
 
-// bmarks, _ := ptest.getBookmarksForUser("userID1")
+// bmarks, _ := ptest.getBookmarks("userID1")
 // fmt.Printf("bmarks = %+v\n", bmarks)
 // assert.NotZero(t, int64(bmarks.ByID[getBookmarksKey("userID1")].CreateAt))
 
@@ -117,7 +117,7 @@ func TestStoreBookmarks(t *testing.T) {
 	fmt.Printf("jsonBookmarks = %+v\n", string(jsonBookmarksD))
 
 	api.On("KVGet", "bookmarks_userID1").Return(jsonBookmarks, nil)
-	getBmarks, err := plugin.kvstore.getBookmarksForUser(u1)
+	getBmarks, err := plugin.kvstore.getBookmarks(u1)
 
 	fmt.Printf("getBmarks = %+v\n", getBmarks)
 
@@ -125,7 +125,7 @@ func TestStoreBookmarks(t *testing.T) {
 
 }
 
-// func TestPlugin_addToBookmarksForUser2(t *testing.T) {
+// func TestPlugin_addBookmark2(t *testing.T) {
 // 	plugin := Plugin{}
 // 	api := &plugintest.API{}
 // 	plugin.SetAPI(api)
@@ -134,13 +134,13 @@ func TestStoreBookmarks(t *testing.T) {
 // 	fmt.Printf("b1 = %+v\n", b1)
 // 	api.On("KVGet", "bookmarks_userID1").Return(nil, nil)
 // 	api.On("KVSet", "bookmarks_userID1").Return(nil)
-// 	bmarks, _ := plugin.addToBookmarksForUser("userID1", b1)
+// 	bmarks, _ := plugin.addBookmark("userID1", b1)
 // 	fmt.Printf("bmarks = %+v\n", bmarks)
 // 	// 	// assert.NotZero(t, int64(bmarks.ByID[getBookmarksKey("userID1")].CreateAt))
 // 	//
 // }
 
-// func TestPlugin_addToBookmarksForUser(t *testing.T) {
+// func TestPlugin_addBookmark(t *testing.T) {
 //
 // 	// var bookmarks  *Bookmarks
 // 	// bookmarks.ByID["jason"] =
@@ -182,12 +182,12 @@ func TestStoreBookmarks(t *testing.T) {
 // 	}
 // 	for _, tt := range tests {
 // 		t.Run(tt.name, func(t *testing.T) {
-// 			if got, err := tt.plugin.addToBookmarksForUser(tt.args.userID, tt.args.newBookmark); (err != nil) != tt.wantErr {
+// 			if got, err := tt.plugin.addBookmark(tt.args.userID, tt.args.newBookmark); (err != nil) != tt.wantErr {
 // 				gotD, _ := json.MarshalIndent(got, "", "    ")
 // 				fmt.Printf("got = %+v\n", string(gotD))
-// 				// bmarks, err := tt.plugin.getBookmarksForUser(tt.args.userID)
+// 				// bmarks, err := tt.plugin.getBookmarks(tt.args.userID)
 // 				// fmt.Printf("bmarks = %+v\n", bmarks)
-// 				t.Errorf("Plugin.addToBookmarksForUser() error = %v, wantErr %v", err, tt.wantErr)
+// 				t.Errorf("Plugin.addBookmark() error = %v, wantErr %v", err, tt.wantErr)
 // 				assert.Equal(t, tt.want, got, "they should be the same")
 // 				// fmt.Printf("bmarks = %+v\n", bmarks)
 // 			}

@@ -14,12 +14,12 @@ const (
 
 // KVStore represents KVStore operations for bookmarks
 type KVStore interface {
-	storeBookmarkForUser(userID string, bmark *Bookmark) error
+	storeBookmark(userID string, bmark *Bookmark) error
 	storeBookmarks(userID string, bmarks *Bookmarks) error
 	getBookmark(userID, bmarkID string) (*Bookmark, error)
-	addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookmarks, error)
-	deleteBookmarkForUser(userID, bmarkID string) error
-	getBookmarksForUser(userID string) (*Bookmarks, error)
+	addBookmark(userID string, bmark *Bookmark) (*Bookmarks, error)
+	deleteBookmark(userID, bmarkID string) error
+	getBookmarks(userID string) (*Bookmarks, error)
 	getBookmarksKey(userID string) string
 }
 
@@ -32,11 +32,11 @@ func NewStore(p *Plugin) *kvstore {
 	return &kvstore{plugin: p}
 }
 
-// storeBookmarkForUser adds a bookmark for the user
-func (s *kvstore) storeBookmarkForUser(userID string, bmark *Bookmark) error {
-	_, err := s.addToBookmarksForUser(userID, bmark)
+// storeBookmark adds a bookmark for the user
+func (s *kvstore) storeBookmark(userID string, bmark *Bookmark) error {
+	_, err := s.addBookmark(userID, bmark)
 	if err != nil {
-		s.deleteBookmarkForUser(userID, bmark.PostID)
+		s.deleteBookmark(userID, bmark.PostID)
 		return errors.New(err.Error())
 	}
 
@@ -60,7 +60,7 @@ func (s *kvstore) storeBookmarks(userID string, bmarks *Bookmarks) error {
 
 // getBookmark returns a bookmark with the specified bookmarkID
 func (s *kvstore) getBookmark(userID, bmarkID string) (*Bookmark, error) {
-	bmarks, err := s.getBookmarksForUser(userID)
+	bmarks, err := s.getBookmarks(userID)
 	if err != nil {
 		return nil, err
 	}
@@ -74,9 +74,9 @@ func (s *kvstore) getBookmark(userID, bmarkID string) (*Bookmark, error) {
 	return nil, nil
 }
 
-// addToBookmarksForUser stores the bookmark in a map,
-func (s *kvstore) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookmarks, error) {
-	bmarks, err := s.getBookmarksForUser(userID)
+// addBookmark stores the bookmark in a map,
+func (s *kvstore) addBookmark(userID string, bmark *Bookmark) (*Bookmarks, error) {
+	bmarks, err := s.getBookmarks(userID)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
@@ -110,8 +110,8 @@ func (s *kvstore) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookma
 	return bmarks, nil
 }
 
-// getBookmarksForUser returns unordered array of bookmarks for a user
-func (s *kvstore) getBookmarksForUser(userID string) (*Bookmarks, error) {
+// getBookmarks returns unordered array of bookmarks for a user
+func (s *kvstore) getBookmarks(userID string) (*Bookmarks, error) {
 	originalJSONBookmarks, appErr := s.plugin.API.KVGet(getBookmarksKey(userID))
 	if appErr != nil {
 		return nil, appErr
@@ -131,9 +131,9 @@ func (s *kvstore) getBookmarksForUser(userID string) (*Bookmarks, error) {
 	return bmarks, nil
 }
 
-// deleteBookmarkForUser deletes a bookmark from the store
-func (s *kvstore) deleteBookmarkForUser(userID, bmarkID string) error {
-	bmarks, err := s.getBookmarksForUser(userID)
+// deleteBookmark deletes a bookmark from the store
+func (s *kvstore) deleteBookmark(userID, bmarkID string) error {
+	bmarks, err := s.getBookmarks(userID)
 	if err != nil {
 		return errors.New(err.Error())
 	}

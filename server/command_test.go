@@ -33,8 +33,8 @@ func TestExecuteCommandView(t *testing.T) {
 	api.On("GetTeam", mock.Anything).Return(&model.Team{Id: "teamID-1"}, nil)
 	api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
 
-	api.On("getBookmarksForUser", u1.Id).Return(bmarks1, nil)
-	api.On("getBookmarksForUser", u2.Id).Return(nil, nil)
+	api.On("getBookmarks", u1.Id).Return(bmarks1, nil)
+	api.On("getBookmarks", u2.Id).Return(nil, nil)
 	api.On("KVGet", getBookmarksKey(u1.Id)).Return(jsonBmarks1, nil)
 	api.On("KVGet", getBookmarksKey(u2.Id)).Return(nil, nil)
 
