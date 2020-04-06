@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -16,9 +15,6 @@ func TestExecuteCommandView(t *testing.T) {
 	bmarks1 := getTestBookmarks()
 	jsonBmarks1, err := json.Marshal(bmarks1)
 	assert.Nil(t, err)
-
-	bmarks1D, _ := json.MarshalIndent(bmarks1, "", "    ")
-	fmt.Printf("bmarks1 = %+v\n", string(bmarks1D))
 
 	makePlugin := func(api *plugintest.API) *Plugin {
 		p := &Plugin{}

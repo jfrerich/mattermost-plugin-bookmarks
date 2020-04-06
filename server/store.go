@@ -35,7 +35,6 @@ func NewStore(p *Plugin) *kvstore {
 // storeBookmarkForUser adds a bookmark for the user
 func (s *kvstore) storeBookmarkForUser(userID string, bmark *Bookmark) error {
 	_, err := s.addToBookmarksForUser(userID, bmark)
-	fmt.Printf("err = %+v\n", err)
 	if err != nil {
 		s.deleteBookmarkForUser(userID, bmark.PostID)
 		return errors.New(err.Error())
@@ -63,7 +62,7 @@ func (s *kvstore) storeBookmarks(userID string, bmarks *Bookmarks) error {
 func (s *kvstore) getBookmark(userID, bmarkID string) (*Bookmark, error) {
 	bmarks, err := s.getBookmarksForUser(userID)
 	if err != nil {
-		fmt.Printf("Error = %+v\n", err)
+		return nil, err
 	}
 
 	for _, bmark := range bmarks.ByID {
@@ -113,11 +112,6 @@ func (s *kvstore) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookma
 
 // getBookmarksForUser returns unordered array of bookmarks for a user
 func (s *kvstore) getBookmarksForUser(userID string) (*Bookmarks, error) {
-	key := getBookmarksKey(userID)
-
-	fmt.Printf("userID = %+v\n", userID)
-	fmt.Printf("key = %+v\n", key)
-
 	originalJSONBookmarks, appErr := s.plugin.API.KVGet(getBookmarksKey(userID))
 	if appErr != nil {
 		return nil, appErr
