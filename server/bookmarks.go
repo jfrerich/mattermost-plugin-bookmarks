@@ -24,6 +24,13 @@ type Label struct {
 	Color string `json:"displayName"`
 }
 
+// NewBookmarks returns an initialized Bookmarks struct
+func NewBookmarks() *Bookmarks {
+	bmarks := new(Bookmarks)
+	bmarks.ByID = make(map[string]*Bookmark)
+	return bmarks
+}
+
 func (b *Bookmarks) add(bmark *Bookmark) {
 	b.ByID[bmark.PostID] = bmark
 }
@@ -51,10 +58,4 @@ func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
 	}
 	bmark.ModifiedAt = model.GetMillis()
 	return bmark
-}
-
-func (b *Bookmarks) new() *Bookmarks {
-	bmarks := new(Bookmarks)
-	bmarks.ByID = make(map[string]*Bookmark)
-	return bmarks
 }

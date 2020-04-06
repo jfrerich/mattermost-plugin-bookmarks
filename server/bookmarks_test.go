@@ -8,9 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func getTestBookmarks() Bookmarks {
-	bmarks := Bookmarks{}
-	bmarks = *bmarks.new()
+func getTestBookmarks() *Bookmarks {
+	bmarks := NewBookmarks()
 
 	b1 := &Bookmark{
 		PostID: "ID1",

@@ -84,7 +84,7 @@ func (s *kvstore) addToBookmarksForUser(userID string, bmark *Bookmark) (*Bookma
 
 	// user doesn't have any bookmarks add first bookmark and return
 	if bmarks == nil {
-		bmarks = bmarks.new()
+		bmarks = NewBookmarks()
 		bmarks.add(bmark)
 		if err = s.storeBookmarks(userID, bmarks); err != nil {
 			return nil, errors.New(err.Error())

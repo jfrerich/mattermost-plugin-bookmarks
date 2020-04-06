@@ -34,8 +34,7 @@ func pluginWithMockedBookmarks(userID string, bookmark *Bookmark) *Plugin {
 
 // wantedSubscriptions returns what should be returned after sorting by repo names
 func wantedBookmarks(userID1 string, bookmarks []*Bookmark) *Bookmarks {
-	var bmarks *Bookmarks
-	bmarks.new()
+	bmarks := NewBookmarks()
 
 	for k, v := range bookmarks {
 		fmt.Printf("k = %+v\n", k)
@@ -96,8 +95,7 @@ func TestStoreBookmarks(t *testing.T) {
 	api := &plugintest.API{}
 
 	// Add Bookmarks
-	bmarks := Bookmarks{}
-	bmarks = *bmarks.new()
+	bmarks := NewBookmarks()
 	bmarks.add(b1)
 	bmarks.add(b2)
 
@@ -112,7 +110,7 @@ func TestStoreBookmarks(t *testing.T) {
 	api.On("KVSet", "bookmarks_userID1", jsonBookmarks).Return(nil)
 
 	// store bmarks using API
-	err = plugin.kvstore.storeBookmarks(u1, &bmarks)
+	err = plugin.kvstore.storeBookmarks(u1, bmarks)
 	assert.Nil(t, err)
 
 	jsonBookmarksD, _ := json.MarshalIndent(jsonBookmarks, "", "    ")
