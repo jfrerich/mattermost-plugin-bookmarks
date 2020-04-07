@@ -45,12 +45,13 @@ func (s *kvstore) storeBookmark(userID string, bmark *Bookmark) error {
 
 // storeBookmarks stores all the users bookmarks
 func (s *kvstore) storeBookmarks(userID string, bmarks *Bookmarks) error {
-	jsonBookmark, jsonErr := json.Marshal(bmarks)
+	jsonBookmarks, jsonErr := json.Marshal(bmarks)
 	if jsonErr != nil {
 		return jsonErr
 	}
 
-	appErr := s.plugin.API.KVSet(getBookmarksKey(userID), jsonBookmark)
+	key := getBookmarksKey(userID)
+	appErr := s.plugin.API.KVSet(key, jsonBookmarks)
 	if appErr != nil {
 		return errors.New(appErr.Error())
 	}
@@ -76,13 +77,15 @@ func (s *kvstore) getBookmark(userID, bmarkID string) (*Bookmark, error) {
 
 // addBookmark stores the bookmark in a map,
 func (s *kvstore) addBookmark(userID string, bmark *Bookmark) (*Bookmarks, error) {
+
+	// get all bookmarks for user
 	bmarks, err := s.getBookmarks(userID)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
 	// user doesn't have any bookmarks add first bookmark and return
-	if bmarks == nil {
+	if len(bmarks.ByID) == 0 {
 		bmarks = NewBookmarks()
 		bmarks.add(bmark)
 		if err = s.storeBookmarks(userID, bmarks); err != nil {
@@ -93,8 +96,6 @@ func (s *kvstore) addBookmark(userID string, bmark *Bookmark) (*Bookmarks, error
 
 	// bookmark already exists, update ModifiedAt and save
 	if bmarks.exists(bmark.PostID) {
-		// grab the saved bookmark from the store (includes original createdAt and
-		// last modifiedAt times)
 		bmarks.updateTimes(bmark.PostID)
 		if err = s.storeBookmarks(userID, bmarks); err != nil {
 			return nil, errors.New(err.Error())
@@ -139,14 +140,14 @@ func (s *kvstore) deleteBookmark(userID, bmarkID string) error {
 	}
 
 	// user doesn't have any bookmarks
-	if bmarks == nil {
+	if len(bmarks.ByID) == 0 {
 		return errors.New("User has no bookmarks")
 	}
 
 	bmarks.delete(bmarkID)
 	s.storeBookmarks(userID, bmarks)
 
-	return errors.New("unable to delete bookmark")
+	return errors.New("")
 }
 
 func getBookmarksKey(userID string) string {
