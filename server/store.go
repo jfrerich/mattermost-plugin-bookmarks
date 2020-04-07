@@ -139,15 +139,14 @@ func (s *kvstore) deleteBookmark(userID, bmarkID string) error {
 		return errors.New(err.Error())
 	}
 
-	// user doesn't have any bookmarks
-	if len(bmarks.ByID) == 0 {
-		return errors.New("User has no bookmarks")
+	if !bmarks.exists(bmarkID) {
+		return errors.New(fmt.Sprintf("Bookmark `%v` does not exist", bmarkID))
 	}
 
 	bmarks.delete(bmarkID)
 	s.storeBookmarks(userID, bmarks)
 
-	return errors.New("")
+	return nil
 }
 
 func getBookmarksKey(userID string) string {

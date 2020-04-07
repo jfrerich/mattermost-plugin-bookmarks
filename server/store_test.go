@@ -110,7 +110,6 @@ func TestDeleteBookmark(t *testing.T) {
 	// create some test bookmarks
 	b1 := &Bookmark{PostID: "ID1", Title: "Title1"}
 	b2 := &Bookmark{PostID: "ID2", Title: "Title2"}
-	b3 := &Bookmark{PostID: "ID3", Title: "Title3"}
 
 	// User 1 has no bookmarks
 	u1 := "userID1"
@@ -138,14 +137,14 @@ func TestDeleteBookmark(t *testing.T) {
 			userID:     u1,
 			bmarks:     bmarks_u1,
 			wantErr:    true,
-			wantErrMsg: "User has no bookmarks",
+			wantErrMsg: "Bookmark `ID2` does not exist",
 		},
 		{
 			name:       "u2 two previous bookmarks  delete one bookmark",
 			userID:     u2,
 			bmarks:     bmarks_u2,
-			wantErr:    true,
-			wantErrMsg: "",
+			wantErr:    false,
+			wantErrMsg: "Bookmark `ID2` does not exist",
 		},
 	}
 	for _, tt := range tests {
@@ -157,9 +156,12 @@ func TestDeleteBookmark(t *testing.T) {
 			api.On("KVGet", key).Return(jsonBookmarks, nil)
 
 			// store bmarks using API
-			err = p.kvstore.deleteBookmark(tt.userID, b3.PostID)
-			// assert.Nil(t, err, tt.wantErr)
-			assert.Equal(t, err.Error(), tt.wantErrMsg)
+			err = p.kvstore.deleteBookmark(tt.userID, b2.PostID)
+			if tt.wantErr {
+				assert.Equal(t, err.Error(), tt.wantErrMsg)
+				return
+			}
+			assert.Nil(t, err)
 		})
 	}
 }
