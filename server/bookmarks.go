@@ -12,17 +12,6 @@ const (
 	StoreBookmarksKey = "bookmarks"
 )
 
-// storeBookmark adds a bookmark for the user
-func (p *Plugin) storeBookmark(userID string, bmark *Bookmark) error {
-	_, err := p.addBookmark(userID, bmark)
-	if err != nil {
-		p.deleteBookmark(userID, bmark.PostID)
-		return errors.New(err.Error())
-	}
-
-	return nil
-}
-
 // storeBookmarks stores all the users bookmarks
 func (p *Plugin) storeBookmarks(userID string, bmarks *Bookmarks) error {
 	jsonBookmarks, jsonErr := json.Marshal(bmarks)
