@@ -15,7 +15,6 @@ import (
 func TestHandleAdd(t *testing.T) {
 	makePlugin := func(api *plugintest.API) *Plugin {
 		p := &Plugin{}
-		p.kvstore = NewStore(p)
 		p.SetAPI(api)
 		return p
 	}

@@ -45,7 +45,7 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = p.kvstore.addBookmark(userID, bmark)
+	_, err = p.addBookmark(userID, bmark)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -76,7 +76,7 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.kvstore.addBookmark(userID, &bmark)
+	p.addBookmark(userID, &bmark)
 
 	return
 }

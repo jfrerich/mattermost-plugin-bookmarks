@@ -22,8 +22,6 @@ type Plugin struct {
 
 	// BotId of the created bot account.
 	BotUserID string
-
-	kvstore *kvstore
 }
 
 // OnActivate runs when the plugin activates and ensures the plugin is properly
@@ -44,8 +42,6 @@ func (p *Plugin) OnActivate() error {
 		return errors.Wrap(err, "failed to ensure Bookmarks bot")
 	}
 	p.BotUserID = botID
-
-	p.kvstore = NewStore(p)
 
 	return p.API.RegisterCommand(getCommand())
 }

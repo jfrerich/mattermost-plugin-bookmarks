@@ -151,14 +151,14 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 		bookmark.Title = post.Message[0:int(numChars)]
 	}
 
-	p.kvstore.addBookmark(args.UserId, &bookmark)
+	p.addBookmark(args.UserId, &bookmark)
 
 	return p.responsef(args, "Added bookmark: %+v", bookmark)
 }
 
 // executeCommandView shows all bookmarks in an ephemeral post
 func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandResponse {
-	bookmarks, err := p.kvstore.getBookmarks(args.UserId)
+	bookmarks, err := p.getBookmarks(args.UserId)
 	if err != nil {
 		return p.responsef(args, "Unable to retreive bookmarks for user %s", args.UserId)
 	}
@@ -185,7 +185,7 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 	subCommand := strings.Fields(args.Command)
 	bookmarkID := p.getPostIDFromLink(subCommand[2])
 
-	err := p.kvstore.deleteBookmark(args.UserId, bookmarkID)
+	err := p.deleteBookmark(args.UserId, bookmarkID)
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
