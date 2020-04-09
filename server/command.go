@@ -71,8 +71,26 @@ func getCommandResponse(responseType, text string) *model.CommandResponse {
 	}
 }
 
+func (p *Plugin) postCommandResponse(args *model.CommandArgs, text string) {
+	post := &model.Post{
+		UserId:    p.getBotID(),
+		ChannelId: args.ChannelId,
+		Message:   text,
+	}
+	_ = p.API.SendEphemeralPost(args.UserId, post)
+}
+
+func (p *Plugin) responsef(commandArgs *model.CommandArgs, format string, args ...interface{}) *model.CommandResponse {
+	p.postCommandResponse(commandArgs, fmt.Sprintf(format, args...))
+	return &model.CommandResponse{}
+}
+
+func (p *Plugin) getBotID() string {
+	return p.BotUserID
+}
+
 func (p *Plugin) executeCommandHelp(args *model.CommandArgs) *model.CommandResponse {
-	return responsef(getHelp(helpCommandText))
+	return p.responsef(args, getHelp(helpCommandText))
 }
 
 func responsef(format string, args ...interface{}) *model.CommandResponse {
@@ -88,7 +106,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	split := strings.Fields(args.Command)
 
 	if len(split) < 2 {
-		return responsef("Missing subCommand. You can try %s", addCommandText), nil
+		return p.responsef(args, "Missing subCommand. You can try %s", addCommandText), nil
 	}
 
 	action := split[1]
@@ -104,10 +122,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		return p.executeCommandHelp(args), nil
 
 	default:
-		return &model.CommandResponse{
-			ResponseType: model.COMMAND_RESPONSE_TYPE_EPHEMERAL,
-			Text:         fmt.Sprintf("Unknown command: " + args.Command),
-		}, nil
+		return p.responsef(args, fmt.Sprintf("Unknown command: "+args.Command)), nil
 	}
 }
 
@@ -117,14 +132,14 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 	subCommand = subCommand[2:]
 
 	if len(subCommand) < 1 {
-		return responsef("Missing sub-command. You can try %v", getHelp(addCommandText))
+		return p.responsef(args, "Missing sub-command. You can try %v", getHelp(addCommandText))
 	}
 	postID := p.getPostIDFromLink(subCommand[0])
 
 	// verify postID exists
 	post, appErr := p.API.GetPost(postID)
 	if appErr != nil {
-		return responsef("PostID `%s` is not a valid postID", postID)
+		return p.responsef(args, "PostID `%s` is not a valid postID", postID)
 	}
 
 	var bookmark Bookmark
@@ -136,25 +151,25 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 		bookmark.Title = post.Message[0:int(numChars)]
 	}
 
-	p.kvstore.storeBookmark(args.UserId, &bookmark)
+	p.kvstore.addBookmark(args.UserId, &bookmark)
 
-	return responsef("Added bookmark: %+v", bookmark)
+	return p.responsef(args, "Added bookmark: %+v", bookmark)
 }
 
 // executeCommandView shows all bookmarks in an ephemeral post
 func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandResponse {
 	bookmarks, err := p.kvstore.getBookmarks(args.UserId)
 	if err != nil {
-		return responsef("Unable to retreive bookmarks for user %s", args.UserId)
+		return p.responsef(args, "Unable to retreive bookmarks for user %s", args.UserId)
 	}
 
 	if bookmarks == nil {
-		return responsef("You do not have any saved bookmarks")
+		return p.responsef(args, "You do not have any saved bookmarks")
 	}
 
 	team, appErr := p.API.GetTeam(args.TeamId)
 	if appErr != nil {
-		return responsef("Unable to get team")
+		return p.responsef(args, "Unable to get team")
 	}
 
 	text := "#### Bookmarks List\n"
@@ -162,7 +177,7 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 		text = text + p.bmarkBullet(bmark, team)
 	}
 
-	return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, text)
+	return p.responsef(args, text)
 }
 
 // executeCommandRemove removes a given bookmark from the store
@@ -170,9 +185,12 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 	subCommand := strings.Fields(args.Command)
 	bookmarkID := p.getPostIDFromLink(subCommand[2])
 
-	p.kvstore.deleteBookmark(args.UserId, bookmarkID)
+	err := p.kvstore.deleteBookmark(args.UserId, bookmarkID)
+	if err != nil {
+		return p.responsef(args, err.Error())
+	}
 
-	return getCommandResponse(model.COMMAND_RESPONSE_TYPE_EPHEMERAL, fmt.Sprintf("Removed bookmark ID: %s", bookmarkID))
+	return p.responsef(args, fmt.Sprintf("Removed bookmark ID: %s", bookmarkID))
 }
 
 func (p *Plugin) bmarkBullet(bmark *Bookmark, team *model.Team) string {
