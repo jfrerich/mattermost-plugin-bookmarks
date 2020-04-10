@@ -21,7 +21,7 @@ type Bookmark struct {
 // Label defines the parameters of a label
 type Label struct {
 	Name  string `json:"name"`
-	Color string `json:"displayName"`
+	Color string `json:"color"`
 }
 
 // NewBookmarks returns an initialized Bookmarks struct

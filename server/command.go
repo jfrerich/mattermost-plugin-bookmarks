@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"regexp"
 	"strings"
 
@@ -137,7 +136,7 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 	postID := p.getPostIDFromLink(subCommand[0])
 
 	// verify postID exists
-	post, appErr := p.API.GetPost(postID)
+	_, appErr := p.API.GetPost(postID)
 	if appErr != nil {
 		return p.responsef(args, "PostID `%s` is not a valid postID", postID)
 	}
@@ -145,10 +144,9 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 	var bookmark Bookmark
 	bookmark.PostID = postID
 
-	// If no title provided, use the first X characters of the post message
-	if len(subCommand) < 2 {
-		numChars := math.Min(float64(len(post.Message)), MaxTitleCharacters)
-		bookmark.Title = post.Message[0:int(numChars)]
+	// Only save title if user provides one.
+	if len(subCommand) >= 2 {
+		bookmark.Title = subCommand[1]
 	}
 
 	p.addBookmark(args.UserId, &bookmark)
@@ -174,7 +172,17 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 
 	text := "#### Bookmarks List\n"
 	for _, bmark := range bookmarks.ByID {
-		text = text + p.bmarkBullet(bmark, team)
+		nextTitle := bmark.Title
+		if bmark.Title != "" {
+			text = text + p.bmarkBullet(bmark, false, nextTitle, team)
+			continue
+		}
+
+		nextTitle, appErr = p.getTitleFromPost(bmark)
+		if appErr != nil {
+			return p.responsef(args, "Unable to get title for bookmark: %s", bmark.PostID)
+		}
+		text = text + p.bmarkBullet(bmark, true, nextTitle, team)
 	}
 
 	return p.responsef(args, text)
@@ -198,8 +206,26 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 	return p.responsef(args, fmt.Sprintf("Removed bookmark ID: %s", bookmarkID))
 }
 
-func (p *Plugin) bmarkBullet(bmark *Bookmark, team *model.Team) string {
-	return fmt.Sprintf("* %s - [%s](%s)\n", bmark.PostID, bmark.Title, p.getPermaLink(bmark.PostID, team.Name))
+// getTitleFromPost returns a title generated from a Post.Message
+func (p *Plugin) getTitleFromPost(bmark *Bookmark) (string, *model.AppError) {
+
+	// TODO: set limit to number of character from post.Message
+	// numChars := math.Min(float64(len(post.Message)), MaxTitleCharacters)
+	// bookmark.Title = post.Message[0:int(numChars)]
+	post, appErr := p.API.GetPost(bmark.PostID)
+	if appErr != nil {
+		return "", appErr
+	}
+	title := post.Message
+	return title, nil
+}
+
+func (p *Plugin) bmarkBullet(bmark *Bookmark, isPostTitle bool, title string, team *model.Team) string {
+	bullet := fmt.Sprintf("* %s - [%s](%s)\n", bmark.PostID, title, p.getPermaLink(bmark.PostID, team.Name))
+	if isPostTitle {
+		bullet = fmt.Sprintf("* %s - `TitleFromPost` [%s](%s)\n", bmark.PostID, title, p.getPermaLink(bmark.PostID, team.Name))
+	}
+	return bullet
 }
 
 func (p *Plugin) getPermaLink(postID string, currentTeam string) string {

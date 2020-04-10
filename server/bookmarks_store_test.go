@@ -22,9 +22,9 @@ func getTestBookmarks() *Bookmarks {
 		ModifiedAt: model.GetMillis(),
 	}
 
+	// no title provided
 	b3 := &Bookmark{
 		PostID:     "ID3",
-		Title:      "Title3 - bookmarks already updated once",
 		CreateAt:   model.GetMillis(),
 		ModifiedAt: model.GetMillis(),
 	}
@@ -40,7 +40,7 @@ func TestBookmarks_get(t *testing.T) {
 	bmarks := getTestBookmarks()
 	assert.Equal(t, 3, len(bmarks.ByID))
 	bmark := bmarks.get("ID3")
-	assert.Equal(t, "Title3 - bookmarks already updated once", bmark.Title)
+	assert.Equal(t, "", bmark.Title)
 }
 
 func TestBookmarks_add(t *testing.T) {
