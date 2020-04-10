@@ -2,6 +2,10 @@
 
 # Mattermost Bookmarks Plugin
 
+[![CircleCI](https://circleci.com/gh/jfrerich/mattermost-plugin-bookmarks.svg?style=shield)](https://circleci.com/gh/jfrerich/mattermost-plugin-bookmarks)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jfrerich/mattermost-plugin-bookmarks)](https://goreportcard.com/report/github.com/jfrerich/mattermost-plugin-bookmarks)
+[![Code Coverage](https://img.shields.io/codecov/c/github/mattermost/mattermost-plugin-bookmarks/master.svg)](https://codecov.io/gh/mattermost/mattermost-plugin-bookmarks)
+
 The bookmarks plugin provides advanced options for users to bookmark posts in [Mattermost](https://mattermost.com).
 
 Mattermost allows to users flag a post (similar to bookmarking), but you cannot arrange, group, sort, or view a condensed list of the flags. The bookmarks plugin utilizes a labeling method for bookmarking posts.  A single post can have multiple labels attached to it.
