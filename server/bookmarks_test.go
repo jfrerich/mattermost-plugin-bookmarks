@@ -52,13 +52,13 @@ func TestAddBookmark(t *testing.T) {
 
 	// User 1 has no bookmarks
 	u1 := "userID1"
-	bmarks_u1 := NewBookmarks()
+	bmarksU1 := NewBookmarks()
 
 	// User 2 has 2 existing bookmarks
 	u2 := "userID2"
-	bmarks_u2 := NewBookmarks()
-	bmarks_u2.add(b1)
-	bmarks_u2.add(b2)
+	bmarksU2 := NewBookmarks()
+	bmarksU2.add(b1)
+	bmarksU2.add(b2)
 
 	type args struct {
 		userID      string
@@ -74,14 +74,14 @@ func TestAddBookmark(t *testing.T) {
 		{
 			name:    "u1 no previous bookmarks  add one bookmark",
 			userID:  u1,
-			bmarks:  bmarks_u1,
+			bmarks:  bmarksU1,
 			wantErr: true,
 			want:    1,
 		},
 		{
 			name:    "u2 two previous bookmarks  add one bookmark",
 			userID:  u2,
-			bmarks:  bmarks_u2,
+			bmarks:  bmarksU2,
 			wantErr: true,
 			want:    3,
 		},
@@ -112,13 +112,13 @@ func TestDeleteBookmark(t *testing.T) {
 
 	// User 1 has no bookmarks
 	u1 := "userID1"
-	bmarks_u1 := NewBookmarks()
+	bmarksU1 := NewBookmarks()
 
 	// User 2 has 2 existing bookmarks
 	u2 := "userID2"
-	bmarks_u2 := NewBookmarks()
-	bmarks_u2.add(b1)
-	bmarks_u2.add(b2)
+	bmarksU2 := NewBookmarks()
+	bmarksU2.add(b1)
+	bmarksU2.add(b2)
 
 	type args struct {
 		userID      string
@@ -134,14 +134,14 @@ func TestDeleteBookmark(t *testing.T) {
 		{
 			name:       "u1 no previous bookmarks  Error out",
 			userID:     u1,
-			bmarks:     bmarks_u1,
+			bmarks:     bmarksU1,
 			wantErr:    true,
 			wantErrMsg: "Bookmark `ID2` does not exist",
 		},
 		{
 			name:       "u2 two previous bookmarks  delete one bookmark",
 			userID:     u2,
-			bmarks:     bmarks_u2,
+			bmarks:     bmarksU2,
 			wantErr:    false,
 			wantErrMsg: "Bookmark `ID2` does not exist",
 		},

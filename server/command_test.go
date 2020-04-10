@@ -36,6 +36,12 @@ func TestExecuteCommandView(t *testing.T) {
 		},
 
 		// /bookmarks remove testing
+		"REMOVE User doesn't provide an ID": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks remove"},
+			bookmarks:         nil,
+			expectedMsgPrefix: strings.TrimSpace("Missing "),
+			expectedContains:  []string{"Missing sub-command", "bookmarks remove"},
+		},
 		"REMOVE User tries to delete a bookmark but has none": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks remove bmarkID"},
 			bookmarks:         nil,
@@ -79,7 +85,7 @@ func TestExecuteCommandView(t *testing.T) {
 				actual := strings.TrimSpace(post.Message)
 				assert.True(t, strings.HasPrefix(actual, tt.expectedMsgPrefix), "Expected returned message to start with: \n%s\nActual:\n%s", tt.expectedMsgPrefix, actual)
 				if tt.expectedContains != nil {
-					for i, _ := range tt.expectedContains {
+					for i := range tt.expectedContains {
 						assert.Contains(t, actual, tt.expectedContains[i])
 					}
 				}

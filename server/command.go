@@ -105,9 +105,9 @@ func responsef(format string, args ...interface{}) *model.CommandResponse {
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	split := strings.Fields(args.Command)
 
-	if len(split) < 2 {
-		return p.responsef(args, "Missing subCommand. You can try %s", addCommandText), nil
-	}
+	// if len(split) < 2 {
+	// 	return p.responsef(args, "Missing subCommand. You can try %s", addCommandText), nil
+	// }
 
 	action := split[1]
 
@@ -183,6 +183,11 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 // executeCommandRemove removes a given bookmark from the store
 func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandResponse {
 	subCommand := strings.Fields(args.Command)
+
+	if len(subCommand) < 3 {
+		return p.responsef(args, "Missing sub-command. You can try %v", getHelp(removeCommandText))
+	}
+
 	bookmarkID := p.getPostIDFromLink(subCommand[2])
 
 	err := p.deleteBookmark(args.UserId, bookmarkID)
