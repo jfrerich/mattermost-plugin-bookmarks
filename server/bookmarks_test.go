@@ -33,6 +33,7 @@ func TestStoreBookmarks(t *testing.T) {
 
 	// Markshal the bmarks and mock api call
 	jsonBookmarks, err := json.Marshal(bmarks)
+	assert.Nil(t, err)
 	api.On("KVSet", "bookmarks_userID1", jsonBookmarks).Return(nil)
 
 	// store bmarks using API
@@ -89,6 +90,7 @@ func TestAddBookmark(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			jsonBookmarks, err := json.Marshal(tt.bmarks)
+			assert.Nil(t, err)
 
 			key := getBookmarksKey(tt.userID)
 			api.On("KVSet", key, mock.Anything).Return(nil)

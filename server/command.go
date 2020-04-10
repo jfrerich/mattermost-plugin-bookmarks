@@ -160,7 +160,7 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandResponse {
 	bookmarks, err := p.getBookmarks(args.UserId)
 	if err != nil {
-		return p.responsef(args, "Unable to retreive bookmarks for user %s", args.UserId)
+		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
 	}
 
 	if bookmarks == nil {
