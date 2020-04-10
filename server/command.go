@@ -104,11 +104,11 @@ func responsef(format string, args ...interface{}) *model.CommandResponse {
 // ExecuteCommand executes a command that has been previously registered via the RegisterCommand API.
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 
-	if len(strings.Fields(args.Command)) < 2 {
+	split := strings.Fields(args.Command)
+	if len(split) < 2 {
 		return p.executeCommandHelp(args), nil
 	}
 
-	split := strings.Fields(args.Command)
 	action := split[1]
 
 	switch action {
