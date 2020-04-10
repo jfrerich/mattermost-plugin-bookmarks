@@ -28,8 +28,16 @@ func TestExecuteCommandView(t *testing.T) {
 		expectedMsgPrefix string
 		expectedContains  []string
 	}{
+		// No Slash Commmand
+		"No slash command": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks"},
+			bookmarks:         nil,
+			expectedMsgPrefix: strings.TrimSpace("###### Bookmarks Slash Command Help "),
+			expectedContains:  []string{"bookmarks add", "bookmarks view", "bookmarks remove"},
+		},
+
 		// Unknown Slash Commmand
-		"UNKNOWN slash commnad": {
+		"UNKNOWN slash command": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks UnknownCommand"},
 			bookmarks:         nil,
 			expectedMsgPrefix: strings.TrimSpace("Unknown command: /bookmarks UnknownCommand"),
@@ -37,7 +45,7 @@ func TestExecuteCommandView(t *testing.T) {
 		},
 
 		// Help Slash Commmand
-		"HELP slash commnad": {
+		"HELP slash command": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks help"},
 			bookmarks:         nil,
 			expectedMsgPrefix: strings.TrimSpace("###### Bookmarks Slash Command Help "),
