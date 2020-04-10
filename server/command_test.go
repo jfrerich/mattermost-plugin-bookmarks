@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -19,22 +18,42 @@ func TestExecuteCommandView(t *testing.T) {
 		commandArgs       *model.CommandArgs
 		bookmarks         *Bookmarks
 		expectedMsgPrefix string
+		expectedContains  []string
 	}{
-		"User has 3 bookmarks": {
+
+		// /bookmarks view testing
+		"VIEW User has 3 bookmarks": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
 			bookmarks:         getTestBookmarks(),
 			expectedMsgPrefix: strings.TrimSpace("#### Bookmarks List"),
+			expectedContains:  []string{"Bookmarks List", "ID1", "ID2", "ID3"},
 		},
-		"User has not bookmarks": {
+		"VIEW User has no bookmarks": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
 			bookmarks:         nil,
 			expectedMsgPrefix: strings.TrimSpace("You do not have any saved bookmarks"),
+			expectedContains:  nil,
 		},
-		// "User deletes one bookmarks": {
-		// 	commandArgs:       &model.CommandArgs{Command: "/bookmarks remove bmarkID"},
-		// 	bookmarks:         nil,
-		// 	expectedMsgPrefix: strings.TrimSpace("You do not have any saved bookmarks"),
-		// },
+
+		// /bookmarks remove testing
+		"REMOVE User tries to delete a bookmark but has none": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks remove bmarkID"},
+			bookmarks:         nil,
+			expectedMsgPrefix: strings.TrimSpace("User doesn't have any bookmarks"),
+			expectedContains:  nil,
+		},
+		"REMOVE User has bmarks tries to delete bookmark that doesnt exist": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks remove bmarkID"},
+			bookmarks:         getTestBookmarks(),
+			expectedMsgPrefix: strings.TrimSpace("Bookmark `bmarkID` does not exist"),
+			expectedContains:  nil,
+		},
+		"REMOVE User successfully deletes 1 bookmark": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks remove ID2"},
+			bookmarks:         getTestBookmarks(),
+			expectedMsgPrefix: strings.TrimSpace("Removed bookmark ID: ID2"),
+			expectedContains:  nil,
+		},
 	}
 	for name, tt := range tests {
 		api := makeAPIMock()
@@ -43,11 +62,12 @@ func TestExecuteCommandView(t *testing.T) {
 		teamID1 := "teamID1"
 		api.On("GetTeam", mock.Anything).Return(&model.Team{Id: teamID1}, nil)
 		api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
-		// api.On("exists", "bmarkID").Return(true)
+		api.On("exists", mock.Anything).Return(true)
 		// api.On("ByID", mock.Anything).Return(true)
 
 		jsonBmarks, err := json.Marshal(tt.bookmarks)
 		api.On("KVGet", getBookmarksKey(tt.commandArgs.UserId)).Return(jsonBmarks, nil)
+		api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 
 		t.Run(name, func(t *testing.T) {
 			assert.Nil(t, err)
@@ -57,8 +77,12 @@ func TestExecuteCommandView(t *testing.T) {
 
 				post := args.Get(1).(*model.Post)
 				actual := strings.TrimSpace(post.Message)
-				fmt.Printf("actual = %+v\n", actual)
 				assert.True(t, strings.HasPrefix(actual, tt.expectedMsgPrefix), "Expected returned message to start with: \n%s\nActual:\n%s", tt.expectedMsgPrefix, actual)
+				if tt.expectedContains != nil {
+					for i, _ := range tt.expectedContains {
+						assert.Contains(t, actual, tt.expectedContains[i])
+					}
+				}
 				// assert.Contains(t, actual, tt.expectedMsgPrefix)
 			}).Once().Return(&model.Post{})
 			// assert.Equal(t, true, isSendEphemeralPostCalled)

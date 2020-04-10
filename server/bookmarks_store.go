@@ -1,6 +1,8 @@
 package main
 
-import "github.com/mattermost/mattermost-server/v5/model"
+import (
+	"github.com/mattermost/mattermost-server/v5/model"
+)
 
 // Bookmarks contains a map of bookmarks
 type Bookmarks struct {

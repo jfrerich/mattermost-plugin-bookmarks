@@ -53,14 +53,13 @@ func (p *Plugin) addBookmark(userID string, bmark *Bookmark) (*Bookmarks, error)
 		return nil, errors.New(err.Error())
 	}
 
-	// no marks, initialize the store first
-	if bmarks == nil {
-		bmarks = NewBookmarks()
-	}
+	// // no marks, initialize the store first
+	// if bmarks == nil {
+	// 	bmarks = NewBookmarks()
+	// }
 
 	// user doesn't have any bookmarks add first bookmark and return
 	if len(bmarks.ByID) == 0 {
-		bmarks = NewBookmarks()
 		bmarks.add(bmark)
 		if err = p.storeBookmarks(userID, bmarks); err != nil {
 			return nil, errors.New(err.Error())
@@ -85,20 +84,23 @@ func (p *Plugin) addBookmark(userID string, bmark *Bookmark) (*Bookmarks, error)
 	return bmarks, nil
 }
 
-// getBookmarks returns unordered array of bookmarks for a user
+// getBookmarks returns a users bookmarks.  If the user has no bookmarks,
+// return nil bookmarks
 func (p *Plugin) getBookmarks(userID string) (*Bookmarks, error) {
-	originalJSONBookmarks, appErr := p.API.KVGet(getBookmarksKey(userID))
+
+	// if a user not not have bookmarks, bb will be nil
+	bb, appErr := p.API.KVGet(getBookmarksKey(userID))
 	if appErr != nil {
 		return nil, appErr
 	}
 
-	if originalJSONBookmarks == nil {
-		var bmarks *Bookmarks
+	// return initialized bookmarks
+	bmarks := NewBookmarks()
+	if bb == nil {
 		return bmarks, nil
 	}
 
-	var bmarks *Bookmarks
-	jsonErr := json.Unmarshal(originalJSONBookmarks, &bmarks)
+	jsonErr := json.Unmarshal(bb, &bmarks)
 	if jsonErr != nil {
 		return nil, jsonErr
 	}
@@ -111,6 +113,10 @@ func (p *Plugin) deleteBookmark(userID, bmarkID string) error {
 	bmarks, err := p.getBookmarks(userID)
 	if err != nil {
 		return errors.New(err.Error())
+	}
+
+	if bmarks == nil {
+		return errors.New(fmt.Sprintf("User doesn't have any bookmarks"))
 	}
 
 	if !bmarks.exists(bmarkID) {

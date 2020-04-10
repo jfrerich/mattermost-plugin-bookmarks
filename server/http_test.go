@@ -33,8 +33,7 @@ func TestHandleAdd(t *testing.T) {
 		assert.Nil(t, err)
 
 		api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
-		api.On("KVGet", mock.Anything).Return(jsonBmark, nil)
-		api.On("addBookmark", mock.Anything, mock.Anything).Return(jsonBmark, nil)
+		api.On("KVGet", getBookmarksKey("theuserid")).Return(nil, nil)
 
 		r := httptest.NewRequest(http.MethodPost, "/add", strings.NewReader(string(jsonBmark)))
 		r.Header.Add("Mattermost-User-Id", "theuserid")
@@ -45,5 +44,18 @@ func TestHandleAdd(t *testing.T) {
 		result := w.Result()
 		assert.NotNil(t, result)
 		assert.Equal(t, http.StatusOK, result.StatusCode)
+
+		api.On("KVGet", getBookmarksKey("theuserid2")).Return(jsonBmark, nil)
+
+		r2 := httptest.NewRequest(http.MethodPost, "/add", strings.NewReader(string(jsonBmark)))
+		r2.Header.Add("Mattermost-User-Id", "theuserid2")
+
+		w2 := httptest.NewRecorder()
+		p.ServeHTTP(nil, w2, r2)
+
+		result2 := w2.Result()
+		assert.NotNil(t, result2)
+		assert.Equal(t, http.StatusOK, result2.StatusCode)
+
 	})
 }
