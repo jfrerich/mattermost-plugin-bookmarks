@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -13,6 +14,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	PostIDDoesNotExist = "PostIDDoesNotExist"
+	PostIDExists       = "ID2"
+	UserID             = "UserID"
+	teamID1            = "teamID1"
+)
+
 func TestExecuteCommandView(t *testing.T) {
 	tests := map[string]struct {
 		commandArgs       *model.CommandArgs
@@ -20,22 +28,57 @@ func TestExecuteCommandView(t *testing.T) {
 		expectedMsgPrefix string
 		expectedContains  []string
 	}{
-
-		// /bookmarks view testing
-		"VIEW User has 3 bookmarks": {
-			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
-			bookmarks:         getTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace("#### Bookmarks List"),
-			expectedContains:  []string{"Bookmarks List", "ID1", "ID2", "ID3"},
+		// Unknown Slash Commmand
+		"UNKNOWN slash commnad": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks UnknownCommand"},
+			bookmarks:         nil,
+			expectedMsgPrefix: strings.TrimSpace("Unknown command: /bookmarks UnknownCommand"),
+			expectedContains:  []string{},
 		},
+
+		// Help Slash Commmand
+		"HELP slash commnad": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks help"},
+			bookmarks:         nil,
+			expectedMsgPrefix: strings.TrimSpace("###### Bookmarks Slash Command Help "),
+			expectedContains:  []string{"bookmarks add", "bookmarks view", "bookmarks remove"},
+		},
+
+		// ADD Slash Commmand
+		"ADD User doesn't provide an ID": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks add"},
+			bookmarks:         nil,
+			expectedMsgPrefix: strings.TrimSpace("Missing "),
+			expectedContains:  []string{"Missing sub-command", "bookmarks add"},
+		},
+		"ADD PostID doesn't exist": {
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v", PostIDDoesNotExist)},
+			bookmarks:         nil,
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("PostID `%v` is not a valid postID", PostIDDoesNotExist)),
+			expectedContains:  nil,
+		},
+		"ADD Boommark added": {
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v", PostIDExists)},
+			bookmarks:         getTestBookmarks(),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: {PostID:%v Title:This message exists", PostIDExists)),
+			expectedContains:  nil,
+		},
+
+		// VIEW Slash Command
 		"VIEW User has no bookmarks": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
 			bookmarks:         nil,
 			expectedMsgPrefix: strings.TrimSpace("You do not have any saved bookmarks"),
 			expectedContains:  nil,
 		},
+		"VIEW User has 3 bookmarks": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
+			bookmarks:         getTestBookmarks(),
+			expectedMsgPrefix: strings.TrimSpace("#### Bookmarks List"),
+			expectedContains:  []string{"Bookmarks List", "ID1", "ID2", "ID3"},
+		},
 
-		// /bookmarks remove testing
+		// REMOVE Slash Command
 		"REMOVE User doesn't provide an ID": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks remove"},
 			bookmarks:         nil,
@@ -49,23 +92,25 @@ func TestExecuteCommandView(t *testing.T) {
 			expectedContains:  nil,
 		},
 		"REMOVE User has bmarks tries to delete bookmark that doesnt exist": {
-			commandArgs:       &model.CommandArgs{Command: "/bookmarks remove bmarkID"},
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v", PostIDDoesNotExist)},
 			bookmarks:         getTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace("Bookmark `bmarkID` does not exist"),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Bookmark `%v` does not exist", PostIDDoesNotExist)),
 			expectedContains:  nil,
 		},
 		"REMOVE User successfully deletes 1 bookmark": {
-			commandArgs:       &model.CommandArgs{Command: "/bookmarks remove ID2"},
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v", PostIDExists)},
 			bookmarks:         getTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace("Removed bookmark ID: ID2"),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Removed bookmark ID: %v", PostIDExists)),
 			expectedContains:  nil,
 		},
 	}
 	for name, tt := range tests {
 		api := makeAPIMock()
-		tt.commandArgs.UserId = "junkID"
+		tt.commandArgs.UserId = UserID
 		siteURL := "https://myhost.com"
-		teamID1 := "teamID1"
+		api.On("GetPost", PostIDDoesNotExist).Return(nil, &model.AppError{Message: "An Error Occurred"})
+		api.On("GetPost", PostIDExists).Return(&model.Post{Message: "This message exists"}, nil)
+		api.On("addBookmark", UserID, tt.bookmarks).Return(mock.Anything)
 		api.On("GetTeam", mock.Anything).Return(&model.Team{Id: teamID1}, nil)
 		api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
 		api.On("exists", mock.Anything).Return(true)
