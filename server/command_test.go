@@ -141,7 +141,12 @@ func TestExecuteCommandView(t *testing.T) {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
 			bookmarks:         getExecuteCommandTestBookmarks(),
 			expectedMsgPrefix: strings.TrimSpace("#### Bookmarks List"),
-			expectedContains:  []string{"Bookmarks List", "ID1", "ID2", "ID3", "ID4 - `TitleFromPost`"},
+			expectedContains: []string{
+				"Bookmarks List",
+				"[:link:](https://myhost.com//pl/ID1) Title1 - New Bookmark - times are zero",
+				"[:link:](https://myhost.com//pl/ID2) Title2 - bookmarks initialized. Times created and same",
+				"[:link:](https://myhost.com//pl/ID3) Title3 - bookmarks already updated once",
+				"[:link:](https://myhost.com//pl/ID4) `TitleFromPost`"},
 		},
 
 		// REMOVE Slash Command

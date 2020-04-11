@@ -221,10 +221,11 @@ func (p *Plugin) getTitleFromPost(bmark *Bookmark) (string, *model.AppError) {
 }
 
 func (p *Plugin) bmarkBullet(bmark *Bookmark, isPostTitle bool, title string, team *model.Team) string {
-	bullet := fmt.Sprintf("* %s - [%s](%s)\n", bmark.PostID, title, p.getPermaLink(bmark.PostID, team.Name))
+	titleFromPostLabel := ""
 	if isPostTitle {
-		bullet = fmt.Sprintf("* %s - `TitleFromPost` [%s](%s)\n", bmark.PostID, title, p.getPermaLink(bmark.PostID, team.Name))
+		titleFromPostLabel = "`TitleFromPost` "
 	}
+	bullet := fmt.Sprintf("[:link:](%s) %s%s\n", p.getPermaLink(bmark.PostID, team.Name), titleFromPostLabel, title)
 	return bullet
 }
 
