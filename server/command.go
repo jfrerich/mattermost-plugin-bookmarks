@@ -151,11 +151,35 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 
 	p.addBookmark(args.UserId, &bookmark)
 
-	return p.responsef(args, "Added bookmark: %+v", bookmark)
+	text, appErr := p.getBmarkTextOneLine(&bookmark, args.TeamId)
+	if appErr != nil {
+		return p.responsef(args, "Unable to get bookmarks list bookmark")
+	}
+
+	return p.responsef(args, "Added bookmark: %s", text)
 }
 
 // executeCommandView shows all bookmarks in an ephemeral post
 func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandResponse {
+
+	subCommand := strings.Fields(args.Command)
+
+	// user requests to view an indiviual bookmark
+	if len(subCommand) == 3 {
+		postID := subCommand[2]
+		postID = p.getPostIDFromLink(postID)
+		bmark, err := p.getBookmark(args.UserId, postID)
+		if err != nil {
+			return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
+		}
+
+		text, appErr := p.getBmarkTextDetailed(bmark, args.TeamId)
+		if appErr != nil {
+			return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
+		}
+		return p.responsef(args, text)
+	}
+
 	bookmarks, err := p.getBookmarks(args.UserId)
 	if err != nil {
 		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
@@ -165,24 +189,13 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 		return p.responsef(args, "You do not have any saved bookmarks")
 	}
 
-	team, appErr := p.API.GetTeam(args.TeamId)
-	if appErr != nil {
-		return p.responsef(args, "Unable to get team")
-	}
-
 	text := "#### Bookmarks List\n"
 	for _, bmark := range bookmarks.ByID {
-		nextTitle := bmark.Title
-		if bmark.Title != "" {
-			text = text + p.bmarkBullet(bmark, false, nextTitle, team)
-			continue
-		}
-
-		nextTitle, appErr = p.getTitleFromPost(bmark)
+		nextText, appErr := p.getBmarkTextOneLine(bmark, args.TeamId)
 		if appErr != nil {
-			return p.responsef(args, "Unable to get title for bookmark: %s", bmark.PostID)
+			return p.responsef(args, "Unable to get bookmarks list bookmark")
 		}
-		text = text + p.bmarkBullet(bmark, true, nextTitle, team)
+		text = text + nextText
 	}
 
 	return p.responsef(args, text)
@@ -220,13 +233,61 @@ func (p *Plugin) getTitleFromPost(bmark *Bookmark) (string, *model.AppError) {
 	return title, nil
 }
 
-func (p *Plugin) bmarkBullet(bmark *Bookmark, isPostTitle bool, title string, team *model.Team) string {
-	titleFromPostLabel := ""
-	if isPostTitle {
-		titleFromPostLabel = "`TitleFromPost` "
+func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, teamID string) (string, *model.AppError) {
+	team, appErr := p.API.GetTeam(teamID)
+	if appErr != nil {
+		return "", appErr
 	}
-	bullet := fmt.Sprintf("[:link:](%s) %s%s\n", p.getPermaLink(bmark.PostID, team.Name), titleFromPostLabel, title)
-	return bullet
+
+	titleFromPostLabel := ""
+	title := bmark.Title
+	if !bmark.hasUserTitle(bmark) {
+		titleFromPostLabel = "`TitleFromPost` "
+		title, appErr = p.getTitleFromPost(bmark)
+		if appErr != nil {
+			return "", appErr
+		}
+	}
+
+	text := fmt.Sprintf("%s %s%s\n", p.getIconLink(bmark, team), titleFromPostLabel, title)
+	return text, nil
+}
+
+func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, teamID string) (string, *model.AppError) {
+	team, appErr := p.API.GetTeam(teamID)
+	if appErr != nil {
+		return "", appErr
+	}
+
+	title, appErr := p.getTitleFromPost(bmark)
+	if appErr != nil {
+		return "", appErr
+	}
+
+	if bmark.hasUserTitle(bmark) {
+		title = bmark.Title
+	}
+
+	post, appErr := p.API.GetPost(bmark.PostID)
+	if appErr != nil {
+		return "", appErr
+	}
+
+	iconLink := p.getIconLink(bmark, team)
+
+	// team := post.
+	text := fmt.Sprintf("#### Bookmark Title %s\n", iconLink)
+	text = text + fmt.Sprintf("**%s**\n", title)
+	text = text + "##### Post Message \n"
+	text = text + post.Message
+
+	return text, appErr
+
+}
+
+func (p *Plugin) getIconLink(bmark *Bookmark, team *model.Team) string {
+	iconLink := fmt.Sprintf("[:link:](%s)", p.getPermaLink(bmark.PostID, team.Name))
+	return iconLink
 }
 
 func (p *Plugin) getPermaLink(postID string, currentTeam string) string {

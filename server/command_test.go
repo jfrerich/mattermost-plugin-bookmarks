@@ -112,15 +112,15 @@ func TestExecuteCommandView(t *testing.T) {
 			expectedContains:  nil,
 		},
 		"ADD Boommark added  no title provided": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v", PostIDExists)},
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v", b1ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: {PostID:%v Title: CreateAt:", PostIDExists)),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID1) `TitleFromPost` this is the post.Message")),
 			expectedContains:  nil,
 		},
 		"ADD Boommark added  title provided": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v", PostIDExists, "MessageProvidedByUser")},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: {PostID:%v Title:MessageProvidedByUser", PostIDExists)),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID2) MessageProvidedByUser")),
 			expectedContains:  nil,
 		},
 
@@ -130,6 +130,17 @@ func TestExecuteCommandView(t *testing.T) {
 			bookmarks:         nil,
 			expectedMsgPrefix: strings.TrimSpace("You do not have any saved bookmarks"),
 			expectedContains:  nil,
+		},
+		"VIEW User requests to view bookmark by ID that has a title defined": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks view ID2"},
+			bookmarks:         getExecuteCommandTestBookmarks(),
+			expectedMsgPrefix: "",
+			expectedContains: []string{
+				"#### Bookmark Title [:link:](https://myhost.com//pl/ID2)",
+				"**Title2 - bookmarks initialized. Times created and same**",
+				"##### Post Message",
+				"this is the post.Message",
+			},
 		},
 		"VIEW User has 3 bookmarks  All with titles provided": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
@@ -180,11 +191,10 @@ func TestExecuteCommandView(t *testing.T) {
 		tt.commandArgs.UserId = UserID
 		siteURL := "https://myhost.com"
 		api.On("GetPost", PostIDDoesNotExist).Return(nil, &model.AppError{Message: "An Error Occurred"})
-		api.On("GetPost", PostIDExists).Return(&model.Post{Message: "This message exists"}, nil)
-		api.On("GetPost", "ID1").Return(&model.Post{Message: "This message exists"}, nil)
-		api.On("GetPost", "ID2").Return(&model.Post{Message: "This message exists"}, nil)
-		api.On("GetPost", "ID3").Return(&model.Post{Message: "This message exists"}, nil)
-		api.On("GetPost", b4ID).Return(&model.Post{Message: p4Title}, nil)
+		api.On("GetPost", b1ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
+		api.On("GetPost", b2ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
+		api.On("GetPost", b3ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
+		api.On("GetPost", b4ID).Return(&model.Post{Message: "this is the post.message"}, nil)
 		api.On("addBookmark", UserID, tt.bookmarks).Return(mock.Anything)
 		api.On("GetTeam", mock.Anything).Return(&model.Team{Id: teamID1}, nil)
 		api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})

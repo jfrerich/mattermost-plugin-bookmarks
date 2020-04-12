@@ -59,3 +59,10 @@ func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
 	bmark.ModifiedAt = model.GetMillis()
 	return bmark
 }
+
+func (b *Bookmark) hasUserTitle(bmark *Bookmark) bool {
+	if bmark.Title != "" {
+		return true
+	}
+	return false
+}
