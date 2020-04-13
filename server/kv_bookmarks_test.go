@@ -60,7 +60,7 @@ func TestBookmarks_delete(t *testing.T) {
 
 func TestBookmarks_exists(t *testing.T) {
 	bmarks := getTestBookmarks()
-	exists := bmarks.exists("ID2")
+	_, exists := bmarks.exists("ID2")
 	assert.Equal(t, true, exists)
 }
 

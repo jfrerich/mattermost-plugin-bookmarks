@@ -43,11 +43,11 @@ func (b *Bookmarks) delete(bmarkID string) {
 	delete(b.ByID, bmarkID)
 }
 
-func (b *Bookmarks) exists(bmarkID string) bool {
-	if _, ok := b.ByID[bmarkID]; ok {
-		return true
+func (b *Bookmarks) exists(bmarkID string) (*Bookmark, bool) {
+	if bmark, ok := b.ByID[bmarkID]; ok {
+		return bmark, true
 	}
-	return false
+	return nil, false
 }
 
 func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {

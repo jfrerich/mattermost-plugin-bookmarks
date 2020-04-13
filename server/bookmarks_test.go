@@ -165,7 +165,7 @@ func TestDeleteBookmark(t *testing.T) {
 			api.On("KVGet", key).Return(jsonBookmarks, nil)
 
 			// store bmarks using API
-			err = p.deleteBookmark(tt.userID, b2.PostID)
+			_, err = p.deleteBookmark(tt.userID, b2.PostID)
 			if tt.wantErr {
 				assert.Equal(t, err.Error(), tt.wantErrMsg)
 				return

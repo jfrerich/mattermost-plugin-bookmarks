@@ -211,12 +211,16 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 
 	bookmarkID := p.getPostIDFromLink(subCommand[2])
 
-	err := p.deleteBookmark(args.UserId, bookmarkID)
+	bmark, err := p.deleteBookmark(args.UserId, bookmarkID)
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
 
-	return p.responsef(args, fmt.Sprintf("Removed bookmark ID: %s", bookmarkID))
+	text, appErr := p.getBmarkTextOneLine(bmark, args.TeamId)
+	if appErr != nil {
+		return p.responsef(args, "Unable to get bookmarks list bookmark")
+	}
+	return p.responsef(args, fmt.Sprintf("Removed bookmark: %s", text))
 }
 
 // getTitleFromPost returns a title generated from a Post.Message

@@ -182,7 +182,7 @@ func TestExecuteCommandView(t *testing.T) {
 		"REMOVE User successfully deletes 1 bookmark": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v", PostIDExists)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Removed bookmark ID: %v", PostIDExists)),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Removed bookmark: [:link:](https://myhost.com//pl/ID2) Title2 - ")),
 			expectedContains:  nil,
 		},
 	}

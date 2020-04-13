@@ -68,7 +68,8 @@ func (p *Plugin) addBookmark(userID string, bmark *Bookmark) (*Bookmarks, error)
 	}
 
 	// bookmark already exists, update ModifiedAt and save
-	if bmarks.exists(bmark.PostID) {
+	_, ok := bmarks.exists(bmark.PostID)
+	if ok {
 		bmarks.updateTimes(bmark.PostID)
 		if err = p.storeBookmarks(userID, bmarks); err != nil {
 			return nil, errors.New(err.Error())
@@ -109,24 +110,28 @@ func (p *Plugin) getBookmarks(userID string) (*Bookmarks, error) {
 }
 
 // deleteBookmark deletes a bookmark from the store
-func (p *Plugin) deleteBookmark(userID, bmarkID string) error {
+func (p *Plugin) deleteBookmark(userID, bmarkID string) (*Bookmark, error) {
 	bmarks, err := p.getBookmarks(userID)
+	var bmark *Bookmark
 	if err != nil {
-		return errors.New(err.Error())
+		return bmark, errors.New(err.Error())
 	}
 
 	if bmarks == nil {
-		return errors.New(fmt.Sprintf("User doesn't have any bookmarks"))
+		return bmark, errors.New(fmt.Sprintf("User doesn't have any bookmarks"))
 	}
 
-	if !bmarks.exists(bmarkID) {
-		return errors.New(fmt.Sprintf("Bookmark `%v` does not exist", bmarkID))
+	_, ok := bmarks.exists(bmarkID)
+	if !ok {
+		return bmark, errors.New(fmt.Sprintf("Bookmark `%v` does not exist", bmarkID))
 	}
+
+	bmark = bmarks.get(bmarkID)
 
 	bmarks.delete(bmarkID)
 	p.storeBookmarks(userID, bmarks)
 
-	return nil
+	return bmark, nil
 }
 
 func getBookmarksKey(userID string) string {
