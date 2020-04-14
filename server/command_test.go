@@ -67,7 +67,7 @@ func getExecuteCommandTestBookmarks() *Bookmarks {
 	return bmarks
 }
 
-func TestExecuteCommandView(t *testing.T) {
+func TestExecuteCommand(t *testing.T) {
 	tests := map[string]struct {
 		commandArgs       *model.CommandArgs
 		bookmarks         *Bookmarks
@@ -184,6 +184,17 @@ func TestExecuteCommandView(t *testing.T) {
 			bookmarks:         getExecuteCommandTestBookmarks(),
 			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Removed bookmark: [:link:](https://myhost.com//pl/ID2) Title2 - ")),
 			expectedContains:  nil,
+		},
+		"REMOVE User successfully deletes 3 bookmark": {
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v,%v,%v", PostIDExists, b2ID, b3ID)},
+			bookmarks:         getExecuteCommandTestBookmarks(),
+			expectedMsgPrefix: "",
+			expectedContains: []string{
+				"Removed bookmarks:",
+				"[:link:](https://myhost.com//pl/ID2) Title2 - bookmarks initialized. Times created and same",
+				"[:link:](https://myhost.com//pl/ID2) Title2 - bookmarks initialized. Times created and same",
+				"[:link:](https://myhost.com//pl/ID3) Title3 - bookmarks already updated once",
+			},
 		},
 	}
 	for name, tt := range tests {

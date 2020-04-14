@@ -18,7 +18,8 @@ const (
 
 	addCommandText = `
 **/bookmarks add**
-* |/bookmarks add <post_id OR post_permalink>| - bookmark a post_id with optional labels. if labels omitted, |unlabeled| autoadded
+* |/bookmarks add <post_id> <bookmark_title>| - add a bookmark by specifying a post_id (with optional title)
+* |/bookmarks add <permalink> <bookmark_title>| - add a bookmark by specifying the post permalink (with optional title)
 `
 	labelCommandText = `
 **/bookmarks label**
@@ -28,11 +29,13 @@ const (
 `
 	viewCommandText = `
 **/bookmarks view**
-* |/bookmarks view| - view bookmarks
+* |/bookmarks view| - view all saved bookmarks
+* |/bookmarks view <post_id> OR <permalink>| - view detailed bookmark view
 `
 	removeCommandText = `
 **/bookmarks remove**
-* |/bookmarks remove <post_id>| - remove labels from bookmarked post_id. if labels omitted remove post_id from bookmarks
+* |/bookmarks remove <post_id>| - remove bookmarks by post_id, or permalink
+* |/bookmarks remove <post_id1>,<post_id2>| - remove multiple bookmarks by post_id, or permalink
 `
 	renameCommandText = `
 **/bookmarks rename**
@@ -209,18 +212,29 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 		return p.responsef(args, "Missing sub-command. You can try %v", getHelp(removeCommandText))
 	}
 
-	bookmarkID := p.getPostIDFromLink(subCommand[2])
+	bookmarkIDs := strings.Split(subCommand[2], ",")
 
-	bmark, err := p.deleteBookmark(args.UserId, bookmarkID)
-	if err != nil {
-		return p.responsef(args, err.Error())
+	text := "Removed bookmark: "
+	if len(bookmarkIDs) > 1 {
+		text = "Removed bookmarks: \n"
 	}
 
-	text, appErr := p.getBmarkTextOneLine(bmark, args.TeamId)
-	if appErr != nil {
-		return p.responsef(args, "Unable to get bookmarks list bookmark")
+	for _, id := range bookmarkIDs {
+		bookmarkID := p.getPostIDFromLink(id)
+
+		bmark, err := p.deleteBookmark(args.UserId, bookmarkID)
+		if err != nil {
+			return p.responsef(args, err.Error())
+		}
+
+		newText, appErr := p.getBmarkTextOneLine(bmark, args.TeamId)
+		if appErr != nil {
+			return p.responsef(args, "Unable to get bookmarks list bookmark")
+		}
+		text = text + newText
 	}
-	return p.responsef(args, fmt.Sprintf("Removed bookmark: %s", text))
+
+	return p.responsef(args, fmt.Sprintf(text))
 }
 
 // getTitleFromPost returns a title generated from a Post.Message
