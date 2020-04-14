@@ -36,23 +36,23 @@ func getExecuteCommandTestBookmarks() *Bookmarks {
 	bmarks := NewBookmarks()
 
 	b1 := &Bookmark{
-		PostID: b1ID,
-		Title:  b1Title,
+		PostID:     b1ID,
+		Title:      b1Title,
+		LabelNames: []string{"label1", "label2"},
 	}
 	b2 := &Bookmark{
 		PostID:     b2ID,
 		Title:      b2Title,
 		CreateAt:   model.GetMillis(),
 		ModifiedAt: model.GetMillis(),
+		LabelNames: []string{"label1", "label2"},
 	}
-
 	b3 := &Bookmark{
 		PostID:     b3ID,
 		Title:      b3Title,
 		CreateAt:   model.GetMillis(),
 		ModifiedAt: model.GetMillis(),
 	}
-
 	b4 := &Bookmark{
 		PostID:     b4ID,
 		CreateAt:   model.GetMillis(),
@@ -63,6 +63,12 @@ func getExecuteCommandTestBookmarks() *Bookmarks {
 	bmarks.add(b2)
 	bmarks.add(b3)
 	bmarks.add(b4)
+
+	l1 := &Label{
+		Name: "label1",
+	}
+
+	bmarks.Labels.add(l1)
 
 	return bmarks
 }
@@ -98,68 +104,6 @@ func TestExecuteCommand(t *testing.T) {
 			expectedContains:  []string{"bookmarks add", "bookmarks view", "bookmarks remove"},
 		},
 
-		// ADD Slash Commmand
-		"ADD User doesn't provide an ID": {
-			commandArgs:       &model.CommandArgs{Command: "/bookmarks add"},
-			bookmarks:         nil,
-			expectedMsgPrefix: strings.TrimSpace("Missing "),
-			expectedContains:  []string{"Missing sub-command", "bookmarks add"},
-		},
-		"ADD PostID doesn't exist": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v", PostIDDoesNotExist)},
-			bookmarks:         nil,
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("PostID `%v` is not a valid postID", PostIDDoesNotExist)),
-			expectedContains:  nil,
-		},
-		"ADD Boommark added  no title provided": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v", b1ID)},
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID1) `TitleFromPost` this is the post.Message")),
-			expectedContains:  nil,
-		},
-		"ADD Boommark added  title provided": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v", PostIDExists, "MessageProvidedByUser")},
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID2) MessageProvidedByUser")),
-			expectedContains:  nil,
-		},
-
-		// VIEW Slash Command
-		"VIEW User has no bookmarks": {
-			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
-			bookmarks:         nil,
-			expectedMsgPrefix: strings.TrimSpace("You do not have any saved bookmarks"),
-			expectedContains:  nil,
-		},
-		"VIEW User requests to view bookmark by ID that has a title defined": {
-			commandArgs:       &model.CommandArgs{Command: "/bookmarks view ID2"},
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: "",
-			expectedContains: []string{
-				"#### Bookmark Title [:link:](https://myhost.com//pl/ID2)",
-				"**Title2 - bookmarks initialized. Times created and same**",
-				"##### Post Message",
-				"this is the post.Message",
-			},
-		},
-		"VIEW User has 3 bookmarks  All with titles provided": {
-			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace("#### Bookmarks List"),
-			expectedContains:  []string{"Bookmarks List", "ID1", "ID2", "ID3"},
-		},
-		"VIEW User has 4 bookmarks  All with titles  One without": {
-			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace("#### Bookmarks List"),
-			expectedContains: []string{
-				"Bookmarks List",
-				"[:link:](https://myhost.com//pl/ID1) Title1 - New Bookmark - times are zero",
-				"[:link:](https://myhost.com//pl/ID2) Title2 - bookmarks initialized. Times created and same",
-				"[:link:](https://myhost.com//pl/ID3) Title3 - bookmarks already updated once",
-				"[:link:](https://myhost.com//pl/ID4) `TitleFromPost`"},
-		},
-
 		// REMOVE Slash Command
 		"REMOVE User doesn't provide an ID": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks remove"},
@@ -182,7 +126,7 @@ func TestExecuteCommand(t *testing.T) {
 		"REMOVE User successfully deletes 1 bookmark": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v", PostIDExists)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Removed bookmark: [:link:](https://myhost.com//pl/ID2) Title2 - ")),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Removed bookmark: [:link:](https://myhost.com//pl/ID2) `label1` `label2` Title2 - ")),
 			expectedContains:  nil,
 		},
 		"REMOVE User successfully deletes 3 bookmark": {
@@ -191,8 +135,8 @@ func TestExecuteCommand(t *testing.T) {
 			expectedMsgPrefix: "",
 			expectedContains: []string{
 				"Removed bookmarks:",
-				"[:link:](https://myhost.com//pl/ID2) Title2 - bookmarks initialized. Times created and same",
-				"[:link:](https://myhost.com//pl/ID2) Title2 - bookmarks initialized. Times created and same",
+				"[:link:](https://myhost.com//pl/ID2) `label1` `label2` Title2 - bookmarks initialized. Times created and same",
+				"[:link:](https://myhost.com//pl/ID2) `label1` `label2` Title2 - bookmarks initialized. Times created and same",
 				"[:link:](https://myhost.com//pl/ID3) Title3 - bookmarks already updated once",
 			},
 		},
