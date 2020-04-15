@@ -19,34 +19,34 @@ workflows:
           filters:
             tags:
               only: /^v.*/
-      - plugin-ci/deploy-ci:
-          filters:
-            branches:
-              only: master
-          context: plugin-ci
-          requires:
-            - plugin-ci/lint
-            - plugin-ci/coverage
-            - plugin-ci/build
-      - plugin-ci/deploy-release:
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-          context: plugin-ci
-          requires:
-            - plugin-ci/lint
-            - plugin-ci/coverage
-            - plugin-ci/build
-      - plugin-ci/deploy-release-github:
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
-          context: matterbuild-github-token
-          requires:
-            - plugin-ci/lint
-            - plugin-ci/coverage
-            - plugin-ci/build
+      # - plugin-ci/deploy-ci:
+      #     filters:
+      #       branches:
+      #         only: master
+      #     context: plugin-ci
+      #     requires:
+      #       - plugin-ci/lint
+      #       - plugin-ci/coverage
+      #       - plugin-ci/build
+      # - plugin-ci/deploy-release:
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #       branches:
+      #         ignore: /.*/
+      #     context: plugin-ci
+      #     requires:
+      #       - plugin-ci/lint
+      #       - plugin-ci/coverage
+      #       - plugin-ci/build
+      # - plugin-ci/deploy-release-github:
+      #     filters:
+      #       tags:
+      #         only: /^v.*/
+      #       branches:
+      #         ignore: /.*/
+      #     context: matterbuild-github-token
+      #     requires:
+      #       - plugin-ci/lint
+      #       - plugin-ci/coverage
+      #       - plugin-ci/build
