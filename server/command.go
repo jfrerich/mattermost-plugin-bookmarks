@@ -18,14 +18,14 @@ const (
 
 	addCommandText = `
 **/bookmarks add**
-* |/bookmarks add <post_id> <bookmark_title>| - add a bookmark by specifying a post_id (with optional title)
-* |/bookmarks add <permalink> <bookmark_title>| - add a bookmark by specifying the post permalink (with optional title)
+* |/bookmarks add <post_id> <bookmark_title> --labels <label1,label2>| - add a bookmark by specifying a post_id (with optional title)
+* |/bookmarks add <permalink> <bookmark_title> --labels <label1,label2>| - add a bookmark by specifying the post permalink (with optional title)
 `
 	labelCommandText = `
 **/bookmarks label**
-* |/bookmarks label <post_id> --lables <labels>| - add labels (comma-separated) to a bookmark
+* |/bookmarks label <post_id> --labels <labels>| - add labels (comma-separated) to a bookmark
 * |/bookmarks label add <labels> | - create a new label
-* |/bookmarks label list | - list all labels (include number of bookmarks per label)
+* |/bookmarks label view | - list all labels
 `
 	viewCommandText = `
 **/bookmarks view**

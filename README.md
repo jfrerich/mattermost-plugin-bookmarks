@@ -20,12 +20,14 @@ Addiitionally, the plugin adds slash commands which provide methods to add, view
 ##### Add a bookmark
 
 ```
-/bookmarks add <permalink> <bookmark_title>
-/bookmarks add <post_id> <bookmark_title>
+/bookmarks add <permalink> <bookmark_title> --labels <label1>,<label2>
+/bookmarks add <post_id> <bookmark_title> --labels <label1>,<label2>
     - bookmark a post by providing a post_id or the post permalink
-    - optionally, provide a bookmark_title
+    - Optional: <bookmark_title>
         - if user no title is provided, the title will be the first 30 characters
           of the post message
+    - Optional: --labels
+        - labels must first be created with /bookmarks label command
 ```
 
 ##### View a bookmark
@@ -47,6 +49,18 @@ Addiitionally, the plugin adds slash commands which provide methods to add, view
     - remove a bookmark from your saved bookmarks
 ```
 
+##### Create a label for your bookmarks
+
+```
+/bookmarks label add label1 label2 label3
+```
+
+##### View all bookmark labels
+
+```
+/bookmarks label view
+```
+
 ### ScreenShots
 
 ##### Add a bookmark
@@ -54,11 +68,17 @@ Addiitionally, the plugin adds slash commands which provide methods to add, view
 `/bookmarks add http://localhost:8065/demoteam/pl/5p4xi5hqmjddzfgggtqafk4iga ThisPostHasEmojisAndCodeBlock`
 ![bookmarks add post](./assets/commandAddPost.png)
 
+###### Add a bookmark with labels
+
+`/bookmarks add http://localhost:8065/demoteam/pl/1frnfjxiubrzie68wozecxorxo --labels Label1,OtherLabel2`
+![bookmarks add post with labels](./assets/commandAddPostWithLabels.png)
+
 ##### View a bookmark
 
 `/bookmarks view`
 
 ![bookmarks view](./assets/commandView.png)
+![bookmarks view 2](./assets/commandView2.png)
 
 `/bookmarks view http://localhost:8065/demoteam/pl/75ga1c6pm7n48en8sshn9bgjhy`
 
