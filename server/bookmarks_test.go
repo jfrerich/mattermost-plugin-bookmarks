@@ -49,9 +49,9 @@ func TestAddBookmark(t *testing.T) {
 	// create some test bookmarks
 	b1 := &Bookmark{PostID: "ID1", Title: "Title1"}
 	b2 := &Bookmark{
-		PostID:   "ID2",
-		Title:    "Title2",
-		LabelIDs: []string{"label1", "label2"},
+		PostID:     "ID2",
+		Title:      "Title2",
+		LabelNames: []string{"label1", "label2"},
 	}
 	b3 := &Bookmark{PostID: "ID3", Title: "Title3"}
 
@@ -115,9 +115,9 @@ func TestDeleteBookmark(t *testing.T) {
 	// create some test bookmarks
 	b1 := &Bookmark{PostID: "ID1", Title: "Title1"}
 	b2 := &Bookmark{
-		PostID:   "ID2",
-		Title:    "Title2",
-		LabelIDs: []string{"label1", "label2"},
+		PostID:     "ID2",
+		Title:      "Title2",
+		LabelNames: []string{"label1", "label2"},
 	}
 
 	// User 1 has no bookmarks

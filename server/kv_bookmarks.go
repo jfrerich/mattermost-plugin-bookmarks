@@ -6,7 +6,8 @@ import (
 
 // Bookmarks contains a map of bookmarks
 type Bookmarks struct {
-	ByID map[string]*Bookmark
+	ByID   map[string]*Bookmark
+	Labels *Labels
 }
 
 // Bookmark contains information about an individual bookmark
@@ -15,19 +16,15 @@ type Bookmark struct {
 	Title      string   `json:"title"`            // Title given to the bookmark
 	CreateAt   int64    `json:"createAt"`         // The original creation time of the bookmark
 	ModifiedAt int64    `json:"modifiedAt"`       // The original creation time of the bookmark
-	LabelIDs   []string `json:"labels:omitempty"` // Array of labels added to the bookmark
-}
-
-// Label defines the parameters of a label
-type Label struct {
-	Name  string `json:"name"`
-	Color string `json:"color"`
+	LabelNames []string `json:"labels:omitempty"` // Array of labels added to the bookmark
 }
 
 // NewBookmarks returns an initialized Bookmarks struct
 func NewBookmarks() *Bookmarks {
 	bmarks := new(Bookmarks)
 	bmarks.ByID = make(map[string]*Bookmark)
+	bmarks.Labels = new(Labels)
+	bmarks.Labels.ByName = make(map[string]*Label)
 	return bmarks
 }
 
@@ -65,4 +62,33 @@ func (b *Bookmark) hasUserTitle(bmark *Bookmark) bool {
 		return true
 	}
 	return false
+}
+
+func (b *Bookmark) hasLabels(bmark *Bookmark) bool {
+	if bmark.LabelNames != nil {
+		return true
+	}
+	return false
+}
+
+func (b *Bookmarks) labelExists(labelName string) (*Label, bool) {
+	if label, ok := b.Labels.ByName[labelName]; ok {
+		return label, true
+	}
+	return nil, false
+}
+
+func (b *Bookmarks) getLabel(labelName string) (*Label, bool) {
+	if label, ok := b.Labels.ByName[labelName]; ok {
+		return label, true
+	}
+	return nil, false
+}
+
+func (b *Bookmarks) addLabel(label *Label) {
+	b.Labels.ByName[label.Name] = label
+}
+
+func (b *Bookmarks) deleteLabel(labelName string) {
+	delete(b.Labels.ByName, labelName)
 }

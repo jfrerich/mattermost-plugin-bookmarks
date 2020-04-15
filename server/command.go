@@ -18,14 +18,14 @@ const (
 
 	addCommandText = `
 **/bookmarks add**
-* |/bookmarks add <post_id> <bookmark_title>| - add a bookmark by specifying a post_id (with optional title)
-* |/bookmarks add <permalink> <bookmark_title>| - add a bookmark by specifying the post permalink (with optional title)
+* |/bookmarks add <post_id> <bookmark_title> --labels <label1,label2>| - add a bookmark by specifying a post_id (with optional title)
+* |/bookmarks add <permalink> <bookmark_title> --labels <label1,label2>| - add a bookmark by specifying the post permalink (with optional title)
 `
 	labelCommandText = `
 **/bookmarks label**
-* |/bookmarks label <post_id> <labels>| - add labels to a bookmark; if labels omitted, |unlabeled| autoadded
+* |/bookmarks label <post_id> --labels <labels>| - add labels (comma-separated) to a bookmark
 * |/bookmarks label add <labels> | - create a new label
-* |/bookmarks label list | - list all labels (include number of bookmarks per label)
+* |/bookmarks label view | - list all labels
 `
 	viewCommandText = `
 **/bookmarks view**
@@ -43,7 +43,7 @@ const (
 `
 	helpCommandText = `###### Bookmarks Slash Command Help` +
 		addCommandText +
-		// labelCommandText +
+		labelCommandText +
 		viewCommandText +
 		removeCommandText
 	// renameCommandText
@@ -116,6 +116,8 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	switch action {
 	case "add":
 		return p.executeCommandAdd(args), nil
+	case "label":
+		return p.executeCommandLabel(args), nil
 	case "remove":
 		return p.executeCommandRemove(args), nil
 	case "view":
@@ -126,82 +128,6 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	default:
 		return p.responsef(args, fmt.Sprintf("Unknown command: "+args.Command)), nil
 	}
-}
-
-// executeCommandAdd adds a bookmark to the store
-func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandResponse {
-	subCommand := strings.Fields(args.Command)
-	subCommand = subCommand[2:]
-
-	if len(subCommand) < 1 {
-		return p.responsef(args, "Missing sub-command. You can try %v", getHelp(addCommandText))
-	}
-	postID := p.getPostIDFromLink(subCommand[0])
-
-	// verify postID exists
-	_, appErr := p.API.GetPost(postID)
-	if appErr != nil {
-		return p.responsef(args, "PostID `%s` is not a valid postID", postID)
-	}
-
-	var bookmark Bookmark
-	bookmark.PostID = postID
-
-	// Only save title if user provides one.
-	if len(subCommand) >= 2 {
-		bookmark.Title = subCommand[1]
-	}
-
-	p.addBookmark(args.UserId, &bookmark)
-
-	text, appErr := p.getBmarkTextOneLine(&bookmark, args.TeamId)
-	if appErr != nil {
-		return p.responsef(args, "Unable to get bookmarks list bookmark")
-	}
-
-	return p.responsef(args, "Added bookmark: %s", text)
-}
-
-// executeCommandView shows all bookmarks in an ephemeral post
-func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandResponse {
-
-	subCommand := strings.Fields(args.Command)
-
-	// user requests to view an indiviual bookmark
-	if len(subCommand) == 3 {
-		postID := subCommand[2]
-		postID = p.getPostIDFromLink(postID)
-		bmark, err := p.getBookmark(args.UserId, postID)
-		if err != nil {
-			return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
-		}
-
-		text, appErr := p.getBmarkTextDetailed(bmark, args.TeamId)
-		if appErr != nil {
-			return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
-		}
-		return p.responsef(args, text)
-	}
-
-	bookmarks, err := p.getBookmarks(args.UserId)
-	if err != nil {
-		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
-	}
-
-	if bookmarks == nil {
-		return p.responsef(args, "You do not have any saved bookmarks")
-	}
-
-	text := "#### Bookmarks List\n"
-	for _, bmark := range bookmarks.ByID {
-		nextText, appErr := p.getBmarkTextOneLine(bmark, args.TeamId)
-		if appErr != nil {
-			return p.responsef(args, "Unable to get bookmarks list bookmark")
-		}
-		text = text + nextText
-	}
-
-	return p.responsef(args, text)
 }
 
 // executeCommandRemove removes a given bookmark from the store
@@ -227,7 +153,7 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 			return p.responsef(args, err.Error())
 		}
 
-		newText, appErr := p.getBmarkTextOneLine(bmark, args.TeamId)
+		newText, appErr := p.getBmarkTextOneLine(bmark, args)
 		if appErr != nil {
 			return p.responsef(args, "Unable to get bookmarks list bookmark")
 		}
@@ -251,11 +177,18 @@ func (p *Plugin) getTitleFromPost(bmark *Bookmark) (string, *model.AppError) {
 	return title, nil
 }
 
-func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, teamID string) (string, *model.AppError) {
-	team, appErr := p.API.GetTeam(teamID)
+func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, args *model.CommandArgs) (string, *model.AppError) {
+	team, appErr := p.API.GetTeam(args.TeamId)
 	if appErr != nil {
 		return "", appErr
 	}
+
+	labelNames, _ := p.getLabelsForBookmark(args.UserId, bmark.PostID)
+	// TODO: reconcile error types
+	// if appErr != nil {
+	// 	return "", appErr
+	// }
+	codeBlockedNames := p.getPrintableLabels(labelNames)
 
 	titleFromPostLabel := ""
 	title := bmark.Title
@@ -267,12 +200,20 @@ func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, teamID string) (string, *m
 		}
 	}
 
-	text := fmt.Sprintf("%s %s%s\n", p.getIconLink(bmark, team), titleFromPostLabel, title)
+	text := fmt.Sprintf("%s%s %s%s\n", p.getIconLink(bmark, team), codeBlockedNames, titleFromPostLabel, title)
 	return text, nil
 }
 
-func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, teamID string) (string, *model.AppError) {
-	team, appErr := p.API.GetTeam(teamID)
+func (p *Plugin) getPrintableLabels(names []string) string {
+	labels := ""
+	for _, name := range names {
+		labels = labels + fmt.Sprintf(" `%s`", name)
+	}
+	return labels
+}
+
+func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, args *model.CommandArgs) (string, *model.AppError) {
+	team, appErr := p.API.GetTeam(args.TeamId)
 	if appErr != nil {
 		return "", appErr
 	}
@@ -286,6 +227,12 @@ func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, teamID string) (string, *
 		title = bmark.Title
 	}
 
+	labelNames, _ := p.getLabelsForBookmark(args.UserId, bmark.PostID)
+	// TODO: reconcile error types
+	// if appErr != nil {
+	// 	return "", appErr
+	// }
+	codeBlockedNames := p.getPrintableLabels(labelNames)
 	post, appErr := p.API.GetPost(bmark.PostID)
 	if appErr != nil {
 		return "", appErr
@@ -294,7 +241,7 @@ func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, teamID string) (string, *
 	iconLink := p.getIconLink(bmark, team)
 
 	// team := post.
-	text := fmt.Sprintf("#### Bookmark Title %s\n", iconLink)
+	text := fmt.Sprintf("%s\n#### Bookmark Title %s\n", codeBlockedNames, iconLink)
 	text = text + fmt.Sprintf("**%s**\n", title)
 	text = text + "##### Post Message \n"
 	text = text + post.Message
