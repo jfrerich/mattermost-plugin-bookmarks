@@ -44,6 +44,24 @@ func TestExecuteCommandAdd(t *testing.T) {
 			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID2) `label1` `label2` TitleProvidedByUser")),
 			expectedContains:  nil,
 		},
+		"Bookmark added  title provided with spaces": {
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v", PostIDExists, "Title Provided By User")},
+			bookmarks:         getExecuteCommandTestBookmarks(),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID2) `label1` `label2` Title Provided By User")),
+			expectedContains:  nil,
+		},
+		"Bookmark added  title provided with spaces and labels": {
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v --labels %v", PostIDExists, "Title Provided By User", "label1,label2")},
+			bookmarks:         getExecuteCommandTestBookmarks(),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID2) `label1` `label2` Title Provided By User")),
+			expectedContains:  nil,
+		},
+		"no flag optionBookmark added  title provided with spaces and labels": {
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v --labels %v", PostIDExists, "Title Provided By User", "label1,label2")},
+			bookmarks:         getExecuteCommandTestBookmarks(),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID2) `label1` `label2` Title Provided By User")),
+			expectedContains:  nil,
+		},
 		"Bookmark added  title provided with labels": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v --labels label1,label2", PostIDExists, "TitleProvidedByUser")},
 			bookmarks:         getExecuteCommandTestBookmarks(),
