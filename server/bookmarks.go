@@ -36,6 +36,15 @@ func (p *Plugin) getBookmark(userID, bmarkID string) (*Bookmark, error) {
 		return nil, err
 	}
 
+	_, ok := bmarks.exists(bmarkID)
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("Bookmark `%v` does not exist", bmarkID))
+	}
+
+	if bmarks == nil {
+		return nil, nil
+	}
+
 	for _, bmark := range bmarks.ByID {
 		if bmark.PostID == bmarkID {
 			return bmark, nil
@@ -162,6 +171,17 @@ func (p *Plugin) deleteBookmark(userID, bmarkID string) (*Bookmark, error) {
 	p.storeBookmarks(userID, bmarks)
 
 	return bmark, nil
+}
+
+// getLabelsForBookmark returns an array of label names for a given bookmark
+func (p *Plugin) getLabelsForBookmark(userID string, bmarkID string) ([]string, error) {
+
+	bmark, err := p.getBookmark(userID, bmarkID)
+	if err != nil {
+		return nil, err
+	}
+
+	return bmark.LabelNames, nil
 }
 
 func getBookmarksKey(userID string) string {

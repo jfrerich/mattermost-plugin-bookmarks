@@ -15,25 +15,31 @@ Addiitionally, the plugin adds slash commands which provide methods to add, view
 
 ## Slash Commands
 
-### Currently Implemented
+### Add a bookmark
 
-##### Add a bookmark
+Bookmark a post by providing a `post_id` or the post `permalink`. You can also
+provide a bookmark title and labels for a bookmark
 
 ```
 /bookmarks add <permalink> <bookmark_title> --labels <label1>,<label2>
 /bookmarks add <post_id> <bookmark_title> --labels <label1>,<label2>
-    - bookmark a post by providing a post_id or the post permalink
     - Optional: <bookmark_title>
         - if user no title is provided, the title will be the first 30 characters
           of the post message
     - Optional: --labels
         - labels must first be created with /bookmarks label command
+        - accepts a comma-separated list of labels
+        - currently does not support spaces in the label name
 ```
 
-##### View a bookmark
+### View a bookmark
 
-The default order of the bookmarks matches the order of the `Post.CreateAt` times.
+When viewing all bookmarks, the default order of the bookmarks matches the order of the `Post.CreateAt` times.
+
+When viewing an individual bookmark, an ephemeral message will be posted that shows all bookmark information including labels, title, and the actualy post message
+
 Additional filters and sorting methods are planned for the future
+
 ```
 /bookmarks view
     - view all saved bookmark titles
@@ -43,21 +49,22 @@ Additional filters and sorting methods are planned for the future
     - Bookmarks Bot will post an ephemeral message of the post message
 ```
 
-##### Remove a bookmark
+### Remove a bookmark
+
+Remove a bookmark from your saved bookmarks.  
 
 ```
-/bookmarks remove <permalink>
+/bookmarks remove <permalinks>
 /bookmarks remove <post_id>
-    - remove a bookmark from your saved bookmarks
 ```
 
-##### Create a label for your bookmarks
+### Create a label for your bookmarks
 
 ```
 /bookmarks label add label1 label2 label3
 ```
 
-##### View all bookmark labels
+### View all bookmark labels
 
 ```
 /bookmarks label view

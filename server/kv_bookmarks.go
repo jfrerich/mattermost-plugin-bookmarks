@@ -6,8 +6,8 @@ import (
 
 // Bookmarks contains a map of bookmarks
 type Bookmarks struct {
-	ByID   map[string]*Bookmark
-	Labels *Labels
+	ByID map[string]*Bookmark
+	// Labels *Labels
 }
 
 // Bookmark contains information about an individual bookmark
@@ -23,8 +23,6 @@ type Bookmark struct {
 func NewBookmarks() *Bookmarks {
 	bmarks := new(Bookmarks)
 	bmarks.ByID = make(map[string]*Bookmark)
-	bmarks.Labels = new(Labels)
-	bmarks.Labels.ByName = make(map[string]*Label)
 	return bmarks
 }
 
@@ -69,26 +67,4 @@ func (b *Bookmark) hasLabels(bmark *Bookmark) bool {
 		return true
 	}
 	return false
-}
-
-func (b *Bookmarks) labelExists(labelName string) (*Label, bool) {
-	if label, ok := b.Labels.ByName[labelName]; ok {
-		return label, true
-	}
-	return nil, false
-}
-
-func (b *Bookmarks) getLabel(labelName string) (*Label, bool) {
-	if label, ok := b.Labels.ByName[labelName]; ok {
-		return label, true
-	}
-	return nil, false
-}
-
-func (b *Bookmarks) addLabel(label *Label) {
-	b.Labels.ByName[label.Name] = label
-}
-
-func (b *Bookmarks) deleteLabel(labelName string) {
-	delete(b.Labels.ByName, labelName)
 }

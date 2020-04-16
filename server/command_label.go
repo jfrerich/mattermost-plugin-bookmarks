@@ -47,9 +47,9 @@ func (p *Plugin) executeCommandLabelAdd(args *model.CommandArgs) *model.CommandR
 	}
 	text = text + strings.Join(names, "\n")
 
-	_, err := p.addLabelsToBookmarks(args.UserId, names)
+	_, err := p.addLabels(args.UserId, names)
 	if err != nil {
-		return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
+		return p.responsef(args, "Unable to add labels for user %s", args.UserId)
 	}
 
 	return p.responsef(args, fmt.Sprintf(text))
@@ -66,6 +66,9 @@ func (p *Plugin) executeCommandLabelView(args *model.CommandArgs) *model.Command
 	labels, err := p.getLabels(args.UserId)
 	if err != nil {
 		return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
+	}
+	if labels == nil {
+		return p.responsef(args, "You do not have any saved labels")
 	}
 
 	for _, label := range labels.ByName {
