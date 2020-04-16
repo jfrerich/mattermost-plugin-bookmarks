@@ -43,6 +43,12 @@ func TestExecuteCommandView(t *testing.T) {
 			expectedMsgPrefix: strings.TrimSpace("You do not have any saved bookmarks"),
 			expectedContains:  nil,
 		},
+		"User has no bookmarks2": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
+			bookmarks:         nil,
+			expectedMsgPrefix: strings.TrimSpace("You do not have any saved bookmarks"),
+			expectedContains:  nil,
+		},
 		"User requests to view bookmark by ID that has a title defined": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view ID2"},
 			bookmarks:         getExecuteCommandTestBookmarks(),

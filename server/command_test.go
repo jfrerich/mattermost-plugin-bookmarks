@@ -72,7 +72,8 @@ func getExecuteCommandTestBookmarks() *Bookmarks {
 		Name: "label1",
 	}
 
-	bmarks.Labels.add(l1)
+	labels := NewLabels()
+	labels.add(l1)
 
 	return bmarks
 }

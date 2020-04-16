@@ -12,16 +12,31 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func getExecuteCommandTestLabels() *Labels {
+	l1 := &Label{
+		Name: "label1",
+	}
+	l2 := &Label{
+		Name: "label2",
+	}
+
+	labels := NewLabels()
+	labels.add(l1)
+	labels.add(l2)
+
+	return labels
+}
+
 func TestExecuteCommandLabel(t *testing.T) {
 	tests := map[string]struct {
 		commandArgs       *model.CommandArgs
-		bookmarks         *Bookmarks
+		labels            *Labels
 		expectedMsgPrefix string
 		expectedContains  []string
 	}{
 		"User does not provide label sub-command": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label"},
-			bookmarks:         nil,
+			labels:            nil,
 			expectedMsgPrefix: strings.TrimSpace("Missing "),
 			expectedContains:  []string{"Missing label sub-command", "bookmarks label add"},
 		},
@@ -29,36 +44,36 @@ func TestExecuteCommandLabel(t *testing.T) {
 		// ADD
 		"ADD User does not provide label names": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label add"},
-			bookmarks:         nil,
+			labels:            nil,
 			expectedMsgPrefix: "",
 			// expectedContains:  []string{"Please specify a label name", getHelp(labelCommandText)},
 			expectedContains: []string{"Please specify a label name"},
 		},
-		"User adds first label": {
+		"ADD User adds first label": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label add label1"},
-			bookmarks:         getExecuteCommandTestBookmarks(),
+			labels:            getExecuteCommandTestLabels(),
 			expectedMsgPrefix: "",
 			expectedContains:  []string{"Added Label: label1"},
 		},
-		"User adds 2 labels": {
+		"ADD User adds 2 labels": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label add label1 label2"},
-			bookmarks:         getExecuteCommandTestBookmarks(),
+			labels:            getExecuteCommandTestLabels(),
 			expectedMsgPrefix: strings.TrimSpace("Added Labels:\n"),
 			expectedContains:  []string{"Added Labels:", "label1", "label2"},
 		},
-		// "PostID doesn't exist": {
-		// 	commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v", PostIDDoesNotExist)},
-		// 	bookmarks:         nil,
-		// 	expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("PostID `%v` is not a valid postID", PostIDDoesNotExist)),
-		// 	expectedContains:  nil,
-		// },
 
 		// VIEW
-		"VIEW": {
+		"VIEW User doesn't have any labels": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label view"},
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: "#### Labels List",
-			expectedContains:  []string{"#### Labels List", "label1"},
+			labels:            nil,
+			expectedMsgPrefix: "You do not have any saved labels",
+			expectedContains:  nil,
+		},
+		"VIEW User has 2 label": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks label view"},
+			labels:            getExecuteCommandTestLabels(),
+			expectedMsgPrefix: "",
+			expectedContains:  []string{"#### Labels List", "label1", "label2"},
 		},
 	}
 	for name, tt := range tests {
@@ -68,8 +83,8 @@ func TestExecuteCommandLabel(t *testing.T) {
 		api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
 		api.On("exists", mock.Anything).Return(true)
 
-		jsonBmarks, err := json.Marshal(tt.bookmarks)
-		api.On("KVGet", getBookmarksKey(tt.commandArgs.UserId)).Return(jsonBmarks, nil)
+		jsonBmarks, err := json.Marshal(tt.labels)
+		api.On("KVGet", getLabelsKey(tt.commandArgs.UserId)).Return(jsonBmarks, nil)
 		api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 
 		t.Run(name, func(t *testing.T) {

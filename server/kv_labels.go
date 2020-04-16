@@ -11,6 +11,13 @@ type Label struct {
 	Color string `json:"color"`
 }
 
+// NewLabels returns an initialized Labels struct
+func NewLabels() *Labels {
+	labels := new(Labels)
+	labels.ByName = make(map[string]*Label)
+	return labels
+}
+
 func (l *Labels) add(label *Label) {
 	l.ByName[label.Name] = label
 }
@@ -29,3 +36,25 @@ func (l *Labels) exists(ID string) (*Label, bool) {
 	}
 	return nil, false
 }
+
+// func (l *Labels) labelExists(labelName string) (*Label, bool) {
+// 	if label, ok := l.ByName[labelName]; ok {
+// 		return label, true
+// 	}
+// 	return nil, false
+// }
+//
+// func (l *Labels) getLabel(labelName string) (*Label, bool) {
+// 	if label, ok := l.ByName[labelName]; ok {
+// 		return label, true
+// 	}
+// 	return nil, false
+// }
+//
+// func (l *Labels) addLabel(label *Label) {
+// 	l.ByName[label.Name] = label
+// }
+//
+// func (l *Labels) deleteLabel(labelName string) {
+// 	delete(l.ByName, labelName)
+// }
