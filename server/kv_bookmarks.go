@@ -7,7 +7,6 @@ import (
 // Bookmarks contains a map of bookmarks
 type Bookmarks struct {
 	ByID map[string]*Bookmark
-	// Labels *Labels
 }
 
 // Bookmark contains information about an individual bookmark
