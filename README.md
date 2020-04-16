@@ -51,11 +51,12 @@ Additional filters and sorting methods are planned for the future
 
 ### Remove a bookmark
 
-Remove a bookmark from your saved bookmarks.  
+Remove a bookmark(s) from your saved bookmarks. A space delimited list of permalinks or postIDs can be used to delete multiple bookmarks
 
 ```
 /bookmarks remove <permalinks>
 /bookmarks remove <post_id>
+/bookmarks remove <post_id> <post_id2>
 ```
 
 ### Create a label for your bookmarks

@@ -35,7 +35,7 @@ const (
 	removeCommandText = `
 **/bookmarks remove**
 * |/bookmarks remove <post_id>| - remove bookmarks by post_id, or permalink
-* |/bookmarks remove <post_id1>,<post_id2>| - remove multiple bookmarks by post_id, or permalink
+* |/bookmarks remove <post_id1> <post_id2>| - remove multiple bookmarks by post_id, or permalink
 `
 	renameCommandText = `
 **/bookmarks rename**

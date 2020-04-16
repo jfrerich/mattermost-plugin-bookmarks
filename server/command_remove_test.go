@@ -45,7 +45,7 @@ func TestExecuteCommandRemove(t *testing.T) {
 			expectedContains:  nil,
 		},
 		"User successfully deletes 3 bookmark": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v,%v,%v", PostIDExists, b2ID, b3ID)},
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v %v %v", PostIDExists, b2ID, b3ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
 			expectedMsgPrefix: "",
 			expectedContains: []string{
