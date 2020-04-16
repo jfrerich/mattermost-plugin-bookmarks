@@ -24,6 +24,11 @@ const (
 	b3ID = "ID3"
 	b4ID = "ID4"
 
+	p1ID = "ID1"
+	p2ID = "ID2"
+	p3ID = "ID3"
+	p4ID = "ID4"
+
 	b1Title = "Title1 - New Bookmark - times are zero"
 	b2Title = "Title2 - bookmarks initialized. Times created and same"
 	b3Title = "Title3 - bookmarks already updated once"
@@ -73,6 +78,24 @@ func getExecuteCommandTestBookmarks() *Bookmarks {
 }
 
 func TestExecuteCommand(t *testing.T) {
+
+	p1IDmodel := &model.Post{
+		Message:  "this is the post.Message",
+		CreateAt: model.GetMillis(),
+	}
+	p2IDmodel := &model.Post{
+		Message:  "this is the post.Message",
+		CreateAt: model.GetMillis() + 1,
+	}
+	p3IDmodel := &model.Post{
+		Message:  "this is the post.Message",
+		CreateAt: model.GetMillis() + 2,
+	}
+	p4IDmodel := &model.Post{
+		Message:  "this is the post.Message",
+		CreateAt: model.GetMillis() + 3,
+	}
+
 	tests := map[string]struct {
 		commandArgs       *model.CommandArgs
 		bookmarks         *Bookmarks
@@ -108,10 +131,10 @@ func TestExecuteCommand(t *testing.T) {
 		tt.commandArgs.UserId = UserID
 		siteURL := "https://myhost.com"
 		api.On("GetPost", PostIDDoesNotExist).Return(nil, &model.AppError{Message: "An Error Occurred"})
-		api.On("GetPost", b1ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
-		api.On("GetPost", b2ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
-		api.On("GetPost", b3ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
-		api.On("GetPost", b4ID).Return(&model.Post{Message: "this is the post.message"}, nil)
+		api.On("GetPost", b1ID).Return(p1IDmodel, nil)
+		api.On("GetPost", b2ID).Return(p2IDmodel, nil)
+		api.On("GetPost", b3ID).Return(p3IDmodel, nil)
+		api.On("GetPost", b4ID).Return(p4IDmodel, nil)
 		api.On("addBookmark", UserID, tt.bookmarks).Return(mock.Anything)
 		api.On("GetTeam", mock.Anything).Return(&model.Team{Id: teamID1}, nil)
 		api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
