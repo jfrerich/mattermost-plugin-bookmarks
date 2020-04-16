@@ -54,10 +54,10 @@ func (p *Plugin) addBookmark(userID string, bmark *Bookmark) (*Bookmarks, error)
 		return nil, errors.New(err.Error())
 	}
 
-	// // no marks, initialize the store first
-	// if bmarks == nil {
-	// 	bmarks = NewBookmarks()
-	// }
+	// no marks, initialize the store first
+	if bmarks == nil {
+		bmarks = NewBookmarks()
+	}
 
 	// user doesn't have any bookmarks add first bookmark and return
 	if len(bmarks.ByID) == 0 {
@@ -96,12 +96,12 @@ func (p *Plugin) getBookmarks(userID string) (*Bookmarks, error) {
 		return nil, appErr
 	}
 
-	// return initialized bookmarks
-	bmarks := NewBookmarks()
 	if bb == nil {
-		return bmarks, nil
+		return nil, nil
 	}
 
+	// return initialized bookmarks
+	bmarks := NewBookmarks()
 	jsonErr := json.Unmarshal(bb, &bmarks)
 	if jsonErr != nil {
 		return nil, jsonErr
