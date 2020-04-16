@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// StoreLabelsKey is the key used to store labels in the plugin KV store
 const StoreLabelsKey = "labels"
 
 // storeLabels stores all the users labels

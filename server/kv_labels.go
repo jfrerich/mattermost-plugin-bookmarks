@@ -11,6 +11,7 @@ type Label struct {
 	Color string `json:"color"`
 }
 
+// NewLabels returns an initialized Labels struct
 func NewLabels() *Labels {
 	labels := new(Labels)
 	labels.ByName = make(map[string]*Label)
