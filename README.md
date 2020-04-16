@@ -32,6 +32,8 @@ Addiitionally, the plugin adds slash commands which provide methods to add, view
 
 ##### View a bookmark
 
+The default order of the bookmarks matches the order of the `Post.CreateAt` times.
+Additional filters and sorting methods are planned for the future
 ```
 /bookmarks view
     - view all saved bookmark titles

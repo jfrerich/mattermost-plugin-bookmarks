@@ -110,6 +110,7 @@ func (p *Plugin) getBookmarks(userID string) (*Bookmarks, error) {
 	return bmarks, nil
 }
 
+// ByPostCreateAt returns an array of bookmarks sorted by post.CreateAt times
 func (p *Plugin) ByPostCreateAt(bmarks *Bookmarks) ([]*Bookmark, error) {
 	// build temp map
 	tempMap := make(map[int64]string)
