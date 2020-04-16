@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"github.com/pkg/errors"
 )
@@ -107,6 +108,34 @@ func (p *Plugin) getBookmarks(userID string) (*Bookmarks, error) {
 	}
 
 	return bmarks, nil
+}
+
+func (p *Plugin) ByPostCreateAt(bmarks *Bookmarks) ([]*Bookmark, error) {
+	// build temp map
+	tempMap := make(map[int64]string)
+	for _, bmark := range bmarks.ByID {
+		post, appErr := p.API.GetPost(bmark.PostID)
+		if appErr != nil {
+			return nil, appErr
+		}
+		tempMap[post.CreateAt] = bmark.PostID
+	}
+
+	// sort post.CreateAt (keys)
+	keys := make([]int, 0, len(tempMap))
+	for k := range tempMap {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+
+	// reconstruct the bookmarks in a sorted array
+	var bookmarks []*Bookmark
+	for _, k := range keys {
+		bmark := bmarks.ByID[tempMap[int64(k)]]
+		bookmarks = append(bookmarks, bmark)
+	}
+
+	return bookmarks, nil
 }
 
 // deleteBookmark deletes a bookmark from the store

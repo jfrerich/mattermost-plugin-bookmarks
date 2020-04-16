@@ -45,7 +45,12 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 	}
 
 	text := "#### Bookmarks List\n"
-	for _, bmark := range bookmarks.ByID {
+	bmarksSorted, appErr := p.ByPostCreateAt(bookmarks)
+	if appErr != nil {
+		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
+	}
+
+	for _, bmark := range bmarksSorted {
 		nextText, appErr := p.getBmarkTextOneLine(bmark, args)
 		if appErr != nil {
 			return p.responsef(args, "Unable to get bookmarks list bookmark")
