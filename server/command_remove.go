@@ -15,7 +15,7 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 		return p.responsef(args, "Missing sub-command. You can try %v", getHelp(removeCommandText))
 	}
 
-	bookmarkIDs := strings.Split(subCommand[2], ",")
+	bookmarkIDs := subCommand[2:]
 
 	text := "Removed bookmark: "
 	if len(bookmarkIDs) > 1 {
