@@ -7,7 +7,9 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const flagLabel = "labels"
+const (
+	flagLabel = "labels"
+)
 
 type addBookmarkOptions struct {
 	labels []string
@@ -58,10 +60,8 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 
 	// user provides a title
 	if len(subCommand) >= 2 {
-		// command is not a flag
-		if !strings.HasPrefix(subCommand[1], "--") {
-			bookmark.Title = subCommand[1]
-		}
+		title := p.constructValueFromArguments(subCommand[1:])
+		bookmark.Title = title
 	}
 
 	options, err := parseAddBookmarkArgs(subCommand)
@@ -81,4 +81,18 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 	}
 
 	return p.responsef(args, "Added bookmark: %s", text)
+}
+
+func (p *Plugin) constructValueFromArguments(args []string) string {
+	index := 0
+	for i, e := range args {
+		// user also provided a --flag
+		if e == "--" {
+			return strings.Join(args[:index-1], " ")
+		}
+		index = i
+	}
+
+	// user provided no flags after the ID, rejoin with spaces and return
+	return strings.Join(args, " ")
 }
