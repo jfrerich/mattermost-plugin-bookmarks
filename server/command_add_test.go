@@ -13,10 +13,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const addPrefixMsg = "Added bookmark: [:link:](https://myhost.com//pl/"
+
 func TestExecuteCommandAdd(t *testing.T) {
 	tests := map[string]struct {
 		commandArgs       *model.CommandArgs
 		bookmarks         *Bookmarks
+		labels            *Labels
 		expectedMsgPrefix string
 		expectedContains  []string
 	}{
@@ -35,38 +38,43 @@ func TestExecuteCommandAdd(t *testing.T) {
 		"Bookmark added  no title provided": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v", b1ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID1) `label1` `label2` `TitleFromPost` this is the post.Message")),
+			labels:            getExecuteCommandTestLabels(),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1) `TitleFromPost` this is the post.Message", addPrefixMsg)),
 			expectedContains:  nil,
 		},
 		"Bookmark added  title provided": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v", PostIDExists, "TitleProvidedByUser")},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID2) `label1` `label2` TitleProvidedByUser")),
-			expectedContains:  nil,
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID2)", addPrefixMsg)),
+			expectedContains:  []string{"TitleProvidedByUser"},
 		},
 		"Bookmark added  title provided with spaces": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v", PostIDExists, "Title Provided By User")},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID2) `label1` `label2` Title Provided By User")),
-			expectedContains:  nil,
+			labels:            getExecuteCommandTestLabels(),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID2)", addPrefixMsg)),
+			expectedContains:  []string{"Title Provided By User"},
 		},
 		"Bookmark added  title provided with spaces and labels": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v --labels %v", PostIDExists, "Title Provided By User", "label1,label2")},
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v --labels %v", PostIDExists, "Title Provided By User", "label1,label2,label8")},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID2) `label1` `label2` Title Provided By User")),
-			expectedContains:  nil,
+			labels:            getExecuteCommandTestLabels(),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID2)", addPrefixMsg)),
+			expectedContains:  []string{"label1", "label2", "label8", "Title Provided By User"},
 		},
 		"no flag optionBookmark added  title provided with spaces and labels": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v --labels %v", PostIDExists, "Title Provided By User", "label1,label2")},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID2) `label1` `label2` Title Provided By User")),
-			expectedContains:  nil,
+			labels:            getExecuteCommandTestLabels(),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID2) `label1` `label2` Title Provided By User", addPrefixMsg)),
+			expectedContains:  []string{"label1", "label2", "Title Provided By User"},
 		},
 		"Bookmark added  title provided with labels": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v --labels label1,label2", PostIDExists, "TitleProvidedByUser")},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID2) `label1` `label2` TitleProvidedByUser")),
-			expectedContains:  nil,
+			labels:            getExecuteCommandTestLabels(),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID2) ", addPrefixMsg)),
+			expectedContains:  []string{"label1", "label2", "TitleProvidedByUser"},
 		},
 		"Bookmark unknown flag provided": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --unknownflag", b1ID)},
@@ -83,14 +91,22 @@ func TestExecuteCommandAdd(t *testing.T) {
 		"Bookmark --labels provided with one label": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1", b1ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID1)")),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1", addPrefixMsg)),
 			expectedContains:  nil,
 		},
 		"Bookmark --labels provided with two labels": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1,label2", b1ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Added bookmark: [:link:](https://myhost.com//pl/ID1)")),
-			expectedContains:  nil,
+			labels:            getExecuteCommandTestLabels(),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1", addPrefixMsg)),
+			expectedContains:  []string{"label1", "label2"},
+		},
+		"Bookmark add 3 labels two exist one new": {
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1,label2,label8", b1ID)},
+			bookmarks:         getExecuteCommandTestBookmarks(),
+			labels:            getExecuteCommandTestLabels(),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1", addPrefixMsg)),
+			expectedContains:  []string{"label1", "label2", "label8"},
 		},
 	}
 	for name, tt := range tests {
@@ -111,6 +127,9 @@ func TestExecuteCommandAdd(t *testing.T) {
 		jsonBmarks, err := json.Marshal(tt.bookmarks)
 		api.On("KVGet", getBookmarksKey(tt.commandArgs.UserId)).Return(jsonBmarks, nil)
 		api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
+
+		jsonLabels, err := json.Marshal(tt.labels)
+		api.On("KVGet", getLabelsKey(tt.commandArgs.UserId)).Return(jsonLabels, nil)
 
 		t.Run(name, func(t *testing.T) {
 			assert.Nil(t, err)

@@ -19,10 +19,14 @@ func getExecuteCommandTestLabels() *Labels {
 	l2 := &Label{
 		Name: "label2",
 	}
+	l3 := &Label{
+		Name: "label8",
+	}
 
 	labels := NewLabels()
-	labels.add("UID1", l1)
-	labels.add("UID2", l2)
+	labels.add("UUID1", l1)
+	labels.add("UUID2", l2)
+	labels.add("UUID3", l3)
 
 	return labels
 }
@@ -30,6 +34,7 @@ func getExecuteCommandTestLabels() *Labels {
 func TestExecuteCommandLabel(t *testing.T) {
 	tests := map[string]struct {
 		commandArgs       *model.CommandArgs
+		bookmarks         *Bookmarks
 		labels            *Labels
 		expectedMsgPrefix string
 		expectedContains  []string
@@ -60,7 +65,7 @@ func TestExecuteCommandLabel(t *testing.T) {
 			expectedMsgPrefix: "",
 			expectedContains:  []string{"Label with name `label1` already exists"},
 		},
-		"ADD User adds one label successfuly with existing labels": {
+		"ADD User adds one label successfully with existing labels": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label add NewLabelName"},
 			labels:            getExecuteCommandTestLabels(),
 			expectedMsgPrefix: "",
@@ -76,6 +81,7 @@ func TestExecuteCommandLabel(t *testing.T) {
 		},
 		"REMOVE User tries to remove a label but has none": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove JunkLabel"},
+			bookmarks:         nil,
 			labels:            nil,
 			expectedMsgPrefix: "",
 			expectedContains:  []string{"User doesn't have any labels"},
@@ -86,11 +92,25 @@ func TestExecuteCommandLabel(t *testing.T) {
 			expectedMsgPrefix: "",
 			expectedContains:  []string{"Label with name `labeldoesnotexist` doesn't exist"},
 		},
-		"REMOVE User succesully removes a label that exists": {
+		"REMOVE User successfully removes a label that exists": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove label1"},
 			labels:            getExecuteCommandTestLabels(),
 			expectedMsgPrefix: "",
-			expectedContains:  []string{"Removed label: label1"},
+			expectedContains:  []string{"Removed label: `label1`"},
+		},
+		"REMOVE User tries to remove a label that exists in a bookmark": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove label1"},
+			labels:            getExecuteCommandTestLabels(),
+			bookmarks:         getExecuteCommandTestBookmarks(),
+			expectedMsgPrefix: "There are 2 bookmarks with the label: `label1`. Use the --force flag remove the label from the bookmarks.",
+			expectedContains:  nil,
+		},
+		"REMOVE User tries to remove a label that exists in a bookmark using the force flag": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove label1 --force"},
+			labels:            getExecuteCommandTestLabels(),
+			bookmarks:         getExecuteCommandTestBookmarks(),
+			expectedMsgPrefix: "Removed label: `label1`",
+			expectedContains:  nil,
 		},
 
 		// VIEW
@@ -113,6 +133,9 @@ func TestExecuteCommandLabel(t *testing.T) {
 		siteURL := "https://myhost.com"
 		api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
 		api.On("exists", mock.Anything).Return(true)
+
+		jsonBmarks, err := json.Marshal(tt.bookmarks)
+		api.On("KVGet", getBookmarksKey(tt.commandArgs.UserId)).Return(jsonBmarks, nil)
 
 		bb, err := json.Marshal(tt.labels)
 		api.On("KVGet", getLabelsKey(tt.commandArgs.UserId)).Return(bb, nil)

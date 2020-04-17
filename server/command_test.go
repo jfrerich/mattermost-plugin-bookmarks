@@ -19,15 +19,15 @@ const (
 	UserID             = "UserID"
 	teamID1            = "teamID1"
 
-	b1ID = "ID1"
-	b2ID = "ID2"
-	b3ID = "ID3"
-	b4ID = "ID4"
-
 	p1ID = "ID1"
 	p2ID = "ID2"
 	p3ID = "ID3"
 	p4ID = "ID4"
+
+	b1ID = p1ID
+	b2ID = p2ID
+	b3ID = p3ID
+	b4ID = p4ID
 
 	b1Title = "Title1 - New Bookmark - times are zero"
 	b2Title = "Title2 - bookmarks initialized. Times created and same"
@@ -40,16 +40,16 @@ func getExecuteCommandTestBookmarks() *Bookmarks {
 	bmarks := NewBookmarks()
 
 	b1 := &Bookmark{
-		PostID:     b1ID,
-		Title:      b1Title,
-		LabelNames: []string{"label1", "label2"},
+		PostID:   b1ID,
+		Title:    b1Title,
+		LabelIDs: []string{"UUID1", "UUID2"},
 	}
 	b2 := &Bookmark{
 		PostID:     b2ID,
 		Title:      b2Title,
 		CreateAt:   model.GetMillis(),
 		ModifiedAt: model.GetMillis(),
-		LabelNames: []string{"label1", "label2"},
+		LabelIDs:   []string{"UUID1", "UUID2"},
 	}
 	b3 := &Bookmark{
 		PostID:     b3ID,

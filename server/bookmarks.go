@@ -81,6 +81,8 @@ func (p *Plugin) addBookmark(userID string, bmark *Bookmark) (*Bookmarks, error)
 	_, ok := bmarks.exists(bmark.PostID)
 	if ok {
 		bmarks.updateTimes(bmark.PostID)
+		bmarks.updateLabels(bmark)
+
 		if err = p.storeBookmarks(userID, bmarks); err != nil {
 			return nil, errors.New(err.Error())
 		}
@@ -148,6 +150,36 @@ func (p *Plugin) ByPostCreateAt(bmarks *Bookmarks) ([]*Bookmark, error) {
 	return bookmarks, nil
 }
 
+// getBookmarksWithLabel return a Bookmarks with bookmarks that contains given
+// label specified by labelName
+func (p *Plugin) getBookmarksWithLabel(userID, labelName string) (*Bookmarks, error) {
+	bmarks, err := p.getBookmarks(userID)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	if bmarks == nil {
+		return nil, nil
+	}
+
+	bmarksWithLabel := NewBookmarks()
+
+	labelIDs, err := p.getLabelIDsFromNames(userID, []string{labelName})
+	labelID := labelIDs[0]
+
+	for _, bmark := range bmarks.ByID {
+		if bmark.hasLabels(bmark) {
+			for _, id := range bmark.LabelIDs {
+				if labelID == id {
+					bmarksWithLabel.add(bmark)
+				}
+			}
+		}
+	}
+
+	return bmarksWithLabel, nil
+}
+
 // deleteBookmark deletes a bookmark from the store
 func (p *Plugin) deleteBookmark(userID, bmarkID string) (*Bookmark, error) {
 	bmarks, err := p.getBookmarks(userID)
@@ -173,15 +205,26 @@ func (p *Plugin) deleteBookmark(userID, bmarkID string) (*Bookmark, error) {
 	return bmark, nil
 }
 
-// getLabelsForBookmark returns an array of label names for a given bookmark
-func (p *Plugin) getLabelsForBookmark(userID string, bmarkID string) ([]string, error) {
-
+// getBookmarkLabelIDs returns an array of label UUIDs for a given bookmark
+func (p *Plugin) getBookmarkLabelIDs(userID string, bmarkID string) ([]string, error) {
 	bmark, err := p.getBookmark(userID, bmarkID)
 	if err != nil {
 		return nil, err
 	}
 
-	return bmark.LabelNames, nil
+	return bmark.LabelIDs, nil
+}
+
+func (p *Plugin) getBookmarkLabelNames(userID string, bmark *Bookmark) ([]string, error) {
+	var labelNames []string
+	for _, id := range bmark.LabelIDs {
+		name, err := p.getLabelNameByID(userID, id)
+		if err != nil {
+			return nil, err
+		}
+		labelNames = append(labelNames, name)
+	}
+	return labelNames, nil
 }
 
 func getBookmarksKey(userID string) string {

@@ -69,8 +69,18 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 		return p.responsef(args, "Unable to parse options, %s", err)
 	}
 
+	// user going to add labels names
 	if len(options.labels) != 0 {
-		bookmark.LabelNames = options.labels
+
+		// get labelIDs from provided names
+		// TODO: creates new label in labels table if name not found
+		labelUUIDs, err := p.getLabelIDsFromNames(args.UserId, options.labels)
+		if err != nil {
+			return p.responsef(args, "Unable to get UUIDs for labels: %s", options.labels)
+		}
+
+		// add labelIDs to bmark
+		bookmark.LabelIDs = labelUUIDs
 	}
 
 	p.addBookmark(args.UserId, &bookmark)
