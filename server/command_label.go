@@ -20,8 +20,10 @@ func (p *Plugin) executeCommandLabel(args *model.CommandArgs) *model.CommandResp
 	switch action {
 	case "add":
 		return p.executeCommandLabelAdd(args)
-	// case "remove":
-	// 	return p.executeCommandRemove(args), nil
+	case "remove":
+		return p.executeCommandLabelRemove(args)
+	// case "rename":
+	// 	return p.executeCommandLabelRename(args)
 	case "view":
 		return p.executeCommandLabelView(args)
 	case "help":
@@ -34,24 +36,42 @@ func (p *Plugin) executeCommandLabel(args *model.CommandArgs) *model.CommandResp
 
 func (p *Plugin) executeCommandLabelAdd(args *model.CommandArgs) *model.CommandResponse {
 	subCommand := strings.Fields(args.Command)
+	if len(subCommand) < 4 {
+		return p.responsef(args, "Please specify a label name %v", getHelp(labelCommandText))
+	}
+
+	labelName := subCommand[3]
+	label, err := p.addLabel(args.UserId, labelName)
+	if err != nil {
+		return p.responsef(args, err.Error())
+	}
+
+	text := "Added Label: "
+	text = text + fmt.Sprintf("%v", label.Name)
+
+	return p.responsef(args, fmt.Sprintf(text))
+}
+
+// executeCommandLabelRemove removes a given bookmark from the store
+func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.CommandResponse {
+	subCommand := strings.Fields(args.Command)
 
 	if len(subCommand) < 4 {
 		return p.responsef(args, "Please specify a label name %v", getHelp(labelCommandText))
 	}
 
-	names := subCommand[3:]
+	labelName := subCommand[3]
 
-	text := "Added Label: "
-	if len(names) > 1 {
-		text = "Added Labels: \n"
-	}
-	text = text + strings.Join(names, "\n")
-
-	_, err := p.addLabels(args.UserId, names)
+	label, err := p.deleteLabel(args.UserId, labelName)
 	if err != nil {
-		return p.responsef(args, "Unable to add labels for user %s", args.UserId)
+		return p.responsef(args, err.Error())
+	}
+	if label == nil {
+		return p.responsef(args, fmt.Sprintf("User doesn't have any labels"))
 	}
 
+	text := "Removed label: "
+	text = text + fmt.Sprintf("%v", label.Name)
 	return p.responsef(args, fmt.Sprintf(text))
 }
 
@@ -71,7 +91,7 @@ func (p *Plugin) executeCommandLabelView(args *model.CommandArgs) *model.Command
 		return p.responsef(args, "You do not have any saved labels")
 	}
 
-	for _, label := range labels.ByName {
+	for _, label := range labels.ByID {
 		v := fmt.Sprintf("`%s`\n", label.Name)
 		text = text + v
 	}

@@ -25,6 +25,7 @@ const (
 **/bookmarks label**
 * |/bookmarks label <post_id> --labels <labels>| - add labels (comma-separated) to a bookmark
 * |/bookmarks label add <labels> | - create a new label
+* |/bookmarks label remove <labels> | - remove a label
 * |/bookmarks label view | - list all labels
 `
 	viewCommandText = `
