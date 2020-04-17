@@ -73,7 +73,7 @@ func getExecuteCommandTestBookmarks() *Bookmarks {
 	}
 
 	labels := NewLabels()
-	labels.add(l1)
+	labels.add("UUID1", l1)
 
 	return bmarks
 }
