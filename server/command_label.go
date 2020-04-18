@@ -95,8 +95,13 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 
 	labelName := subCommand[3]
 
+	labelID, err := p.getLabelIDFromName(args.UserId, labelName)
+	if err != nil {
+		return p.responsef(args, err.Error())
+	}
+
 	// check to see if any bookmarks currently have the label
-	bmarks, err := p.getBookmarksWithLabel(args.UserId, labelName)
+	bmarks, err := p.getBookmarksWithLabelID(args.UserId, labelID)
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
@@ -115,18 +120,24 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 					numBmarksWithLabel, p.getCodeBlockedLabels([]string{labelName})),
 			)
 		}
+
+		// delete label from bookmarks
+		for _, bmark := range bmarks.ByID {
+			err = p.deleteLabelFromBookmark(args.UserId, bmark.PostID, labelID)
+			if err != nil {
+				return p.responsef(args, err.Error())
+			}
+		}
 	}
 
-	label, err := p.deleteLabelByName(args.UserId, labelName)
+	// delete from store last
+	err = p.deleteStoreLabelByID(args.UserId, labelID)
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
-	if label == nil {
-		return p.responsef(args, fmt.Sprintf("User doesn't have any labels"))
-	}
 
 	text := "Removed label: "
-	text = text + fmt.Sprintf("`%v`", label.Name)
+	text = text + fmt.Sprintf("`%v`", labelName)
 	return p.responsef(args, fmt.Sprintf(text))
 }
 

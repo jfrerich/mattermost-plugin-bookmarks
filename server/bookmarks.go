@@ -180,6 +180,31 @@ func (p *Plugin) getBookmarksWithLabel(userID, labelName string) (*Bookmarks, er
 	return bmarksWithLabel, nil
 }
 
+func (p *Plugin) getBookmarksWithLabelID(userID, labelID string) (*Bookmarks, error) {
+	bmarks, err := p.getBookmarks(userID)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	if bmarks == nil {
+		return nil, nil
+	}
+
+	bmarksWithLabel := NewBookmarks()
+
+	for _, bmark := range bmarks.ByID {
+		if bmark.hasLabels(bmark) {
+			for _, id := range bmark.LabelIDs {
+				if labelID == id {
+					bmarksWithLabel.add(bmark)
+				}
+			}
+		}
+	}
+
+	return bmarksWithLabel, nil
+}
+
 // deleteBookmark deletes a bookmark from the store
 func (p *Plugin) deleteBookmark(userID, bmarkID string) (*Bookmark, error) {
 	bmarks, err := p.getBookmarks(userID)
@@ -203,6 +228,36 @@ func (p *Plugin) deleteBookmark(userID, bmarkID string) (*Bookmark, error) {
 	p.storeBookmarks(userID, bmarks)
 
 	return bmark, nil
+}
+
+// deleteLabelFromBookmark deletes a label from a bookmarks
+func (p *Plugin) deleteLabelFromBookmark(userID, bmarkID string, labelID string) error {
+	bmark, err := p.getBookmark(userID, bmarkID)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+
+	origLabels := bmark.LabelIDs
+
+	var newLabels []string
+	for _, ID := range origLabels {
+		if labelID == ID {
+			continue
+		}
+		newLabels = append(newLabels, ID)
+	}
+
+	bmark.LabelIDs = newLabels
+
+	bmarks, err := p.getBookmarks(userID)
+	if err != nil {
+		return err
+	}
+
+	bmarks.add(bmark)
+	p.storeBookmarks(userID, bmarks)
+
+	return nil
 }
 
 // getBookmarkLabelIDs returns an array of label UUIDs for a given bookmark

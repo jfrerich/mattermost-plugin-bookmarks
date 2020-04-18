@@ -130,6 +130,28 @@ func (p *Plugin) getLabelIDsFromNames(userID string, labelNames []string) ([]str
 	return uuids, nil
 }
 
+// addLabels stores labels available for bookmarks
+func (p *Plugin) getLabelIDFromName(userID string, labelName string) (string, error) {
+
+	// // get all labels for user
+	labels, err := p.getLabels(userID)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	if labels == nil {
+		return "", errors.New(fmt.Sprint("User does not have any labels"))
+	}
+
+	// return the labelId if found
+	for id, l := range labels.ByID {
+		if l.Name == labelName {
+			return id, nil
+		}
+	}
+	return "", errors.New(fmt.Sprintf("Label: `%s` does not exist", labelName))
+}
+
 func removeFromArray(name string, array []string) []string {
 	var newArray []string
 	for _, elem := range array {
@@ -177,8 +199,33 @@ func (p *Plugin) addLabel(userID string, labelName string) (*Label, error) {
 	return label, nil
 }
 
+// deleteLabelByID deletes a label from the store
+func (p *Plugin) deleteStoreLabelByID(userID, labelID string) error {
+
+	labels, err := p.getLabels(userID)
+	if err != nil {
+		return errors.New(err.Error())
+	}
+
+	if labels == nil {
+		return errors.New(fmt.Sprintf("User does not have any labels"))
+	}
+
+	// check if exists
+	_, ok := labels.exists(labelID)
+	if !ok {
+		return errors.New(fmt.Sprintf("Label with ID `%s` doesn't exist", labelID))
+	}
+
+	// labelID, _ := p.getLabelIDsFromNames(userID, []string{labelName})
+	labels.delete(labelID)
+	p.storeLabels(userID, labels)
+
+	return nil
+}
+
 // deleteLabelByName deletes a label from the store
-func (p *Plugin) deleteLabelByName(userID, labelName string) (*Label, error) {
+func (p *Plugin) deleteStoreLabelByName(userID, labelName string) (*Label, error) {
 
 	labels, err := p.getLabels(userID)
 	if err != nil {
