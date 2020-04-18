@@ -75,6 +75,10 @@ func TestExecuteCommandRemove(t *testing.T) {
 		api.On("KVGet", getBookmarksKey(tt.commandArgs.UserId)).Return(jsonBmarks, nil)
 		api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 
+		labels := getExecuteCommandTestLabels()
+		jsonLabels, err := json.Marshal(labels)
+		api.On("KVGet", getLabelsKey(tt.commandArgs.UserId)).Return(jsonLabels, nil)
+
 		t.Run(name, func(t *testing.T) {
 			assert.Nil(t, err)
 			// isSendEphemeralPostCalled := false

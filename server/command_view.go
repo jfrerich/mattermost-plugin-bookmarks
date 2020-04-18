@@ -40,7 +40,10 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
 	}
 
-	if bookmarks == nil {
+	// bookmarks is nil if user has never added a bookmark.
+	// bookmarks.ByID will be empty if user created a bookmark and then deleted
+	// it and now has 0 bookmarks
+	if bookmarks == nil || len(bookmarks.ByID) == 0 {
 		return p.responsef(args, "You do not have any saved bookmarks")
 	}
 

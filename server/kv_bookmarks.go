@@ -15,7 +15,7 @@ type Bookmark struct {
 	Title      string   `json:"title"`            // Title given to the bookmark
 	CreateAt   int64    `json:"createAt"`         // The original creation time of the bookmark
 	ModifiedAt int64    `json:"modifiedAt"`       // The original creation time of the bookmark
-	LabelNames []string `json:"labels:omitempty"` // Array of labels added to the bookmark
+	LabelIDs   []string `json:"labels:omitempty"` // Array of labels added to the bookmark
 }
 
 // NewBookmarks returns an initialized Bookmarks struct
@@ -54,6 +54,12 @@ func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
 	return bmark
 }
 
+func (b *Bookmarks) updateLabels(bmark *Bookmark) *Bookmark {
+	bmarkOrig := b.get(bmark.PostID)
+	bmarkOrig.LabelIDs = bmark.LabelIDs
+	return bmark
+}
+
 func (b *Bookmark) hasUserTitle(bmark *Bookmark) bool {
 	if bmark.Title != "" {
 		return true
@@ -62,7 +68,7 @@ func (b *Bookmark) hasUserTitle(bmark *Bookmark) bool {
 }
 
 func (b *Bookmark) hasLabels(bmark *Bookmark) bool {
-	if bmark.LabelNames != nil {
+	if bmark.LabelIDs != nil {
 		return true
 	}
 	return false

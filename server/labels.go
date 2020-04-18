@@ -30,6 +30,18 @@ func (p *Plugin) storeLabels(userID string, labels *Labels) error {
 }
 
 // getLabels returns a users Labels available for all their bookmarks.
+func (p *Plugin) getLabelNameByID(userID string, ID string) (string, error) {
+	// get all labels for user
+	labels, err := p.getLabels(userID)
+	if err != nil {
+		return "", errors.New(err.Error())
+	}
+
+	label := labels.get(ID)
+	return label.Name, nil
+}
+
+// getLabels returns a users Labels available for all their bookmarks.
 func (p *Plugin) getLabels(userID string) (*Labels, error) {
 
 	// if a user does not have labels, bb will be nil
@@ -74,6 +86,63 @@ func (p *Plugin) getLabelByName(userID string, labelName string) (*Label, error)
 }
 
 // addLabels stores labels available for bookmarks
+func (p *Plugin) getLabelIDsFromNames(userID string, labelNames []string) ([]string, error) {
+
+	// // get all labels for user
+	labels, err := p.getLabels(userID)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
+
+	if labels == nil {
+		return nil, nil
+	}
+
+	newLabelNames := labelNames
+
+	// need to determine which names did not have an ID in the labels store
+	// then create them in the store and attach them to the bookmark
+
+	// build array of all UUIDs for the bookmark
+	var uuids []string
+	for id, l := range labels.ByID {
+		for _, name := range labelNames {
+			if l.Name == name {
+				newLabelNames = removeFromArray(l.Name, newLabelNames)
+				uuids = append(uuids, id)
+			}
+		}
+	}
+
+	//generate new labels
+	if len(newLabelNames) > 0 {
+		for _, name := range newLabelNames {
+			labelID := NewID()
+			label := &Label{
+				Name: name,
+			}
+			labels.add(labelID, label)
+			uuids = append(uuids, labelID)
+		}
+	}
+
+	p.storeLabels(userID, labels)
+	return uuids, nil
+}
+
+func removeFromArray(name string, array []string) []string {
+	var newArray []string
+	for _, elem := range array {
+		if name == elem {
+			continue
+		}
+		newArray = append(newArray, elem)
+	}
+
+	return newArray
+}
+
+// addLabels stores labels available for bookmarks
 func (p *Plugin) addLabel(userID string, labelName string) (*Label, error) {
 
 	// check if name already exists
@@ -108,8 +177,8 @@ func (p *Plugin) addLabel(userID string, labelName string) (*Label, error) {
 	return label, nil
 }
 
-// deleteLabel deletes a label from the store
-func (p *Plugin) deleteLabel(userID, labelName string) (*Label, error) {
+// deleteLabelByName deletes a label from the store
+func (p *Plugin) deleteLabelByName(userID, labelName string) (*Label, error) {
 
 	labels, err := p.getLabels(userID)
 	if err != nil {
@@ -126,7 +195,8 @@ func (p *Plugin) deleteLabel(userID, labelName string) (*Label, error) {
 		return nil, errors.New(fmt.Sprintf("Label with name `%s` doesn't exist", labelName))
 	}
 
-	labels.delete(labelName)
+	labelID, _ := p.getLabelIDsFromNames(userID, []string{labelName})
+	labels.delete(labelID[0])
 	p.storeLabels(userID, labels)
 
 	return label, nil

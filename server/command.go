@@ -26,6 +26,8 @@ const (
 * |/bookmarks label <post_id> --labels <labels>| - add labels (comma-separated) to a bookmark
 * |/bookmarks label add <labels> | - create a new label
 * |/bookmarks label remove <labels> | - remove a label
+* |/bookmarks label remove <labels> --force | - forces removal of labels from
+* bookmarks currently using the label as well as the label list
 * |/bookmarks label view | - list all labels
 `
 	viewCommandText = `
@@ -61,7 +63,7 @@ func getCommand() *model.Command {
 		Description:      "Manage Mattermost messages!",
 		AutoComplete:     true,
 		AutoCompleteHint: "[command]",
-		AutoCompleteDesc: "Available commands: add, view, remove, help",
+		AutoCompleteDesc: "Available commands: add, view, remove, label help",
 	}
 }
 
@@ -151,15 +153,17 @@ func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, args *model.CommandArgs) (
 		return "", appErr
 	}
 
-	labelNames, _ := p.getLabelsForBookmark(args.UserId, bmark.PostID)
-	// TODO: reconcile error types
-	// if appErr != nil {
-	// 	return "", appErr
+	labelNames, _ := p.getBookmarkLabelNames(args.UserId, bmark)
+	// TODO fix error
+	// if err != nil {
+	// 	return nil, err
 	// }
-	codeBlockedNames := p.getPrintableLabels(labelNames)
+
+	codeBlockedNames := p.getCodeBlockedLabels(labelNames)
 
 	titleFromPostLabel := ""
 	title := bmark.Title
+
 	if !bmark.hasUserTitle(bmark) {
 		titleFromPostLabel = "`TitleFromPost` "
 		title, appErr = p.getTitleFromPost(bmark)
@@ -172,7 +176,7 @@ func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, args *model.CommandArgs) (
 	return text, nil
 }
 
-func (p *Plugin) getPrintableLabels(names []string) string {
+func (p *Plugin) getCodeBlockedLabels(names []string) string {
 	labels := ""
 	for _, name := range names {
 		labels = labels + fmt.Sprintf(" `%s`", name)
@@ -195,12 +199,9 @@ func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, args *model.CommandArgs) 
 		title = bmark.Title
 	}
 
-	labelNames, _ := p.getLabelsForBookmark(args.UserId, bmark.PostID)
-	// TODO: reconcile error types
-	// if appErr != nil {
-	// 	return "", appErr
-	// }
-	codeBlockedNames := p.getPrintableLabels(labelNames)
+	labelNames, _ := p.getBookmarkLabelNames(args.UserId, bmark)
+
+	codeBlockedNames := p.getCodeBlockedLabels(labelNames)
 	post, appErr := p.API.GetPost(bmark.PostID)
 	if appErr != nil {
 		return "", appErr

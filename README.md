@@ -28,7 +28,8 @@ provide a bookmark title and labels for a bookmark.
           of the post message
         - titles can have spaces in the text
     - OPTIONAL: --labels
-        - labels must first be created with /bookmarks label command
+        - if a label name is added that wasn't previously created with the
+          `label add` command, the name will be added to the labels table
         - accepts a comma-separated list of labels
         - currently does not support spaces in the label name
 ```
@@ -69,9 +70,10 @@ Labels can be applied to bookmarks
 
 - You can create the labels and add them to bookmarks, but cannot filter by labels. This is feature will be added soon
 - Label names cannot contain spaces
+- You can only create one label at a time
 
 ```
-/bookmarks label add label1 label2 label3
+/bookmarks label add <label>
 ```
 
 ### View all bookmark labels
@@ -80,6 +82,19 @@ To view all of you labels, the following command is provided
 
 ```
 /bookmarks label view
+```
+
+### Delete a label
+
+Labels can be deleted with the label remove command. This will remove a label
+from the labels database.  If any bookmarks are currently using the label, the
+user will be notified before the label is deleted, with a message informing the
+them of the --force flag. With the --force flag, the label will be removed from
+the list of labels and removed from any bookmarks currently using the label.
+
+```
+/bookmarks label remove <label>
+/bookmarks label remove <label> --force
 ```
 
 ## ScreenShots
@@ -111,6 +126,19 @@ To view all of you labels, the following command is provided
 
 ![bookmarks remove post](./assets/commandRemovePost.png)
 
+#### Remove a label
+
+This example shows the reponse when a user attempts to first delete a label
+that is being used by 1 bookmark.  The `--force` option is used to force the
+deletion.
+
+```
+/bookmarks label remove <label>
+/bookmarks label remove <label> --force
+```
+
+![bookmarks remove label force](./assets/commandLabelRemoveForce.png)
+
 ### Future Implementations
 
 - **Done** `/bookmarks add <permalink> <title> <labels>` - bookmark a post with optional labels
@@ -119,7 +147,7 @@ To view all of you labels, the following command is provided
   - if labels omitted, unlabeled autoadded
 - **Done** `/bookmarks label add <labels>` - create a new label
 - **Done** `/bookmarks label list` - list all labels 
-    - include number of bookmarks per label
+  - include number of bookmarks per label
 - **Done** `/bookmarks remove label <label>` - remove label from all bookmarks
 - `/bookmarks view <label>` - view bookmarks with optional labels for filtering
 - `/bookmarks rename <label-old> <label-new>`- rename a label

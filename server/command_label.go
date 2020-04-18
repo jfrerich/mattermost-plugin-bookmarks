@@ -5,7 +5,40 @@ import (
 	"strings"
 
 	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/spf13/pflag"
 )
+
+const (
+	flagForce = "force"
+)
+
+type removeLabelOptions struct {
+	force bool
+}
+
+func getLabelRemoveFlagSet() *pflag.FlagSet {
+	flagSet := pflag.NewFlagSet("remove labels", pflag.ContinueOnError)
+	flagSet.Bool(flagForce, false, "force removal of labels when they currently exist on a bookmark")
+
+	return flagSet
+}
+
+func parseLabelRemoveArgs(args []string) (removeLabelOptions, error) {
+	var options removeLabelOptions
+
+	removeLabelFlagSet := getLabelRemoveFlagSet()
+	err := removeLabelFlagSet.Parse(args)
+	if err != nil {
+		return options, err
+	}
+
+	options.force, err = removeLabelFlagSet.GetBool(flagForce)
+	if err != nil {
+		return options, err
+	}
+
+	return options, nil
+}
 
 // ExecuteCommandLabel executes a label sub-command
 func (p *Plugin) executeCommandLabel(args *model.CommandArgs) *model.CommandResponse {
@@ -62,7 +95,29 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 
 	labelName := subCommand[3]
 
-	label, err := p.deleteLabel(args.UserId, labelName)
+	// check to see if any bookmarks currently have the label
+	bmarks, err := p.getBookmarksWithLabel(args.UserId, labelName)
+	if err != nil {
+		return p.responsef(args, err.Error())
+	}
+
+	options, err := parseLabelRemoveArgs(subCommand)
+	if err != nil {
+		return p.responsef(args, "Unable to parse options, %s", err)
+	}
+
+	if bmarks != nil {
+		numBmarksWithLabel := len(bmarks.ByID)
+		if numBmarksWithLabel != 0 && !options.force {
+			return p.responsef(
+				args,
+				fmt.Sprintf("There are %v bookmarks with the label:%s. Use the --force flag remove the label from the bookmarks.",
+					numBmarksWithLabel, p.getCodeBlockedLabels([]string{labelName})),
+			)
+		}
+	}
+
+	label, err := p.deleteLabelByName(args.UserId, labelName)
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
@@ -71,7 +126,7 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 	}
 
 	text := "Removed label: "
-	text = text + fmt.Sprintf("%v", label.Name)
+	text = text + fmt.Sprintf("`%v`", label.Name)
 	return p.responsef(args, fmt.Sprintf(text))
 }
 
