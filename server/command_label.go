@@ -123,7 +123,7 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 
 		// delete label from bookmarks
 		for _, bmark := range bmarks.ByID {
-			err := p.deleteLabelFromBookmark(args.UserId, bmark.PostID, labelID)
+			err = p.deleteLabelFromBookmark(args.UserId, bmark.PostID, labelID)
 			if err != nil {
 				return p.responsef(args, err.Error())
 			}
