@@ -2,11 +2,13 @@ package main
 
 import (
 	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v5/plugin"
 )
 
 // Bookmarks contains a map of bookmarks
 type Bookmarks struct {
 	ByID map[string]*Bookmark
+	api  plugin.API
 }
 
 // Bookmark contains information about an individual bookmark
@@ -19,10 +21,11 @@ type Bookmark struct {
 }
 
 // NewBookmarks returns an initialized Bookmarks struct
-func NewBookmarks() *Bookmarks {
-	bmarks := new(Bookmarks)
-	bmarks.ByID = make(map[string]*Bookmark)
-	return bmarks
+func NewBookmarks(api plugin.API) *Bookmarks {
+	return &Bookmarks{
+		ByID: make(map[string]*Bookmark),
+		api:  api,
+	}
 }
 
 func (b *Bookmarks) add(bmark *Bookmark) {
@@ -56,20 +59,38 @@ func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
 
 func (b *Bookmarks) updateLabels(bmark *Bookmark) *Bookmark {
 	bmarkOrig := b.get(bmark.PostID)
-	bmarkOrig.LabelIDs = bmark.LabelIDs
+	bmarkOrig.setLabelIDs(bmark.getLabelIDs())
 	return bmark
 }
 
 func (b *Bookmark) hasUserTitle(bmark *Bookmark) bool {
-	if bmark.Title != "" {
+	if bmark.getTitle() != "" {
 		return true
 	}
 	return false
 }
 
 func (b *Bookmark) hasLabels(bmark *Bookmark) bool {
-	if bmark.LabelIDs != nil {
+	if bmark.getLabelIDs() != nil {
 		return true
 	}
 	return false
+}
+
+func (b *Bookmark) getTitle() string {
+	return b.Title
+}
+
+func (b *Bookmark) setTitle(title string) {
+	b.Title = title
+	return
+}
+
+func (b *Bookmark) getLabelIDs() []string {
+	return b.LabelIDs
+}
+
+func (b *Bookmark) setLabelIDs(IDs []string) {
+	b.LabelIDs = IDs
+	return
 }

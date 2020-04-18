@@ -23,7 +23,8 @@ func getExecuteCommandTestLabels() *Labels {
 		Name: "label8",
 	}
 
-	labels := NewLabels()
+	api := makeAPIMock()
+	labels := NewLabels(api)
 	labels.add("UUID1", l1)
 	labels.add("UUID2", l2)
 	labels.add("UUID3", l3)
@@ -54,10 +55,10 @@ func TestExecuteCommandLabel(t *testing.T) {
 			expectedContains:  []string{"Please specify a label name"},
 		},
 		"ADD User adds first label": {
-			commandArgs:       &model.CommandArgs{Command: "/bookmarks label add label1"},
-			labels:            nil,
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks label add label9"},
+			labels:            getExecuteCommandTestLabels(),
 			expectedMsgPrefix: "",
-			expectedContains:  []string{"Added Label: label1"},
+			expectedContains:  []string{"Added Label: label9"},
 		},
 		"ADD User tries creating label with name that already exists": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label add label1"},
@@ -82,9 +83,9 @@ func TestExecuteCommandLabel(t *testing.T) {
 		"REMOVE User tries to remove a label but has none": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove JunkLabel"},
 			bookmarks:         nil,
-			labels:            nil,
+			labels:            getExecuteCommandTestLabels(),
 			expectedMsgPrefix: "",
-			expectedContains:  []string{"User does not have any labels"},
+			expectedContains:  []string{"Label: `JunkLabel` does not exist"},
 		},
 		"REMOVE User tries to remove a label that does not exist": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove labeldoesnotexist"},
@@ -94,6 +95,7 @@ func TestExecuteCommandLabel(t *testing.T) {
 		},
 		"REMOVE User successfully removes a label that exists": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove label1"},
+			bookmarks:         nil,
 			labels:            getExecuteCommandTestLabels(),
 			expectedMsgPrefix: "",
 			expectedContains:  []string{"Removed label: `label1`"},

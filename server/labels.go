@@ -14,14 +14,14 @@ import (
 const StoreLabelsKey = "labels"
 
 // storeLabels stores all the users labels
-func (p *Plugin) storeLabels(userID string, labels *Labels) error {
-	bb, jsonErr := json.Marshal(labels)
+func (l *Labels) storeLabels(userID string) error {
+	bb, jsonErr := json.Marshal(l)
 	if jsonErr != nil {
 		return jsonErr
 	}
 
 	key := getLabelsKey(userID)
-	appErr := p.MattermostPlugin.API.KVSet(key, bb)
+	appErr := l.api.KVSet(key, bb)
 	if appErr != nil {
 		return errors.New(appErr.Error())
 	}
@@ -29,28 +29,22 @@ func (p *Plugin) storeLabels(userID string, labels *Labels) error {
 	return nil
 }
 
-// getLabels returns a users Labels available for all their bookmarks.
-func (p *Plugin) getLabelNameByID(userID string, ID string) (string, error) {
-	// get all labels for user
-	labels, err := p.getLabels(userID)
-	if err != nil {
-		return "", errors.New(err.Error())
-	}
-
-	label := labels.get(ID)
+// getNameFromID returns the Name of a Label
+func (l *Labels) getNameFromID(userID string, ID string) (string, error) {
+	label := l.get(ID)
 	return label.Name, nil
 }
 
-// getLabels returns a users Labels available for all their bookmarks.
-func (p *Plugin) getLabels(userID string) (*Labels, error) {
+// getLabels returns a users labels
+func (l *Labels) getLabels(userID string) (*Labels, error) {
 
 	// if a user does not have labels, bb will be nil
-	bb, appErr := p.API.KVGet(getLabelsKey(userID))
+	bb, appErr := l.api.KVGet(getLabelsKey(userID))
 	if appErr != nil {
 		return nil, appErr
 	}
 
-	labels := NewLabels()
+	labels := NewLabels(l.api)
 	if bb == nil {
 		return labels, nil
 	}
@@ -63,17 +57,12 @@ func (p *Plugin) getLabels(userID string) (*Labels, error) {
 	return labels, nil
 }
 
-// addLabels stores labels available for bookmarks
-func (p *Plugin) getLabelByName(userID string, labelName string) (*Label, error) {
+// getLabelByName returns a label with the provided label name
+func (l *Labels) getLabelByName(userID string, labelName string) (*Label, error) {
 
-	// get all labels for user
-	labels, err := p.getLabels(userID)
+	labels, err := l.getLabels(userID)
 	if err != nil {
 		return nil, errors.New(err.Error())
-	}
-
-	if labels == nil {
-		return nil, nil
 	}
 
 	for _, l := range labels.ByID {
@@ -85,18 +74,8 @@ func (p *Plugin) getLabelByName(userID string, labelName string) (*Label, error)
 	return nil, nil
 }
 
-// addLabels stores labels available for bookmarks
-func (p *Plugin) getLabelIDsFromNames(userID string, labelNames []string) ([]string, error) {
-
-	// // get all labels for user
-	labels, err := p.getLabels(userID)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	if labels == nil {
-		return nil, nil
-	}
+// getIDsFromNames returns a list of label names
+func (l *Labels) getIDsFromNames(userID string, labelNames []string) ([]string, error) {
 
 	newLabelNames := labelNames
 
@@ -105,10 +84,10 @@ func (p *Plugin) getLabelIDsFromNames(userID string, labelNames []string) ([]str
 
 	// build array of all UUIDs for the bookmark
 	var uuids []string
-	for id, l := range labels.ByID {
+	for id, label := range l.ByID {
 		for _, name := range labelNames {
-			if l.Name == name {
-				newLabelNames = removeFromArray(l.Name, newLabelNames)
+			if label.Name == name {
+				newLabelNames = removeFromArray(label.Name, newLabelNames)
 				uuids = append(uuids, id)
 			}
 		}
@@ -121,20 +100,19 @@ func (p *Plugin) getLabelIDsFromNames(userID string, labelNames []string) ([]str
 			label := &Label{
 				Name: name,
 			}
-			labels.add(labelID, label)
+			l.add(labelID, label)
 			uuids = append(uuids, labelID)
 		}
 	}
 
-	p.storeLabels(userID, labels)
+	l.storeLabels(userID)
 	return uuids, nil
 }
 
-// addLabels stores labels available for bookmarks
-func (p *Plugin) getLabelIDFromName(userID string, labelName string) (string, error) {
+// getIDFromName returns a label name with the corresponding label ID
+func (l *Labels) getIDFromName(userID string, labelName string) (string, error) {
 
-	// // get all labels for user
-	labels, err := p.getLabels(userID)
+	labels, err := l.getLabels(userID)
 	if err != nil {
 		return "", errors.New(err.Error())
 	}
@@ -164,11 +142,14 @@ func removeFromArray(name string, array []string) []string {
 	return newArray
 }
 
-// addLabels stores labels available for bookmarks
-func (p *Plugin) addLabel(userID string, labelName string) (*Label, error) {
+// addLabel stores a label into the users label store
+func (l *Labels) addLabel(userID string, labelName string) (*Label, error) {
 
 	// check if name already exists
-	label, err := p.getLabelByName(userID, labelName)
+	label, err := l.getLabelByName(userID, labelName)
+	if err != nil {
+		return nil, errors.New(err.Error())
+	}
 
 	// User already has label with this labelName
 	if label != nil {
@@ -176,14 +157,14 @@ func (p *Plugin) addLabel(userID string, labelName string) (*Label, error) {
 	}
 
 	// get all labels for user
-	labels, err := p.getLabels(userID)
+	labels, err := l.getLabels(userID)
 	if err != nil {
 		return nil, errors.New(err.Error())
 	}
 
 	// no labels, initialize the store and save
 	if labels == nil {
-		labels = NewLabels() // save first label
+		labels = NewLabels(l.api) // save first label
 	}
 
 	labelID := NewID()
@@ -192,61 +173,26 @@ func (p *Plugin) addLabel(userID string, labelName string) (*Label, error) {
 	}
 	labels.add(labelID, label)
 
-	if err = p.storeLabels(userID, labels); err != nil {
+	if err = l.storeLabels(userID); err != nil {
 		return nil, errors.New(err.Error())
 	}
 
 	return label, nil
 }
 
-// deleteLabelByID deletes a label from the store
-func (p *Plugin) deleteStoreLabelByID(userID, labelID string) error {
-
-	labels, err := p.getLabels(userID)
-	if err != nil {
-		return errors.New(err.Error())
-	}
-
-	if labels == nil {
-		return errors.New(fmt.Sprintf("User does not have any labels"))
-	}
+// deleteByID deletes a label from the store
+func (l *Labels) deleteByID(userID, labelID string) error {
 
 	// check if exists
-	_, ok := labels.exists(labelID)
+	_, ok := l.exists(labelID)
 	if !ok {
 		return errors.New(fmt.Sprintf("Label with ID `%s` doesn't exist", labelID))
 	}
 
-	// labelID, _ := p.getLabelIDsFromNames(userID, []string{labelName})
-	labels.delete(labelID)
-	p.storeLabels(userID, labels)
+	l.delete(labelID)
+	l.storeLabels(userID)
 
 	return nil
-}
-
-// deleteLabelByName deletes a label from the store
-func (p *Plugin) deleteStoreLabelByName(userID, labelName string) (*Label, error) {
-
-	labels, err := p.getLabels(userID)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	if labels == nil {
-		return nil, errors.New(fmt.Sprintf("User doesn't have any labels"))
-	}
-
-	// check if exists
-	label, err := p.getLabelByName(userID, labelName)
-	if label == nil {
-		return nil, errors.New(fmt.Sprintf("Label with name `%s` doesn't exist", labelName))
-	}
-
-	labelID, _ := p.getLabelIDsFromNames(userID, []string{labelName})
-	labels.delete(labelID[0])
-	p.storeLabels(userID, labels)
-
-	return label, nil
 }
 
 func getLabelsKey(userID string) string {

@@ -91,6 +91,7 @@ func TestExecuteCommandAdd(t *testing.T) {
 		"Bookmark --labels provided with one label": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1", b1ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
+			labels:            getExecuteCommandTestLabels(),
 			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1", addPrefixMsg)),
 			expectedContains:  nil,
 		},

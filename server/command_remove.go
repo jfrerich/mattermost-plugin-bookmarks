@@ -22,7 +22,8 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 		text = "Removed bookmarks: \n"
 	}
 
-	bmarks, err := p.getBookmarks(args.UserId)
+	b := NewBookmarks(p.API)
+	bmarks, err := b.getBookmarks(args.UserId)
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
@@ -32,7 +33,7 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 
 	for _, id := range bookmarkIDs {
 		bookmarkID := p.getPostIDFromLink(id)
-		bmark, err := p.getBookmark(args.UserId, bookmarkID)
+		bmark, err := bmarks.getBookmark(args.UserId, bookmarkID)
 		if err != nil {
 			return p.responsef(args, err.Error())
 		}
@@ -42,7 +43,7 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 			return p.responsef(args, "Unable to get bookmarks list bookmark")
 		}
 
-		_, err = p.deleteBookmark(args.UserId, bookmarkID)
+		_, err = bmarks.deleteBookmark(args.UserId, bookmarkID)
 		if err != nil {
 			return p.responsef(args, err.Error())
 		}
