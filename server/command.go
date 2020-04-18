@@ -153,13 +153,16 @@ func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, args *model.CommandArgs) (
 		return "", appErr
 	}
 
-	labelNames, _ := p.getBookmarkLabelNames(args.UserId, bmark)
-	// TODO fix error
-	// if err != nil {
-	// 	return nil, err
-	// }
+	codeBlockedNames := ""
+	if bmark.hasLabels(bmark) {
+		labelNames, _ := p.getBookmarkLabelNames(args.UserId, bmark)
+		// TODO fix error
+		// if err != nil {
+		// 	return nil, err
+		// }
 
-	codeBlockedNames := p.getCodeBlockedLabels(labelNames)
+		codeBlockedNames = p.getCodeBlockedLabels(labelNames)
+	}
 
 	titleFromPostLabel := ""
 	title := bmark.Title

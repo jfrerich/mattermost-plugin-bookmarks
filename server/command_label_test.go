@@ -84,13 +84,13 @@ func TestExecuteCommandLabel(t *testing.T) {
 			bookmarks:         nil,
 			labels:            nil,
 			expectedMsgPrefix: "",
-			expectedContains:  []string{"User doesn't have any labels"},
+			expectedContains:  []string{"User does not have any labels"},
 		},
-		"REMOVE User tries to remove a label that doesn't exist": {
+		"REMOVE User tries to remove a label that does not exist": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove labeldoesnotexist"},
 			labels:            getExecuteCommandTestLabels(),
 			expectedMsgPrefix: "",
-			expectedContains:  []string{"Label with name `labeldoesnotexist` doesn't exist"},
+			expectedContains:  []string{"Label: `labeldoesnotexist` does not exist"},
 		},
 		"REMOVE User successfully removes a label that exists": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove label1"},
