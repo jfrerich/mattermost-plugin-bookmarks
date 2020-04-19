@@ -45,7 +45,17 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = p.addBookmark(userID, bmark)
+	b := NewBookmarks(p.API)
+	bmarks, err := b.getBookmarks(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if bmarks == nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = bmarks.addBookmark(userID, bmark)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -76,7 +86,15 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.addBookmark(userID, &bmark)
+	b := NewBookmarks(p.API)
+	bmarks, err := b.getBookmarks(userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	if bmarks == nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	bmarks.addBookmark(userID, &bmark)
 
 	return
 }

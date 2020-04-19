@@ -37,7 +37,9 @@ const (
 )
 
 func getExecuteCommandTestBookmarks() *Bookmarks {
-	bmarks := NewBookmarks()
+	api := makeAPIMock()
+	p := makePlugin(api)
+	bmarks := NewBookmarks(p.API)
 
 	b1 := &Bookmark{
 		PostID:   b1ID,
@@ -72,7 +74,7 @@ func getExecuteCommandTestBookmarks() *Bookmarks {
 		Name: "label1",
 	}
 
-	labels := NewLabels()
+	labels := NewLabels(api)
 	labels.add("UUID1", l1)
 
 	return bmarks

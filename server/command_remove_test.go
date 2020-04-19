@@ -45,12 +45,12 @@ func TestExecuteCommandRemove(t *testing.T) {
 			expectedContains:  nil,
 		},
 		"User successfully deletes 3 bookmark": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v %v %v", PostIDExists, b2ID, b3ID)},
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v %v %v", b1ID, b2ID, b3ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
 			expectedMsgPrefix: "",
 			expectedContains: []string{
 				"Removed bookmarks:",
-				"[:link:](https://myhost.com//pl/ID2) `label1` `label2` Title2 - bookmarks initialized. Times created and same",
+				"[:link:](https://myhost.com//pl/ID1) `label1` `label2` Title1 - New Bookmark - times are zero",
 				"[:link:](https://myhost.com//pl/ID2) `label1` `label2` Title2 - bookmarks initialized. Times created and same",
 				"[:link:](https://myhost.com//pl/ID3) Title3 - bookmarks already updated once",
 			},

@@ -74,7 +74,11 @@ func (p *Plugin) executeCommandLabelAdd(args *model.CommandArgs) *model.CommandR
 	}
 
 	labelName := subCommand[3]
-	label, err := p.addLabel(args.UserId, labelName)
+
+	l := NewLabels(p.API)
+	labels, err := l.getLabels(args.UserId)
+
+	label, err := labels.addLabel(args.UserId, labelName)
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
@@ -95,15 +99,17 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 
 	labelName := subCommand[3]
 
-	labelID, err := p.getLabelIDFromName(args.UserId, labelName)
+	l := NewLabels(p.API)
+	labels, err := l.getLabels(args.UserId)
+	labelID, err := labels.getIDFromName(args.UserId, labelName)
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
 
-	// check to see if any bookmarks currently have the label
-	bmarks, err := p.getBookmarksWithLabelID(args.UserId, labelID)
+	b := NewBookmarks(p.API)
+	bmarks, err := b.getBookmarks(args.UserId)
 	if err != nil {
-		return p.responsef(args, err.Error())
+		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
 	}
 
 	options, err := parseLabelRemoveArgs(subCommand)
@@ -112,6 +118,11 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 	}
 
 	if bmarks != nil {
+		// check to see if any bookmarks currently have the label
+		bmarks, err = bmarks.getBookmarksWithLabelID(args.UserId, labelID)
+		if err != nil {
+			return p.responsef(args, err.Error())
+		}
 		numBmarksWithLabel := len(bmarks.ByID)
 		if numBmarksWithLabel != 0 && !options.force {
 			return p.responsef(
@@ -123,15 +134,15 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 
 		// delete label from bookmarks
 		for _, bmark := range bmarks.ByID {
-			err = p.deleteLabelFromBookmark(args.UserId, bmark.PostID, labelID)
+			err = bmarks.deleteLabel(args.UserId, bmark.PostID, labelID)
 			if err != nil {
 				return p.responsef(args, err.Error())
 			}
 		}
 	}
 
-	// delete from store last
-	err = p.deleteStoreLabelByID(args.UserId, labelID)
+	// delete from store after delete from bookmarks
+	err = labels.deleteByID(args.UserId, labelID)
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
@@ -148,8 +159,8 @@ func (p *Plugin) executeCommandLabelView(args *model.CommandArgs) *model.Command
 		return p.responsef(args, "view subcommand takes no arguments%v", getHelp(labelCommandText))
 	}
 
-	text := "#### Labels List\n"
-	labels, err := p.getLabels(args.UserId)
+	l := NewLabels(p.API)
+	labels, err := l.getLabels(args.UserId)
 	if err != nil {
 		return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
 	}
@@ -157,6 +168,7 @@ func (p *Plugin) executeCommandLabelView(args *model.CommandArgs) *model.Command
 		return p.responsef(args, "You do not have any saved labels")
 	}
 
+	text := "#### Labels List\n"
 	for _, label := range labels.ByID {
 		v := fmt.Sprintf("`%s`\n", label.Name)
 		text = text + v

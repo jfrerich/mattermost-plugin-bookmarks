@@ -9,7 +9,9 @@ import (
 )
 
 func getTestBookmarks() *Bookmarks {
-	bmarks := NewBookmarks()
+	api := makeAPIMock()
+	p := makePlugin(api)
+	bmarks := NewBookmarks(p.API)
 
 	b1 := &Bookmark{
 		PostID: "ID1",
@@ -40,7 +42,7 @@ func TestBookmarks_get(t *testing.T) {
 	bmarks := getTestBookmarks()
 	assert.Equal(t, 3, len(bmarks.ByID))
 	bmark := bmarks.get("ID3")
-	assert.Equal(t, "", bmark.Title)
+	assert.Equal(t, "", bmark.getTitle())
 }
 
 func TestBookmarks_add(t *testing.T) {

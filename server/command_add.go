@@ -61,7 +61,7 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 	// user provides a title
 	if len(subCommand) >= 2 {
 		title := p.constructValueFromArguments(subCommand[1:])
-		bookmark.Title = title
+		bookmark.setTitle(title)
 	}
 
 	options, err := parseAddBookmarkArgs(subCommand)
@@ -72,18 +72,34 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 	// user going to add labels names
 	if len(options.labels) != 0 {
 
+		l := NewLabels(p.API)
+		labels, _ := l.getLabels(args.UserId)
+
 		// get labelIDs from provided names
 		// TODO: creates new label in labels table if name not found
-		labelUUIDs, err := p.getLabelIDsFromNames(args.UserId, options.labels)
+		var labelUUIDs []string
+		labelUUIDs, err = labels.getIDsFromNames(args.UserId, options.labels)
 		if err != nil {
 			return p.responsef(args, "Unable to get UUIDs for labels: %s", options.labels)
 		}
 
 		// add labelIDs to bmark
-		bookmark.LabelIDs = labelUUIDs
+		bookmark.setLabelIDs(labelUUIDs)
 	}
 
-	p.addBookmark(args.UserId, &bookmark)
+	// get all bookmarks for user
+	b := NewBookmarks(p.API)
+	bmarks, err := b.getBookmarks(args.UserId)
+	if err != nil {
+		return p.responsef(args, "Unable to get bookmarks")
+	}
+
+	// no marks, initialize the store first
+	if bmarks == nil {
+		bmarks = NewBookmarks(p.API)
+	}
+
+	bmarks.addBookmark(args.UserId, &bookmark)
 
 	text, appErr := p.getBmarkTextOneLine(&bookmark, args)
 	if appErr != nil {

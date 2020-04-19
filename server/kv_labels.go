@@ -1,8 +1,11 @@
 package main
 
+import "github.com/mattermost/mattermost-server/v5/plugin"
+
 // Labels contains a map of labels with the label name as the key
 type Labels struct {
 	ByID map[string]*Label
+	api  plugin.API
 }
 
 // Label defines the parameters of a label
@@ -12,10 +15,11 @@ type Label struct {
 }
 
 // NewLabels returns an initialized Labels struct
-func NewLabels() *Labels {
-	labels := new(Labels)
-	labels.ByID = make(map[string]*Label)
-	return labels
+func NewLabels(api plugin.API) *Labels {
+	return &Labels{
+		ByID: make(map[string]*Label),
+		api:  api,
+	}
 }
 
 func (l *Labels) add(UUID string, label *Label) {
