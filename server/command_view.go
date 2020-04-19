@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -25,8 +24,12 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 	if err != nil {
 		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
 	}
-	if bmarks == nil {
-		return p.responsef(args, fmt.Sprintf("You do not have any saved bookmarks"))
+
+	// bookmarks is nil if user has never added a bookmark.
+	// bookmarks.ByID will be empty if user created a bookmark and then deleted
+	// it and now has 0 bookmarks
+	if bmarks == nil || len(bmarks.ByID) == 0 {
+		return p.responsef(args, "You do not have any saved bookmarks")
 	}
 
 	// user requests to view an indiviual bookmark
@@ -43,13 +46,6 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 			return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
 		}
 		return p.responsef(args, text)
-	}
-
-	// bookmarks is nil if user has never added a bookmark.
-	// bookmarks.ByID will be empty if user created a bookmark and then deleted
-	// it and now has 0 bookmarks
-	if bmarks == nil || len(bmarks.ByID) == 0 {
-		return p.responsef(args, "You do not have any saved bookmarks")
 	}
 
 	text := "#### Bookmarks List\n"

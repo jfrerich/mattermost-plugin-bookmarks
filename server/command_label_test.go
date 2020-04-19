@@ -73,7 +73,7 @@ func TestExecuteCommandLabel(t *testing.T) {
 			expectedContains:  []string{"Added Label: NewLabelName"},
 		},
 
-		// REMOVE
+		// REMOVE - user does not have any saved labels
 		"REMOVE User does not provide label name": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove"},
 			labels:            nil,
@@ -83,10 +83,12 @@ func TestExecuteCommandLabel(t *testing.T) {
 		"REMOVE User tries to remove a label but has none": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove JunkLabel"},
 			bookmarks:         nil,
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "",
-			expectedContains:  []string{"Label: `JunkLabel` does not exist"},
+			labels:            nil,
+			expectedMsgPrefix: "You do not have any saved labels",
+			expectedContains:  nil,
 		},
+
+		// REMOVE - user has saved labels
 		"REMOVE User tries to remove a label that does not exist": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove labeldoesnotexist"},
 			labels:            getExecuteCommandTestLabels(),
