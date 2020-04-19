@@ -42,6 +42,8 @@ func TestExecuteCommandAdd(t *testing.T) {
 			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1) `TitleFromPost` this is the post.Message", addPrefixMsg)),
 			expectedContains:  nil,
 		},
+
+		// TITLE PROVIDED; NO LABELS
 		"Bookmark added  title provided": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v", PostIDExists, "TitleProvidedByUser")},
 			bookmarks:         getExecuteCommandTestBookmarks(),
@@ -55,6 +57,8 @@ func TestExecuteCommandAdd(t *testing.T) {
 			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID2)", addPrefixMsg)),
 			expectedContains:  []string{"Title Provided By User"},
 		},
+
+		// HAS TITLES AND LABELS
 		"Bookmark added  title provided with spaces and labels": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v --labels %v", PostIDExists, "Title Provided By User", "label1,label2,label8")},
 			bookmarks:         getExecuteCommandTestBookmarks(),
@@ -76,6 +80,8 @@ func TestExecuteCommandAdd(t *testing.T) {
 			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID2) ", addPrefixMsg)),
 			expectedContains:  []string{"label1", "label2", "TitleProvidedByUser"},
 		},
+
+		// HAS LABELS; NO TITLES
 		"Bookmark unknown flag provided": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --unknownflag", b1ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),

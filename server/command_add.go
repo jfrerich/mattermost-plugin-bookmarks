@@ -60,7 +60,7 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 
 	// user provides a title
 	if len(subCommand) >= 2 {
-		title := p.constructValueFromArguments(subCommand[1:])
+		title := p.getTitleFromArguments(subCommand[1:])
 		bookmark.setTitle(title)
 	}
 
@@ -109,14 +109,12 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 	return p.responsef(args, "Added bookmark: %s", text)
 }
 
-func (p *Plugin) constructValueFromArguments(args []string) string {
-	index := 0
-	for i, e := range args {
+func (p *Plugin) getTitleFromArguments(args []string) string {
+	for i, arg := range args {
 		// user also provided a --flag
-		if e == "--" {
-			return strings.Join(args[:index-1], " ")
+		if arg == "--" {
+			return strings.Join(args[:i-1], " ")
 		}
-		index = i
 	}
 
 	// user provided no flags after the ID, rejoin with spaces and return
