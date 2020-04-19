@@ -115,7 +115,7 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 	b := NewBookmarks(p.API)
 	bmarks, err := b.getBookmarks(args.UserId)
 	if err != nil {
-		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
+		return p.responsef(args, err.Error())
 	}
 
 	options, err := parseLabelRemoveArgs(subCommand)
@@ -168,7 +168,7 @@ func (p *Plugin) executeCommandLabelView(args *model.CommandArgs) *model.Command
 	l := NewLabels(p.API)
 	labels, err := l.getLabels(args.UserId)
 	if err != nil {
-		return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
+		return p.responsef(args, err.Error())
 	}
 	if labels == nil || len(labels.ByID) == 0 {
 		return p.responsef(args, "You do not have any saved labels")

@@ -38,8 +38,8 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 			return p.responsef(args, err.Error())
 		}
 
-		newText, appErr := p.getBmarkTextOneLine(bmark, args)
-		if appErr != nil {
+		newText, err := p.getBmarkTextOneLine(bmark, args)
+		if err != nil {
 			return p.responsef(args, "Unable to get bookmarks list bookmark")
 		}
 

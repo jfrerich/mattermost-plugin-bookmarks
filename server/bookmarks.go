@@ -23,7 +23,7 @@ func (b *Bookmarks) storeBookmarks(userID string) error {
 	key := getBookmarksKey(userID)
 	appErr := b.api.KVSet(key, jsonBookmarks)
 	if appErr != nil {
-		return errors.New(appErr.Error())
+		return appErr
 	}
 
 	return nil

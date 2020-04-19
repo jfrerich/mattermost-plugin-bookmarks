@@ -32,31 +32,31 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 		return p.responsef(args, "You do not have any saved bookmarks")
 	}
 
-	// user requests to view an indiviual bookmark
+	// user requests to view an individual bookmark
 	if len(subCommand) == 3 {
 		postID := subCommand[2]
 		postID = p.getPostIDFromLink(postID)
 		bmark, err := bmarks.getBookmark(args.UserId, postID)
 		if err != nil {
-			return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
+			return p.responsef(args, err.Error())
 		}
 
-		text, appErr := p.getBmarkTextDetailed(bmark, args)
-		if appErr != nil {
-			return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
+		text, err := p.getBmarkTextDetailed(bmark, args)
+		if err != nil {
+			return p.responsef(args, err.Error())
 		}
 		return p.responsef(args, text)
 	}
 
 	text := "#### Bookmarks List\n"
-	bmarksSorted, appErr := b.ByPostCreateAt(bmarks)
-	if appErr != nil {
+	bmarksSorted, err := b.ByPostCreateAt(bmarks)
+	if err != nil {
 		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
 	}
 
 	for _, bmark := range bmarksSorted {
-		nextText, appErr := p.getBmarkTextOneLine(bmark, args)
-		if appErr != nil {
+		nextText, err := p.getBmarkTextOneLine(bmark, args)
+		if err != nil {
 			return p.responsef(args, "Unable to get bookmarks list bookmark")
 		}
 		text = text + nextText
