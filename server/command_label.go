@@ -97,15 +97,21 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 		return p.responsef(args, "Please specify a label name %v", getHelp(labelCommandText))
 	}
 
-	labelName := subCommand[3]
-
 	l := NewLabels(p.API)
 	labels, err := l.getLabels(args.UserId)
+	if err != nil {
+		return p.responsef(args, err.Error())
+	}
+	if labels == nil || len(labels.ByID) == 0 {
+		return p.responsef(args, "You do not have any saved labels")
+	}
+
+	labelName := subCommand[3]
+
 	labelID, err := labels.getIDFromName(args.UserId, labelName)
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
-
 	b := NewBookmarks(p.API)
 	bmarks, err := b.getBookmarks(args.UserId)
 	if err != nil {
@@ -164,7 +170,7 @@ func (p *Plugin) executeCommandLabelView(args *model.CommandArgs) *model.Command
 	if err != nil {
 		return p.responsef(args, "Unable to retrieve bookmark for user %s", args.UserId)
 	}
-	if labels == nil {
+	if labels == nil || len(labels.ByID) == 0 {
 		return p.responsef(args, "You do not have any saved labels")
 	}
 

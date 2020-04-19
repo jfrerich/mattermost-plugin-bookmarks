@@ -37,6 +37,7 @@ func TestExecuteCommandView(t *testing.T) {
 		expectedMsgPrefix string
 		expectedContains  []string
 	}{
+		// USER HAS NO BOOKMARKS
 		"User has no bookmarks": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
 			bookmarks:         nil,
@@ -49,6 +50,8 @@ func TestExecuteCommandView(t *testing.T) {
 			expectedMsgPrefix: strings.TrimSpace("You do not have any saved bookmarks"),
 			expectedContains:  nil,
 		},
+
+		// VIEW INDIVIDUAL BOOKMARK
 		"User requests to view bookmark by ID that has a title defined": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view ID2"},
 			bookmarks:         getExecuteCommandTestBookmarks(),
@@ -61,6 +64,8 @@ func TestExecuteCommandView(t *testing.T) {
 				"this is the post.Message",
 			},
 		},
+
+		// VIEW ALL BOOKMARKS
 		"User has 3 bookmarks  All with titles provided": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
 			bookmarks:         getExecuteCommandTestBookmarks(),
