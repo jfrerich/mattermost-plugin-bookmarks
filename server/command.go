@@ -134,7 +134,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 }
 
 // getTitleFromPost returns a title generated from a Post.Message
-func (p *Plugin) getTitleFromPost(bmark *Bookmark) (string, *model.AppError) {
+func (p *Plugin) getTitleFromPost(bmark *Bookmark) (string, error) {
 
 	// TODO: set limit to number of character from post.Message
 	// numChars := math.Min(float64(len(post.Message)), MaxTitleCharacters)
@@ -147,7 +147,7 @@ func (p *Plugin) getTitleFromPost(bmark *Bookmark) (string, *model.AppError) {
 	return title, nil
 }
 
-func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, args *model.CommandArgs) (string, *model.AppError) {
+func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, args *model.CommandArgs) (string, error) {
 	team, appErr := p.API.GetTeam(args.TeamId)
 	if appErr != nil {
 		return "", appErr
@@ -157,27 +157,26 @@ func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, args *model.CommandArgs) (
 	b := NewBookmarks(p.API)
 	bmarks, _ := b.getBookmarks(args.UserId)
 	if bmark.hasLabels(bmark) {
-		labelNames, _ := bmarks.getLabelNames(args.UserId, bmark)
-		// TODO fix error
-		// if err != nil {
-		// 	return nil, err
-		// }
+		labelNames, err := bmarks.getLabelNames(args.UserId, bmark)
+		if err != nil {
+			return "", err
+		}
 
 		codeBlockedNames = p.getCodeBlockedLabels(labelNames)
 	}
 
-	titleFromPostLabel := ""
-	title := bmark.getTitle()
-
-	if !bmark.hasUserTitle(bmark) {
-		titleFromPostLabel = "`TitleFromPost` "
-		title, appErr = p.getTitleFromPost(bmark)
-		if appErr != nil {
-			return "", appErr
-		}
+	postMessage, err := p.getTitleFromPost(bmark)
+	if err != nil {
+		return "", err
 	}
 
-	text := fmt.Sprintf("%s%s %s%s\n", p.getIconLink(bmark, team), codeBlockedNames, titleFromPostLabel, title)
+	title := fmt.Sprint("`TitleFromPost` ") + postMessage
+	if bmark.hasUserTitle(bmark) {
+		title = bmark.getTitle()
+	}
+
+	text := fmt.Sprintf("%s%s %s\n", p.getIconLink(bmark, team), codeBlockedNames, title)
+
 	return text, nil
 }
 
@@ -189,15 +188,15 @@ func (p *Plugin) getCodeBlockedLabels(names []string) string {
 	return labels
 }
 
-func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, args *model.CommandArgs) (string, *model.AppError) {
+func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, args *model.CommandArgs) (string, error) {
 	team, appErr := p.API.GetTeam(args.TeamId)
 	if appErr != nil {
 		return "", appErr
 	}
 
-	title, appErr := p.getTitleFromPost(bmark)
-	if appErr != nil {
-		return "", appErr
+	title, err := p.getTitleFromPost(bmark)
+	if err != nil {
+		return "", err
 	}
 
 	if bmark.hasUserTitle(bmark) {
@@ -222,7 +221,7 @@ func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, args *model.CommandArgs) 
 	text = text + "##### Post Message \n"
 	text = text + post.Message
 
-	return text, appErr
+	return text, nil
 
 }
 
