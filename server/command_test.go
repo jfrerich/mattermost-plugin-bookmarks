@@ -24,11 +24,6 @@ const (
 	p3ID = "ID3"
 	p4ID = "ID4"
 
-	b1ID = p1ID
-	b2ID = p2ID
-	b3ID = p3ID
-	b4ID = p4ID
-
 	b1Title = "Title1 - New Bookmark - times are zero"
 	b2Title = "Title2 - bookmarks initialized. Times created and same"
 	b3Title = "Title3 - bookmarks already updated once"
@@ -39,28 +34,28 @@ const (
 func getExecuteCommandTestBookmarks() *Bookmarks {
 	api := makeAPIMock()
 	p := makePlugin(api)
-	bmarks := NewBookmarks(p.API)
+	bmarks := NewBookmarksWithUser(p.API, UserID)
 
 	b1 := &Bookmark{
-		PostID:   b1ID,
+		PostID:   p1ID,
 		Title:    b1Title,
 		LabelIDs: []string{"UUID1", "UUID2"},
 	}
 	b2 := &Bookmark{
-		PostID:     b2ID,
+		PostID:     p2ID,
 		Title:      b2Title,
 		CreateAt:   model.GetMillis(),
 		ModifiedAt: model.GetMillis(),
 		LabelIDs:   []string{"UUID1", "UUID2"},
 	}
 	b3 := &Bookmark{
-		PostID:     b3ID,
+		PostID:     p3ID,
 		Title:      b3Title,
 		CreateAt:   model.GetMillis(),
 		ModifiedAt: model.GetMillis(),
 	}
 	b4 := &Bookmark{
-		PostID:     b4ID,
+		PostID:     p4ID,
 		CreateAt:   model.GetMillis(),
 		ModifiedAt: model.GetMillis(),
 	}
@@ -134,10 +129,10 @@ func TestExecuteCommand(t *testing.T) {
 		tt.commandArgs.UserId = UserID
 		siteURL := "https://myhost.com"
 		api.On("GetPost", PostIDDoesNotExist).Return(nil, &model.AppError{Message: "An Error Occurred"})
-		api.On("GetPost", b1ID).Return(p1IDmodel, nil)
-		api.On("GetPost", b2ID).Return(p2IDmodel, nil)
-		api.On("GetPost", b3ID).Return(p3IDmodel, nil)
-		api.On("GetPost", b4ID).Return(p4IDmodel, nil)
+		api.On("GetPost", p1ID).Return(p1IDmodel, nil)
+		api.On("GetPost", p2ID).Return(p2IDmodel, nil)
+		api.On("GetPost", p3ID).Return(p3IDmodel, nil)
+		api.On("GetPost", p4ID).Return(p4IDmodel, nil)
 		api.On("addBookmark", UserID, tt.bookmarks).Return(mock.Anything)
 		api.On("GetTeam", mock.Anything).Return(&model.Team{Id: teamID1}, nil)
 		api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})

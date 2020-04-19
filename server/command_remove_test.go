@@ -45,7 +45,7 @@ func TestExecuteCommandRemove(t *testing.T) {
 			expectedContains:  nil,
 		},
 		"User successfully deletes 3 bookmark": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v %v %v", b1ID, b2ID, b3ID)},
+			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v %v %v", p1ID, p2ID, p3ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
 			expectedMsgPrefix: "",
 			expectedContains: []string{
@@ -61,10 +61,10 @@ func TestExecuteCommandRemove(t *testing.T) {
 		tt.commandArgs.UserId = UserID
 		siteURL := "https://myhost.com"
 		api.On("GetPost", PostIDDoesNotExist).Return(nil, &model.AppError{Message: "An Error Occurred"})
-		api.On("GetPost", b1ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
-		api.On("GetPost", b2ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
-		api.On("GetPost", b3ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
-		api.On("GetPost", b4ID).Return(&model.Post{Message: "this is the post.message"}, nil)
+		api.On("GetPost", p1ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
+		api.On("GetPost", p2ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
+		api.On("GetPost", p3ID).Return(&model.Post{Message: "this is the post.Message"}, nil)
+		api.On("GetPost", p4ID).Return(&model.Post{Message: "this is the post.message"}, nil)
 		api.On("addBookmark", UserID, tt.bookmarks).Return(mock.Anything)
 		api.On("GetTeam", mock.Anything).Return(&model.Team{Id: teamID1}, nil)
 		api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})

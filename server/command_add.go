@@ -69,40 +69,52 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 		return p.responsef(args, "Unable to parse options, %s", err)
 	}
 
+	// var labels *Labels
+	var labelIDsForBookmark []string
+
 	// user going to add labels names
 	if len(options.labels) != 0 {
 
-		l := NewLabels(p.API)
-		labels, _ := l.getLabels(args.UserId)
-
-		// get labelIDs from provided names
-		// TODO: creates new label in labels table if name not found
-		var labelUUIDs []string
-		labelUUIDs, err = labels.getIDsFromNames(args.UserId, options.labels)
+		labels := NewLabelsWithUser(p.API, args.UserId)
+		labels, err = labels.getLabels()
 		if err != nil {
-			return p.responsef(args, "Unable to get UUIDs for labels: %s", options.labels)
+			return p.responsef(args, "Unable to get labels for user, %s", err)
 		}
 
-		// add labelIDs to bmark
-		bookmark.setLabelIDs(labelUUIDs)
+		for _, name := range options.labels {
+			label := labels.getLabelByName(name)
+			// create new label in labels store and add ID to bookmark
+			if label == nil {
+				_, err = labels.addLabel(name)
+				if err != nil {
+					return p.responsef(args, "Unable to add new label for: %s, err=%s", name, err.Error())
+				}
+			}
+			var labelID string
+			labelID, err = labels.getIDFromName(name)
+			if err != nil {
+				return p.responsef(args, err.Error())
+			}
+			labelIDsForBookmark = append(labelIDsForBookmark, labelID)
+		}
+		bookmark.addLabelIDs(labelIDsForBookmark)
 	}
 
 	// get all bookmarks for user
-	b := NewBookmarks(p.API)
-	bmarks, err := b.getBookmarks(args.UserId)
+	b := NewBookmarksWithUser(p.API, args.UserId)
+	bmarks, err := b.getBookmarks()
 	if err != nil {
 		return p.responsef(args, "Unable to get bookmarks")
 	}
 
 	// no marks, initialize the store first
 	if bmarks == nil {
-		bmarks = NewBookmarks(p.API)
+		bmarks = NewBookmarksWithUser(p.API, args.UserId)
 	}
+	bmarks.addBookmark(&bookmark)
 
-	bmarks.addBookmark(args.UserId, &bookmark)
-
-	text, appErr := p.getBmarkTextOneLine(&bookmark, args)
-	if appErr != nil {
+	text, err := p.getBmarkTextOneLine(&bookmark, options.labels, args)
+	if err != nil {
 		return p.responsef(args, "Unable to get bookmarks list bookmark")
 	}
 

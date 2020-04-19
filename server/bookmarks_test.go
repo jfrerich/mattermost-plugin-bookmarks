@@ -27,7 +27,7 @@ func TestStoreBookmarks(t *testing.T) {
 	b2 := &Bookmark{PostID: "ID2", Title: "Title2"}
 
 	// Add Bookmarks
-	bmarks := NewBookmarks(p.API)
+	bmarks := NewBookmarksWithUser(p.API, u1)
 	bmarks.add(b1)
 	bmarks.add(b2)
 
@@ -37,7 +37,7 @@ func TestStoreBookmarks(t *testing.T) {
 	api.On("KVSet", "bookmarks_userID1", jsonBookmarks).Return(nil)
 
 	// store bmarks using API
-	err = bmarks.storeBookmarks(u1)
+	err = bmarks.storeBookmarks()
 	assert.Nil(t, err)
 
 }
@@ -57,11 +57,11 @@ func TestAddBookmark(t *testing.T) {
 
 	// User 1 has no bookmarks
 	u1 := "userID1"
-	bmarksU1 := NewBookmarks(p.API)
+	bmarksU1 := NewBookmarksWithUser(p.API, u1)
 
 	// User 2 has 2 existing bookmarks
 	u2 := "userID2"
-	bmarksU2 := NewBookmarks(p.API)
+	bmarksU2 := NewBookmarksWithUser(p.API, u2)
 	bmarksU2.add(b1)
 	bmarksU2.add(b2)
 
@@ -102,7 +102,7 @@ func TestAddBookmark(t *testing.T) {
 
 			// store bmarks using API
 			// bmarks, err := p.addBookmark(tt.userID, b3)
-			err = tt.bmarks.addBookmark(tt.userID, b3)
+			err = tt.bmarks.addBookmark(b3)
 			assert.Nil(t, err)
 			assert.Equal(t, tt.want, len(tt.bmarks.ByID))
 		})
@@ -123,11 +123,11 @@ func TestDeleteBookmark(t *testing.T) {
 
 	// User 1 has no bookmarks
 	u1 := "userID1"
-	bmarksU1 := NewBookmarks(p.API)
+	bmarksU1 := NewBookmarksWithUser(p.API, u1)
 
 	// User 2 has 2 existing bookmarks
 	u2 := "userID2"
-	bmarksU2 := NewBookmarks(p.API)
+	bmarksU2 := NewBookmarksWithUser(p.API, u2)
 	bmarksU2.add(b1)
 	bmarksU2.add(b2)
 
@@ -166,7 +166,7 @@ func TestDeleteBookmark(t *testing.T) {
 			api.On("KVGet", key).Return(jsonBookmarks, nil)
 
 			// store bmarks using API
-			_, err = tt.bmarks.deleteBookmark(tt.userID, b2.PostID)
+			_, err = tt.bmarks.deleteBookmark(b2.PostID)
 			if tt.wantErr {
 				assert.Equal(t, err.Error(), tt.wantErrMsg)
 				return

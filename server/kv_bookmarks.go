@@ -7,8 +7,9 @@ import (
 
 // Bookmarks contains a map of bookmarks
 type Bookmarks struct {
-	ByID map[string]*Bookmark
-	api  plugin.API
+	ByID   map[string]*Bookmark
+	api    plugin.API
+	userID string
 }
 
 // Bookmark contains information about an individual bookmark
@@ -25,6 +26,15 @@ func NewBookmarks(api plugin.API) *Bookmarks {
 	return &Bookmarks{
 		ByID: make(map[string]*Bookmark),
 		api:  api,
+	}
+}
+
+// NewBookmarksWithUser returns an initialized Labels for a User
+func NewBookmarksWithUser(api plugin.API, userID string) *Bookmarks {
+	return &Bookmarks{
+		ByID:   make(map[string]*Bookmark),
+		api:    api,
+		userID: userID,
 	}
 }
 
@@ -59,7 +69,7 @@ func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
 
 func (b *Bookmarks) updateLabels(bmark *Bookmark) *Bookmark {
 	bmarkOrig := b.get(bmark.PostID)
-	bmarkOrig.setLabelIDs(bmark.getLabelIDs())
+	bmarkOrig.addLabelIDs(bmark.getLabelIDs())
 	return bmark
 }
 
@@ -90,7 +100,7 @@ func (b *Bookmark) getLabelIDs() []string {
 	return b.LabelIDs
 }
 
-func (b *Bookmark) setLabelIDs(IDs []string) {
+func (b *Bookmark) addLabelIDs(IDs []string) {
 	b.LabelIDs = IDs
 	return
 }
