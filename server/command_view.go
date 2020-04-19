@@ -36,12 +36,15 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 	if len(subCommand) == 3 {
 		postID := subCommand[2]
 		postID = p.getPostIDFromLink(postID)
-		bmark, err := bmarks.getBookmark(args.UserId, postID)
+
+		var bmark *Bookmark
+		bmark, err = bmarks.getBookmark(args.UserId, postID)
 		if err != nil {
 			return p.responsef(args, err.Error())
 		}
 
-		text, err := p.getBmarkTextDetailed(bmark, args)
+		var text string
+		text, err = p.getBmarkTextDetailed(bmark, args)
 		if err != nil {
 			return p.responsef(args, err.Error())
 		}
