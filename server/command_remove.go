@@ -22,8 +22,8 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 		text = "Removed bookmarks: \n"
 	}
 
-	b := NewBookmarks(p.API)
-	bmarks, err := b.getBookmarks(args.UserId)
+	b := NewBookmarksWithUser(p.API, args.UserId)
+	bmarks, err := b.getBookmarks()
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
@@ -31,19 +31,32 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 		return p.responsef(args, fmt.Sprintf("User doesn't have any bookmarks"))
 	}
 
+	labels := NewLabelsWithUser(p.API, args.UserId)
+	labels, err = labels.getLabelsForUser()
+	if err != nil {
+		return p.responsef(args, "Unable to get labels for user, %s", err)
+	}
+
 	for _, id := range bookmarkIDs {
 		bookmarkID := p.getPostIDFromLink(id)
-		bmark, err := bmarks.getBookmark(args.UserId, bookmarkID)
+		bmark, err := bmarks.getBookmark(bookmarkID)
 		if err != nil {
 			return p.responsef(args, err.Error())
 		}
 
-		newText, err := p.getBmarkTextOneLine(bmark, args)
-		if err != nil {
-			return p.responsef(args, "Unable to get bookmarks list bookmark")
+		var labelNames []string
+		for _, labelID := range bmark.LabelIDs {
+			name, _ := labels.getNameFromID(labelID)
+			labelNames = append(labelNames, name)
 		}
 
-		_, err = bmarks.deleteBookmark(args.UserId, bookmarkID)
+		newText, err := p.getBmarkTextOneLine(bmark, labelNames, args)
+		// FIXME newText, err := p.getBmarkTextOneLine(bmark, args)
+		if err != nil {
+			return p.responsef(args, err.Error())
+		}
+
+		_, err = bmarks.deleteBookmark(bookmarkID)
 		if err != nil {
 			return p.responsef(args, err.Error())
 		}

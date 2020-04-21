@@ -11,7 +11,7 @@ import (
 func getTestBookmarks() *Bookmarks {
 	api := makeAPIMock()
 	p := makePlugin(api)
-	bmarks := NewBookmarks(p.API)
+	bmarks := NewBookmarksWithUser(p.API, UserID)
 
 	b1 := &Bookmark{
 		PostID: "ID1",
@@ -75,15 +75,15 @@ func TestBookmarks_updateTimes(t *testing.T) {
 	assert.Equal(t, 0, int(b1.ModifiedAt))
 
 	// bmark has been added and times added
-	b1 = bmarks.updateTimes("ID1")
-	b1 = bmarks.get("ID1")
+	bmarks.updateTimes("ID1")
+	bmarks.get("ID1")
 	assert.Greater(t, int(b1.ModifiedAt), 0)
 	assert.Equal(t, int(b1.ModifiedAt), int(b1.CreateAt))
 
 	// bmark was already saved and modified time updates
 	b2 := bmarks.get("ID2")
 	time.Sleep(time.Millisecond)
-	b2 = bmarks.updateTimes("ID2")
+	bmarks.updateTimes("ID2")
 	b2 = bmarks.get("ID2")
 	assert.Greater(t, b2.ModifiedAt, b2.CreateAt)
 }

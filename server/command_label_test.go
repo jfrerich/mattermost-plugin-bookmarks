@@ -24,7 +24,7 @@ func getExecuteCommandTestLabels() *Labels {
 	}
 
 	api := makeAPIMock()
-	labels := NewLabels(api)
+	labels := NewLabelsWithUser(api, UserID)
 	labels.add("UUID1", l1)
 	labels.add("UUID2", l2)
 	labels.add("UUID3", l3)

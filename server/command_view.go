@@ -19,8 +19,8 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 
 	subCommand := strings.Fields(args.Command)
 
-	b := NewBookmarks(p.API)
-	bmarks, err := b.getBookmarks(args.UserId)
+	b := NewBookmarksWithUser(p.API, args.UserId)
+	bmarks, err := b.getBookmarks()
 	if err != nil {
 		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
 	}
@@ -32,21 +32,33 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 		return p.responsef(args, "You do not have any saved bookmarks")
 	}
 
+	labels := NewLabelsWithUser(p.API, args.UserId)
+	labels, err = labels.getLabelsForUser()
+	if err != nil {
+		return p.responsef(args, "Unable to get labels for user, %s", err)
+	}
+
 	// user requests to view an individual bookmark
 	if len(subCommand) == 3 {
 		postID := subCommand[2]
 		postID = p.getPostIDFromLink(postID)
 
 		var bmark *Bookmark
-		bmark, err = bmarks.getBookmark(args.UserId, postID)
+		bmark, err = bmarks.getBookmark(postID)
+		if err != nil {
+			return p.responsef(args, err.Error())
+		}
+
+		var labelNames []string
+		labelNames, err = labels.getLabelNames(args.UserId, bmark)
 		if err != nil {
 			return p.responsef(args, err.Error())
 		}
 
 		var text string
-		text, err = p.getBmarkTextDetailed(bmark, args)
+		text, err = p.getBmarkTextDetailed(bmark, labelNames, args)
 		if err != nil {
-			return p.responsef(args, err.Error())
+			return p.responsef(args, "Unable to get bookmark text %s", err)
 		}
 		return p.responsef(args, text)
 	}
@@ -54,13 +66,17 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 	text := "#### Bookmarks List\n"
 	bmarksSorted, err := b.ByPostCreateAt(bmarks)
 	if err != nil {
-		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
+		return p.responsef(args, err.Error())
 	}
 
 	for _, bmark := range bmarksSorted {
-		nextText, err := p.getBmarkTextOneLine(bmark, args)
+		labelNames, err := labels.getLabelNames(args.UserId, bmark)
 		if err != nil {
-			return p.responsef(args, "Unable to get bookmarks list bookmark")
+			return p.responsef(args, err.Error())
+		}
+		nextText, err := p.getBmarkTextOneLine(bmark, labelNames, args)
+		if err != nil {
+			return p.responsef(args, "Unable to get bookmarks text %s", err)
 		}
 		text = text + nextText
 	}

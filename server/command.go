@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -147,21 +148,15 @@ func (p *Plugin) getTitleFromPost(bmark *Bookmark) (string, error) {
 	return title, nil
 }
 
-func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, args *model.CommandArgs) (string, error) {
+func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, labelNames []string, args *model.CommandArgs) (string, error) {
 	team, appErr := p.API.GetTeam(args.TeamId)
 	if appErr != nil {
 		return "", appErr
 	}
 
 	codeBlockedNames := ""
-	b := NewBookmarks(p.API)
-	bmarks, _ := b.getBookmarks(args.UserId)
-	if bmark.hasLabels(bmark) {
-		labelNames, err := bmarks.getLabelNames(args.UserId, bmark)
-		if err != nil {
-			return "", err
-		}
 
+	if bmark.hasLabels(bmark) {
 		codeBlockedNames = p.getCodeBlockedLabels(labelNames)
 	}
 
@@ -182,13 +177,14 @@ func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, args *model.CommandArgs) (
 
 func (p *Plugin) getCodeBlockedLabels(names []string) string {
 	labels := ""
+	sort.Strings(names)
 	for _, name := range names {
 		labels = labels + fmt.Sprintf(" `%s`", name)
 	}
 	return labels
 }
 
-func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, args *model.CommandArgs) (string, error) {
+func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, labelNames []string, args *model.CommandArgs) (string, error) {
 	team, appErr := p.API.GetTeam(args.TeamId)
 	if appErr != nil {
 		return "", appErr
@@ -203,10 +199,6 @@ func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, args *model.CommandArgs) 
 		title = bmark.Title
 	}
 
-	b := NewBookmarks(p.API)
-	bmarks, _ := b.getBookmarks(args.UserId)
-	labelNames, _ := bmarks.getLabelNames(args.UserId, bmark)
-
 	codeBlockedNames := p.getCodeBlockedLabels(labelNames)
 	post, appErr := p.API.GetPost(bmark.PostID)
 	if appErr != nil {
@@ -215,7 +207,6 @@ func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, args *model.CommandArgs) 
 
 	iconLink := p.getIconLink(bmark, team)
 
-	// team := post.
 	text := fmt.Sprintf("%s\n#### Bookmark Title %s\n", codeBlockedNames, iconLink)
 	text = text + fmt.Sprintf("**%s**\n", title)
 	text = text + "##### Post Message \n"

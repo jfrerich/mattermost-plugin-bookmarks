@@ -14,13 +14,13 @@ import (
 const StoreLabelsKey = "labels"
 
 // storeLabels stores all the users labels
-func (l *Labels) storeLabels(userID string) error {
+func (l *Labels) storeLabels() error {
 	bb, jsonErr := json.Marshal(l)
 	if jsonErr != nil {
 		return jsonErr
 	}
 
-	key := getLabelsKey(userID)
+	key := getLabelsKey(l.userID)
 	appErr := l.api.KVSet(key, bb)
 	if appErr != nil {
 		return errors.New(appErr.Error())
@@ -30,25 +30,49 @@ func (l *Labels) storeLabels(userID string) error {
 }
 
 // getNameFromID returns the Name of a Label
-func (l *Labels) getNameFromID(userID string, ID string) (string, error) {
-	label := l.get(ID)
+func (l *Labels) getNameFromID(ID string) (string, error) {
+	label, err := l.get(ID)
+	if err != nil {
+		return "", err
+	}
+
 	return label.Name, nil
 }
 
 // getLabels returns a users labels
-func (l *Labels) getLabels(userID string) (*Labels, error) {
+func (l *Labels) getLabels() (*Labels, error) {
 
 	// if a user does not have labels, bb will be nil
-	bb, appErr := l.api.KVGet(getLabelsKey(userID))
+	bb, appErr := l.api.KVGet(getLabelsKey(l.userID))
 	if appErr != nil {
 		return nil, appErr
 	}
 
-	labels := NewLabels(l.api)
 	if bb == nil {
-		return labels, nil
+		return l, nil
 	}
 
+	jsonErr := json.Unmarshal(bb, l)
+	if jsonErr != nil {
+		return nil, jsonErr
+	}
+
+	return l, nil
+}
+
+// getLabelsForUser returns a users labels
+func (l *Labels) getLabelsForUser() (*Labels, error) {
+
+	// if a user does not have labels, bb will be nil
+	bb, appErr := l.api.KVGet(getLabelsKey(l.userID))
+	if appErr != nil {
+		return nil, appErr
+	}
+	if bb == nil {
+		return nil, nil
+	}
+
+	var labels *Labels
 	jsonErr := json.Unmarshal(bb, &labels)
 	if jsonErr != nil {
 		return nil, jsonErr
@@ -58,27 +82,19 @@ func (l *Labels) getLabels(userID string) (*Labels, error) {
 }
 
 // getLabelByName returns a label with the provided label name
-func (l *Labels) getLabelByName(userID string, labelName string) (*Label, error) {
-
-	labels, err := l.getLabels(userID)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	for _, l := range labels.ByID {
-		if l.Name == labelName {
-			return l, nil
+func (l *Labels) getLabelByName(labelName string) *Label {
+	for _, label := range l.ByID {
+		if label.Name == labelName {
+			return label
 		}
 	}
-
-	return nil, nil
+	return nil
 }
 
 // getIDsFromNames returns a list of label names
-func (l *Labels) getIDsFromNames(userID string, labelNames []string) ([]string, error) {
+func (l *Labels) getIDsFromNames(labelNames []string) ([]string, error) {
 
 	newLabelNames := labelNames
-
 	// need to determine which names did not have an ID in the labels store
 	// then create them in the store and attach them to the bookmark
 
@@ -105,25 +121,21 @@ func (l *Labels) getIDsFromNames(userID string, labelNames []string) ([]string, 
 		}
 	}
 
-	l.storeLabels(userID)
+	l.storeLabels()
+
 	return uuids, nil
 }
 
 // getIDFromName returns a label name with the corresponding label ID
-func (l *Labels) getIDFromName(userID string, labelName string) (string, error) {
+func (l *Labels) getIDFromName(labelName string) (string, error) {
 
-	labels, err := l.getLabels(userID)
-	if err != nil {
-		return "", errors.New(err.Error())
-	}
-
-	if labels == nil {
+	if l == nil {
 		return "", errors.New(fmt.Sprint("User does not have any labels"))
 	}
 
 	// return the labelId if found
-	for id, l := range labels.ByID {
-		if l.Name == labelName {
+	for id, label := range l.ByID {
+		if label.Name == labelName {
 			return id, nil
 		}
 	}
@@ -143,55 +155,35 @@ func removeFromArray(name string, array []string) []string {
 }
 
 // addLabel stores a label into the users label store
-func (l *Labels) addLabel(userID string, labelName string) (*Label, error) {
+func (l *Labels) addLabel(labelName string) (*Labels, error) {
 
 	// check if name already exists
-	label, err := l.getLabelByName(userID, labelName)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
+	label := l.getLabelByName(labelName)
 
 	// User already has label with this labelName
 	if label != nil {
 		return nil, errors.New(fmt.Sprintf("Label with name `%s` already exists", label.Name))
 	}
 
-	// get all labels for user
-	labels, err := l.getLabels(userID)
-	if err != nil {
-		return nil, errors.New(err.Error())
-	}
-
-	// no labels, initialize the store and save
-	if labels == nil {
-		labels = NewLabels(l.api) // save first label
-	}
-
 	labelID := NewID()
 	label = &Label{
 		Name: labelName,
 	}
-	labels.add(labelID, label)
+	l.add(labelID, label)
 
-	if err = l.storeLabels(userID); err != nil {
-		return nil, errors.New(err.Error())
+	if err := l.storeLabels(); err != nil {
+		return nil, err
 	}
 
-	return label, nil
+	return l, nil
 }
 
 // deleteByID deletes a label from the store
-func (l *Labels) deleteByID(userID, labelID string) error {
-
-	// check if exists
-	_, ok := l.exists(labelID)
-	if !ok {
-		return errors.New(fmt.Sprintf("Label with ID `%s` doesn't exist", labelID))
-	}
-
+func (l *Labels) deleteByID(labelID string) error {
 	l.delete(labelID)
-	l.storeLabels(userID)
-
+	if err := l.storeLabels(); err != nil {
+		return err
+	}
 	return nil
 }
 

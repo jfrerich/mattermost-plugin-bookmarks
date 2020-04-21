@@ -89,10 +89,10 @@ func TestExecuteCommandView(t *testing.T) {
 		tt.commandArgs.UserId = UserID
 		siteURL := "https://myhost.com"
 		api.On("GetPost", PostIDDoesNotExist).Return(nil, &model.AppError{Message: "An Error Occurred"})
-		api.On("GetPost", b1ID).Return(p1IDmodel, nil)
-		api.On("GetPost", b2ID).Return(p2IDmodel, nil)
-		api.On("GetPost", b3ID).Return(p3IDmodel, nil)
-		api.On("GetPost", b4ID).Return(p4IDmodel, nil)
+		api.On("GetPost", p1ID).Return(p1IDmodel, nil)
+		api.On("GetPost", p2ID).Return(p2IDmodel, nil)
+		api.On("GetPost", p3ID).Return(p3IDmodel, nil)
+		api.On("GetPost", p4ID).Return(p4IDmodel, nil)
 		api.On("addBookmark", UserID, tt.bookmarks).Return(mock.Anything)
 		api.On("GetTeam", mock.Anything).Return(&model.Team{Id: teamID1}, nil)
 		api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})

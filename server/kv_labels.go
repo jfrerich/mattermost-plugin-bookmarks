@@ -1,11 +1,14 @@
 package main
 
-import "github.com/mattermost/mattermost-server/v5/plugin"
+import (
+	"github.com/mattermost/mattermost-server/v5/plugin"
+)
 
 // Labels contains a map of labels with the label name as the key
 type Labels struct {
-	ByID map[string]*Label
-	api  plugin.API
+	ByID   map[string]*Label
+	api    plugin.API
+	userID string
 }
 
 // Label defines the parameters of a label
@@ -22,43 +25,23 @@ func NewLabels(api plugin.API) *Labels {
 	}
 }
 
+// NewLabelsWithUser returns an initialized Labels for a User
+func NewLabelsWithUser(api plugin.API, userID string) *Labels {
+	return &Labels{
+		ByID:   make(map[string]*Label),
+		api:    api,
+		userID: userID,
+	}
+}
+
 func (l *Labels) add(UUID string, label *Label) {
 	l.ByID[UUID] = label
 }
 
-func (l *Labels) get(ID string) *Label {
-	return l.ByID[ID]
+func (l *Labels) get(ID string) (*Label, error) {
+	return l.ByID[ID], nil
 }
 
 func (l *Labels) delete(ID string) {
 	delete(l.ByID, ID)
 }
-
-func (l *Labels) exists(ID string) (*Label, bool) {
-	if label, ok := l.ByID[ID]; ok {
-		return label, true
-	}
-	return nil, false
-}
-
-// func (l *Labels) labelExists(labelName string) (*Label, bool) {
-// 	if label, ok := l.ByName[labelName]; ok {
-// 		return label, true
-// 	}
-// 	return nil, false
-// }
-//
-// func (l *Labels) getLabel(labelName string) (*Label, bool) {
-// 	if label, ok := l.ByName[labelName]; ok {
-// 		return label, true
-// 	}
-// 	return nil, false
-// }
-//
-// func (l *Labels) addLabel(label *Label) {
-// 	l.ByName[label.Name] = label
-// }
-//
-// func (l *Labels) deleteLabel(labelName string) {
-// 	delete(l.ByName, labelName)
-// }
