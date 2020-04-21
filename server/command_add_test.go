@@ -17,11 +17,12 @@ const addPrefixMsg = "Added bookmark: [:link:](https://myhost.com//pl/"
 
 func TestExecuteCommandAdd(t *testing.T) {
 	tests := map[string]struct {
-		commandArgs       *model.CommandArgs
-		bookmarks         *Bookmarks
-		labels            *Labels
-		expectedMsgPrefix string
-		expectedContains  []string
+		commandArgs         *model.CommandArgs
+		bookmarks           *Bookmarks
+		labels              *Labels
+		expectedMsgPrefix   string
+		expectedContains    []string
+		expectedNotContains []string
 	}{
 		"User doesn't provide an ID": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks add"},
@@ -74,11 +75,12 @@ func TestExecuteCommandAdd(t *testing.T) {
 			expectedContains:  []string{"label1", "label2", "Title Provided By User"},
 		},
 		"Bookmark added  title provided with labels": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v --labels label1,label2", PostIDExists, "TitleProvidedByUser")},
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID2) ", addPrefixMsg)),
-			expectedContains:  []string{"label1", "label2", "TitleProvidedByUser"},
+			commandArgs:         &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v --labels label1,label2", PostIDExists, "TitleProvidedByUser")},
+			bookmarks:           getExecuteCommandTestBookmarks(),
+			labels:              getExecuteCommandTestLabels(),
+			expectedMsgPrefix:   strings.TrimSpace(fmt.Sprintf("%sID2) ", addPrefixMsg)),
+			expectedContains:    []string{"label1", "label2", "TitleProvidedByUser"},
+			expectedNotContains: []string{"--labels"},
 		},
 
 		// HAS LABELS; NO TITLES
@@ -95,33 +97,37 @@ func TestExecuteCommandAdd(t *testing.T) {
 			expectedContains:  nil,
 		},
 		"Bookmark --labels provided with one label": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1", p1ID)},
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1", addPrefixMsg)),
-			expectedContains:  nil,
+			commandArgs:         &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1", p1ID)},
+			bookmarks:           getExecuteCommandTestBookmarks(),
+			labels:              getExecuteCommandTestLabels(),
+			expectedMsgPrefix:   strings.TrimSpace(fmt.Sprintf("%sID1", addPrefixMsg)),
+			expectedNotContains: []string{"--labels"},
+			expectedContains:    nil,
 		},
 		"Bookmark --labels provided with two labels": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1,label2", p1ID)},
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1", addPrefixMsg)),
-			expectedContains:  []string{"label1", "label2"},
+			commandArgs:         &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1,label2", p1ID)},
+			bookmarks:           getExecuteCommandTestBookmarks(),
+			labels:              getExecuteCommandTestLabels(),
+			expectedMsgPrefix:   strings.TrimSpace(fmt.Sprintf("%sID1", addPrefixMsg)),
+			expectedContains:    []string{"label1", "label2"},
+			expectedNotContains: []string{"--labels"},
 		},
 		"Bookmark add 3 labels two exist one new": {
-			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1,label2,label8", p1ID)},
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1", addPrefixMsg)),
-			expectedContains:  []string{"label1", "label2", "label8"},
+			commandArgs:         &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1,label2,label8", p1ID)},
+			bookmarks:           getExecuteCommandTestBookmarks(),
+			labels:              getExecuteCommandTestLabels(),
+			expectedMsgPrefix:   strings.TrimSpace(fmt.Sprintf("%sID1", addPrefixMsg)),
+			expectedContains:    []string{"label1", "label2", "label8"},
+			expectedNotContains: []string{"--labels"},
 		},
 		"Bookmark added  test labels are sorted": {
 			commandArgs: &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1,l8,l2,aa,cc,bb,xx", p1ID)},
 			// commandArgs: &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1,xx", p1ID)},
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1) `aa` `bb` `cc` `l2` `l8` `label1` `xx`", addPrefixMsg)),
-			expectedContains:  []string{"l1", "l2", "l8"},
+			bookmarks:           getExecuteCommandTestBookmarks(),
+			labels:              getExecuteCommandTestLabels(),
+			expectedMsgPrefix:   strings.TrimSpace(fmt.Sprintf("%sID1) `aa` `bb` `cc` `l2` `l8` `label1` `xx`", addPrefixMsg)),
+			expectedContains:    []string{"l1", "l2", "l8"},
+			expectedNotContains: []string{"--labels"},
 			// expectedContains: nil,
 		},
 	}
@@ -159,6 +165,11 @@ func TestExecuteCommandAdd(t *testing.T) {
 				if tt.expectedContains != nil {
 					for i := range tt.expectedContains {
 						assert.Contains(t, actual, tt.expectedContains[i])
+					}
+				}
+				if tt.expectedNotContains != nil {
+					for i := range tt.expectedNotContains {
+						assert.NotContains(t, actual, tt.expectedNotContains[i])
 					}
 				}
 				// assert.Contains(t, actual, tt.expectedMsgPrefix)
