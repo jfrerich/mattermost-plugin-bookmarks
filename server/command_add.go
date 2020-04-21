@@ -124,8 +124,9 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 func (p *Plugin) getTitleFromArguments(args []string) string {
 	for i, arg := range args {
 		// user also provided a --flag
-		if arg == "--" {
-			return strings.Join(args[:i-1], " ")
+		if strings.HasPrefix(arg, "--") {
+			title := strings.Join(args[:i], " ")
+			return title
 		}
 	}
 
