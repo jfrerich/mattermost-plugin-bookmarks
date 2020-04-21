@@ -28,7 +28,7 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 		return p.responsef(args, err.Error())
 	}
 	if bmarks == nil {
-		return p.responsef(args, fmt.Sprintf("User doesn't have any bookmarks"))
+		return p.responsef(args, "User doesn't have any bookmarks")
 	}
 
 	labels := NewLabelsWithUser(p.API, args.UserId)
@@ -61,8 +61,8 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 			return p.responsef(args, err.Error())
 		}
 
-		text = text + newText
+		text += newText
 	}
 
-	return p.responsef(args, fmt.Sprintf(text))
+	return p.responsef(args, fmt.Sprint(text))
 }

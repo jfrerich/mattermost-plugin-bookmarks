@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+//nolint
 func makePlugin(api *plugintest.API) *Plugin {
 	p := &Plugin{}
 	p.SetAPI(api)
@@ -19,7 +20,7 @@ func TestStoreBookmarks(t *testing.T) {
 	api := makeAPIMock()
 	p := makePlugin(api)
 
-	// intialize test Bookmarks
+	// initialize test Bookmarks
 	u1 := "userID1"
 	// u2 := "userID2"
 
@@ -39,7 +40,6 @@ func TestStoreBookmarks(t *testing.T) {
 	// store bmarks using API
 	err = bmarks.storeBookmarks()
 	assert.Nil(t, err)
-
 }
 
 func TestAddBookmark(t *testing.T) {
@@ -65,10 +65,6 @@ func TestAddBookmark(t *testing.T) {
 	bmarksU2.add(b1)
 	bmarksU2.add(b2)
 
-	type args struct {
-		userID      string
-		newBookmark *Bookmark
-	}
 	tests := []struct {
 		name    string
 		userID  string
@@ -131,10 +127,6 @@ func TestDeleteBookmark(t *testing.T) {
 	bmarksU2.add(b1)
 	bmarksU2.add(b2)
 
-	type args struct {
-		userID      string
-		newBookmark *Bookmark
-	}
 	tests := []struct {
 		name       string
 		userID     string
@@ -160,6 +152,7 @@ func TestDeleteBookmark(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			jsonBookmarks, err := json.Marshal(tt.bmarks)
+			assert.Nil(t, err)
 
 			key := getBookmarksKey(tt.userID)
 			api.On("KVSet", key, mock.Anything).Return(nil)

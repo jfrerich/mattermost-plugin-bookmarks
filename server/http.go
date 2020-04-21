@@ -10,7 +10,6 @@ import (
 )
 
 func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "application/json")
 
 	switch r.URL.Path {
@@ -18,15 +17,14 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		p.handleAdd(w, r)
 	case "/view":
 		p.handleView(w, r)
-	case "/delete":
-		p.handleDelete(w, r)
+	// case "/delete":
+	// 	p.handleDelete(w, r)
 	default:
 		http.NotFound(w, r)
 	}
 }
 
 func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
-
 	userID := r.Header.Get("Mattermost-User-ID")
 	if userID == "" {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
@@ -51,21 +49,26 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if bmarks == nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	// ok if bmarks are nil.  They dont yet exist
+	// if bmarks == nil {
+	// 	// http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	fmt.Println("IN HERE")
+	// 	http.Error(w, "no bookmarks", http.StatusInternalServerError)
+	// 	// p.handleErrorWithCode(w, http.StatusBadRequest, "Unable to decode JSON", err)
+	// if bmarks == nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
 	err = bmarks.addBookmark(bmark)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 }
 
-func (p *Plugin) handleDelete(w http.ResponseWriter, r *http.Request) {
-	return
-}
+// func (p *Plugin) handleDelete(w http.ResponseWriter, r *http.Request) {
+// 	return
+// }
 
 func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("Mattermost-User-ID")
@@ -91,12 +94,10 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	if bmarks == nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	err = bmarks.addBookmark(&bmark)
+	if err != nil {
+		p.handleErrorWithCode(w, http.StatusBadRequest, "Unable to add bookmark", err)
 	}
-	bmarks.addBookmark(&bmark)
-
-	return
 }
 
 func (p *Plugin) handleErrorWithCode(w http.ResponseWriter, code int, errTitle string, err error) {

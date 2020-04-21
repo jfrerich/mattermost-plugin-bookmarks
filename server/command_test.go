@@ -27,8 +27,6 @@ const (
 	b1Title = "Title1 - New Bookmark - times are zero"
 	b2Title = "Title2 - bookmarks initialized. Times created and same"
 	b3Title = "Title3 - bookmarks already updated once"
-
-	p4Title = "This is a message from a post"
 )
 
 func getExecuteCommandTestBookmarks() *Bookmarks {
@@ -76,7 +74,6 @@ func getExecuteCommandTestBookmarks() *Bookmarks {
 }
 
 func TestExecuteCommand(t *testing.T) {
-
 	p1IDmodel := &model.Post{
 		Message:  "this is the post.Message",
 		CreateAt: model.GetMillis(),
@@ -100,7 +97,7 @@ func TestExecuteCommand(t *testing.T) {
 		expectedMsgPrefix string
 		expectedContains  []string
 	}{
-		// No Slash Commmand
+		// No Slash Command
 		"No slash command": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks"},
 			bookmarks:         nil,
@@ -108,7 +105,7 @@ func TestExecuteCommand(t *testing.T) {
 			expectedContains:  []string{"bookmarks add", "bookmarks view", "bookmarks remove"},
 		},
 
-		// Unknown Slash Commmand
+		// Unknown Slash Command
 		"UNKNOWN slash command": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks UnknownCommand"},
 			bookmarks:         nil,
@@ -116,7 +113,7 @@ func TestExecuteCommand(t *testing.T) {
 			expectedContains:  []string{},
 		},
 
-		// Help Slash Commmand
+		// Help Slash Command
 		"HELP slash command": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks help"},
 			bookmarks:         nil,
