@@ -87,13 +87,13 @@ func TestExecuteCommandAdd(t *testing.T) {
 		"Bookmark unknown flag provided": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --unknownflag", p1ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Unable to parse options, unknown flag: --unknownflag")),
+			expectedMsgPrefix: strings.TrimSpace("Unable to parse options, unknown flag: --unknownflag"),
 			expectedContains:  nil,
 		},
 		"Bookmark --labels provided without options": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels", p1ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Unable to parse options, flag needs an argument: --labels")),
+			expectedMsgPrefix: strings.TrimSpace("Unable to parse options, flag needs an argument: --labels"),
 			expectedContains:  nil,
 		},
 		"Bookmark --labels provided with one label": {

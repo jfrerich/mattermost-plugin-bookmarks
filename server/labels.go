@@ -92,7 +92,7 @@ func (l *Labels) getLabelByName(labelName string) *Label {
 // getIDFromName returns a label name with the corresponding label ID
 func (l *Labels) getIDFromName(labelName string) (string, error) {
 	if l == nil {
-		return "", errors.New(fmt.Sprint("User does not have any labels"))
+		return "", errors.New("user does not have any labels")
 	}
 
 	// return the labelId if found

@@ -147,7 +147,7 @@ func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, labelNames []string, args 
 		return "", err
 	}
 
-	title := fmt.Sprint("`TitleFromPost` ") + postMessage
+	title := "`TitleFromPost` " + postMessage
 	if bmark.hasUserTitle(bmark) {
 		title = bmark.getTitle()
 	}
