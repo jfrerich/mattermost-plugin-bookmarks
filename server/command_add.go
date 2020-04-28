@@ -41,7 +41,6 @@ func parseAddBookmarkArgs(args []string) (addBookmarkOptions, error) {
 
 // executeCommandAdd adds a bookmark to the store
 func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandResponse {
-
 	subCommand := strings.Fields(args.Command)
 	subCommand = subCommand[2:]
 
@@ -74,7 +73,6 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 
 	// user going to add labels names
 	if len(options.labels) != 0 {
-
 		labels := NewLabelsWithUser(p.API, args.UserId)
 		labels, err = labels.getLabels()
 		if err != nil {
@@ -111,7 +109,10 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 	if bmarks == nil {
 		bmarks = NewBookmarksWithUser(p.API, args.UserId)
 	}
-	bmarks.addBookmark(&bookmark)
+	err = bmarks.addBookmark(&bookmark)
+	if err != nil {
+		return p.responsef(args, "Unable to add bookmark")
+	}
 
 	text, err := p.getBmarkTextOneLine(&bookmark, options.labels, args)
 	if err != nil {

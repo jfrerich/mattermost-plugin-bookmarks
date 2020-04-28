@@ -30,8 +30,8 @@ func (l *Labels) storeLabels() error {
 }
 
 // getNameFromID returns the Name of a Label
-func (l *Labels) getNameFromID(ID string) (string, error) {
-	label, err := l.get(ID)
+func (l *Labels) getNameFromID(id string) (string, error) {
+	label, err := l.get(id)
 	if err != nil {
 		return "", err
 	}
@@ -41,7 +41,6 @@ func (l *Labels) getNameFromID(ID string) (string, error) {
 
 // getLabels returns a users labels
 func (l *Labels) getLabels() (*Labels, error) {
-
 	// if a user does not have labels, bb will be nil
 	bb, appErr := l.api.KVGet(getLabelsKey(l.userID))
 	if appErr != nil {
@@ -62,7 +61,6 @@ func (l *Labels) getLabels() (*Labels, error) {
 
 // getLabelsForUser returns a users labels
 func (l *Labels) getLabelsForUser() (*Labels, error) {
-
 	// if a user does not have labels, bb will be nil
 	bb, appErr := l.api.KVGet(getLabelsKey(l.userID))
 	if appErr != nil {
@@ -91,44 +89,8 @@ func (l *Labels) getLabelByName(labelName string) *Label {
 	return nil
 }
 
-// getIDsFromNames returns a list of label names
-func (l *Labels) getIDsFromNames(labelNames []string) ([]string, error) {
-
-	newLabelNames := labelNames
-	// need to determine which names did not have an ID in the labels store
-	// then create them in the store and attach them to the bookmark
-
-	// build array of all UUIDs for the bookmark
-	var uuids []string
-	for id, label := range l.ByID {
-		for _, name := range labelNames {
-			if label.Name == name {
-				newLabelNames = removeFromArray(label.Name, newLabelNames)
-				uuids = append(uuids, id)
-			}
-		}
-	}
-
-	//generate new labels
-	if len(newLabelNames) > 0 {
-		for _, name := range newLabelNames {
-			labelID := NewID()
-			label := &Label{
-				Name: name,
-			}
-			l.add(labelID, label)
-			uuids = append(uuids, labelID)
-		}
-	}
-
-	l.storeLabels()
-
-	return uuids, nil
-}
-
 // getIDFromName returns a label name with the corresponding label ID
 func (l *Labels) getIDFromName(labelName string) (string, error) {
-
 	if l == nil {
 		return "", errors.New(fmt.Sprint("User does not have any labels"))
 	}
@@ -142,21 +104,8 @@ func (l *Labels) getIDFromName(labelName string) (string, error) {
 	return "", errors.New(fmt.Sprintf("Label: `%s` does not exist", labelName))
 }
 
-func removeFromArray(name string, array []string) []string {
-	var newArray []string
-	for _, elem := range array {
-		if name == elem {
-			continue
-		}
-		newArray = append(newArray, elem)
-	}
-
-	return newArray
-}
-
 // addLabel stores a label into the users label store
 func (l *Labels) addLabel(labelName string) (*Labels, error) {
-
 	// check if name already exists
 	label := l.getLabelByName(labelName)
 
@@ -199,7 +148,7 @@ var encoding = base32.NewEncoding("ybndrfg8ejkmcpqxot1uwisza345h769")
 func NewID() string {
 	var b bytes.Buffer
 	encoder := base32.NewEncoder(encoding, &b)
-	encoder.Write(uuid.NewRandom())
+	_, _ = encoder.Write(uuid.NewRandom())
 	encoder.Close()
 	b.Truncate(26) // removes the '==' padding
 	return b.String()

@@ -34,14 +34,14 @@ func NewLabelsWithUser(api plugin.API, userID string) *Labels {
 	}
 }
 
-func (l *Labels) add(UUID string, label *Label) {
-	l.ByID[UUID] = label
+func (l *Labels) add(uuid string, label *Label) {
+	l.ByID[uuid] = label
 }
 
-func (l *Labels) get(ID string) (*Label, error) {
-	return l.ByID[ID], nil
+func (l *Labels) get(id string) (*Label, error) {
+	return l.ByID[id], nil
 }
 
-func (l *Labels) delete(ID string) {
-	delete(l.ByID, ID)
+func (l *Labels) delete(id string) {
+	delete(l.ByID, id)
 }

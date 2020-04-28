@@ -4,19 +4,10 @@ import (
 	"strings"
 
 	"github.com/mattermost/mattermost-server/v5/model"
-	"github.com/spf13/pflag"
 )
-
-func getViewBookmarksFlagSet() *pflag.FlagSet {
-	getViewBookmarksFlagSet := pflag.NewFlagSet("view bookmarks", pflag.ContinueOnError)
-	getViewBookmarksFlagSet.String("filter-labels", "", "Filter bookmarks with these specified labels")
-
-	return getViewBookmarksFlagSet
-}
 
 // executeCommandView shows all bookmarks in an ephemeral post
 func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandResponse {
-
 	subCommand := strings.Fields(args.Command)
 
 	b := NewBookmarksWithUser(p.API, args.UserId)
@@ -78,7 +69,7 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 		if err != nil {
 			return p.responsef(args, "Unable to get bookmarks text %s", err)
 		}
-		text = text + nextText
+		text += nextText
 	}
 
 	return p.responsef(args, text)
