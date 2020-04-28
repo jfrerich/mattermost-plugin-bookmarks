@@ -31,7 +31,6 @@ func (b *Bookmarks) storeBookmarks() error {
 
 // getBookmark returns a bookmark with the specified bookmarkID
 func (b *Bookmarks) getBookmark(bmarkID string) (*Bookmark, error) {
-
 	_, ok := b.exists(bmarkID)
 	if !ok {
 		return nil, errors.New(fmt.Sprintf("Bookmark `%v` does not exist", bmarkID))
@@ -48,7 +47,6 @@ func (b *Bookmarks) getBookmark(bmarkID string) (*Bookmark, error) {
 
 // addBookmark stores the bookmark in a map,
 func (b *Bookmarks) addBookmark(bmark *Bookmark) error {
-
 	// user doesn't have any bookmarks add first bookmark and return
 	if len(b.ByID) == 0 {
 		b.add(bmark)
@@ -81,7 +79,6 @@ func (b *Bookmarks) addBookmark(bmark *Bookmark) error {
 // getBookmarks returns a users bookmarks.  If the user has no bookmarks,
 // return nil bookmarks
 func (b *Bookmarks) getBookmarks() (*Bookmarks, error) {
-
 	// if a user not not have bookmarks, bb will be nil
 	bb, appErr := b.api.KVGet(getBookmarksKey(b.userID))
 	if appErr != nil {
@@ -132,7 +129,6 @@ func (b *Bookmarks) ByPostCreateAt(bmarks *Bookmarks) ([]*Bookmark, error) {
 }
 
 func (b *Bookmarks) getBookmarksWithLabelID(labelID string) (*Bookmarks, error) {
-
 	bmarksWithLabel := NewBookmarksWithUser(b.api, b.userID)
 
 	for _, bmark := range b.ByID {
@@ -160,7 +156,9 @@ func (b *Bookmarks) deleteBookmark(bmarkID string) (*Bookmark, error) {
 	bmark = b.get(bmarkID)
 
 	b.delete(bmarkID)
-	b.storeBookmarks()
+	if err := b.storeBookmarks(); err != nil {
+		return nil, err
+	}
 
 	return bmark, nil
 }
@@ -185,7 +183,9 @@ func (b *Bookmarks) deleteLabel(bmarkID string, labelID string) error {
 	bmark.addLabelIDs(newLabels)
 
 	b.add(bmark)
-	b.storeBookmarks()
+	if err := b.storeBookmarks(); err != nil {
+		return err
+	}
 
 	return nil
 }

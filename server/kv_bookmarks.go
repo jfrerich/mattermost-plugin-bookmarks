@@ -21,14 +21,6 @@ type Bookmark struct {
 	LabelIDs   []string `json:"labels:omitempty"` // Array of labels added to the bookmark
 }
 
-// NewBookmarks returns an initialized Bookmarks struct
-func NewBookmarks(api plugin.API) *Bookmarks {
-	return &Bookmarks{
-		ByID: make(map[string]*Bookmark),
-		api:  api,
-	}
-}
-
 // NewBookmarksWithUser returns an initialized Labels for a User
 func NewBookmarksWithUser(api plugin.API, userID string) *Bookmarks {
 	return &Bookmarks{
@@ -74,17 +66,11 @@ func (b *Bookmarks) updateLabels(bmark *Bookmark) *Bookmark {
 }
 
 func (b *Bookmark) hasUserTitle(bmark *Bookmark) bool {
-	if bmark.getTitle() != "" {
-		return true
-	}
-	return false
+	return bmark.getTitle() != ""
 }
 
 func (b *Bookmark) hasLabels(bmark *Bookmark) bool {
-	if bmark.getLabelIDs() != nil {
-		return true
-	}
-	return false
+	return bmark.getLabelIDs() != nil
 }
 
 func (b *Bookmark) getTitle() string {
@@ -93,14 +79,12 @@ func (b *Bookmark) getTitle() string {
 
 func (b *Bookmark) setTitle(title string) {
 	b.Title = title
-	return
 }
 
 func (b *Bookmark) getLabelIDs() []string {
 	return b.LabelIDs
 }
 
-func (b *Bookmark) addLabelIDs(IDs []string) {
-	b.LabelIDs = IDs
-	return
+func (b *Bookmark) addLabelIDs(ids []string) {
+	b.LabelIDs = ids
 }

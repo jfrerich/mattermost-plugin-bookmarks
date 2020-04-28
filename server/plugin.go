@@ -27,7 +27,6 @@ type Plugin struct {
 // OnActivate runs when the plugin activates and ensures the plugin is properly
 // configured.
 func (p *Plugin) OnActivate() error {
-
 	bot := &model.Bot{
 		Username:    "bookmarks",
 		DisplayName: "Bookmarks",

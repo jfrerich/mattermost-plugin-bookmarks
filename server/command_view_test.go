@@ -13,7 +13,6 @@ import (
 )
 
 func TestExecuteCommandView(t *testing.T) {
-
 	p1IDmodel := &model.Post{
 		Message:  "this is the post.Message",
 		CreateAt: model.GetMillis(),

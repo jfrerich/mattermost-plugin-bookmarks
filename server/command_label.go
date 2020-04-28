@@ -42,7 +42,6 @@ func parseLabelRemoveArgs(args []string) (removeLabelOptions, error) {
 
 // ExecuteCommandLabel executes a label sub-command
 func (p *Plugin) executeCommandLabel(args *model.CommandArgs) *model.CommandResponse {
-
 	split := strings.Fields(args.Command)
 	if len(split) < 3 {
 		return p.responsef(args, "Missing label sub-command. You can try %v", getHelp(labelCommandText))
@@ -81,15 +80,15 @@ func (p *Plugin) executeCommandLabelAdd(args *model.CommandArgs) *model.CommandR
 		return p.responsef(args, err.Error())
 	}
 
-	labels, err = labels.addLabel(labelName)
+	_, err = labels.addLabel(labelName)
 	if err != nil {
 		return p.responsef(args, err.Error())
 	}
 
 	text := "Added Label: "
-	text = text + fmt.Sprintf("%v", labelName)
+	text += fmt.Sprintf("%v", labelName)
 
-	return p.responsef(args, fmt.Sprintf(text))
+	return p.responsef(args, fmt.Sprint(text))
 }
 
 // executeCommandLabelRemove removes a given bookmark from the store
@@ -157,8 +156,8 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 	}
 
 	text := "Removed label: "
-	text = text + fmt.Sprintf("`%v`", labelName)
-	return p.responsef(args, fmt.Sprintf(text))
+	text += fmt.Sprintf("`%v`", labelName)
+	return p.responsef(args, fmt.Sprint(text))
 }
 
 func (p *Plugin) executeCommandLabelView(args *model.CommandArgs) *model.CommandResponse {
@@ -180,8 +179,8 @@ func (p *Plugin) executeCommandLabelView(args *model.CommandArgs) *model.Command
 	text := "#### Labels List\n"
 	for _, label := range labels.ByID {
 		v := fmt.Sprintf("`%s`\n", label.Name)
-		text = text + v
+		text += v
 	}
 
-	return p.responsef(args, fmt.Sprintf(text))
+	return p.responsef(args, fmt.Sprint(text))
 }

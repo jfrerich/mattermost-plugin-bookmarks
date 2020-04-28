@@ -81,9 +81,8 @@ func TestBookmarks_updateTimes(t *testing.T) {
 	assert.Equal(t, int(b1.ModifiedAt), int(b1.CreateAt))
 
 	// bmark was already saved and modified time updates
-	b2 := bmarks.get("ID2")
 	time.Sleep(time.Millisecond)
 	bmarks.updateTimes("ID2")
-	b2 = bmarks.get("ID2")
+	b2 := bmarks.get("ID2")
 	assert.Greater(t, b2.ModifiedAt, b2.CreateAt)
 }

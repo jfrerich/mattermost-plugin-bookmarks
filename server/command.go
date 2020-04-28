@@ -13,7 +13,7 @@ import (
 const (
 	// MaxTitleCharacters is the maximum length of characters displayed in a
 	// bookmark title
-	MaxTitleCharacters = 30
+	// MaxTitleCharacters = 30
 
 	commandTriggerBookmarks = "bookmarks"
 
@@ -41,10 +41,10 @@ const (
 * |/bookmarks remove <post_id>| - remove bookmarks by post_id, or permalink
 * |/bookmarks remove <post_id1> <post_id2>| - remove multiple bookmarks by post_id, or permalink
 `
-	renameCommandText = `
-**/bookmarks rename**
-* |/bookmarks rename <label-old> <label-new>| - rename a label
-`
+	// 	renameCommandText = `
+	// **/bookmarks rename**
+	// * |/bookmarks rename <label-old> <label-new>| - rename a label
+	// `
 	helpCommandText = `###### Bookmarks Slash Command Help` +
 		addCommandText +
 		labelCommandText +
@@ -65,15 +65,6 @@ func getCommand() *model.Command {
 		AutoComplete:     true,
 		AutoCompleteHint: "[command]",
 		AutoCompleteDesc: "Available commands: add, view, remove, label help",
-	}
-}
-
-func getCommandResponse(responseType, text string) *model.CommandResponse {
-	return &model.CommandResponse{
-		ResponseType: responseType,
-		Text:         text,
-		Username:     "bookmarks",
-		IconURL:      fmt.Sprintf("/plugins/%s/profile.png", manifest.Id),
 	}
 }
 
@@ -99,17 +90,8 @@ func (p *Plugin) executeCommandHelp(args *model.CommandArgs) *model.CommandRespo
 	return p.responsef(args, getHelp(helpCommandText))
 }
 
-func responsef(format string, args ...interface{}) *model.CommandResponse {
-	return &model.CommandResponse{
-		ResponseType: model.COMMAND_RESPONSE_TYPE_EPHEMERAL,
-		Text:         fmt.Sprintf(format, args...),
-		Type:         model.POST_DEFAULT,
-	}
-}
-
 // ExecuteCommand executes a command that has been previously registered via the RegisterCommand API.
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
-
 	split := strings.Fields(args.Command)
 	if len(split) < 2 {
 		return p.executeCommandHelp(args), nil
@@ -117,6 +99,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 
 	action := split[1]
 
+	//nolint:goconst
 	switch action {
 	case "add":
 		return p.executeCommandAdd(args), nil
@@ -136,7 +119,6 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 
 // getTitleFromPost returns a title generated from a Post.Message
 func (p *Plugin) getTitleFromPost(bmark *Bookmark) (string, error) {
-
 	// TODO: set limit to number of character from post.Message
 	// numChars := math.Min(float64(len(post.Message)), MaxTitleCharacters)
 	// bookmark.Title = post.Message[0:int(numChars)]
@@ -165,7 +147,7 @@ func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, labelNames []string, args 
 		return "", err
 	}
 
-	title := fmt.Sprint("`TitleFromPost` ") + postMessage
+	title := "`TitleFromPost` " + postMessage
 	if bmark.hasUserTitle(bmark) {
 		title = bmark.getTitle()
 	}
@@ -179,7 +161,7 @@ func (p *Plugin) getCodeBlockedLabels(names []string) string {
 	labels := ""
 	sort.Strings(names)
 	for _, name := range names {
-		labels = labels + fmt.Sprintf(" `%s`", name)
+		labels += fmt.Sprintf(" `%s`", name)
 	}
 	return labels
 }
@@ -208,12 +190,11 @@ func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, labelNames []string, args
 	iconLink := p.getIconLink(bmark, team)
 
 	text := fmt.Sprintf("%s\n#### Bookmark Title %s\n", codeBlockedNames, iconLink)
-	text = text + fmt.Sprintf("**%s**\n", title)
-	text = text + "##### Post Message \n"
-	text = text + post.Message
+	text += fmt.Sprintf("**%s**\n", title)
+	text += "##### Post Message \n"
+	text += post.Message
 
 	return text, nil
-
 }
 
 func (p *Plugin) getIconLink(bmark *Bookmark, team *model.Team) string {
