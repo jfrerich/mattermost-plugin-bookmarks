@@ -12,7 +12,6 @@ import (
 )
 
 func TestHandleAdd(t *testing.T) {
-
 	b1 := &Bookmark{
 		Title:  "PostID-Title",
 		PostID: "PostID1",
@@ -54,8 +53,8 @@ func TestHandleAdd(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-
 			jsonBmark, err := json.Marshal(tt.bookmark)
+			assert.Nil(t, err)
 			jsonBmarks, err := json.Marshal(tt.bookmarks)
 			assert.Nil(t, err)
 
@@ -71,7 +70,6 @@ func TestHandleAdd(t *testing.T) {
 			result := w.Result()
 			assert.NotNil(t, result)
 			assert.Equal(t, tt.expectedCode, result.StatusCode)
-
 		})
 	}
 }
