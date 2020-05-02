@@ -55,8 +55,6 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Println("IN HERE")
 	// 	http.Error(w, "no bookmarks", http.StatusInternalServerError)
 	// 	// p.handleErrorWithCode(w, http.StatusBadRequest, "Unable to decode JSON", err)
-	// if bmarks == nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
 	// 	return
 	// }
 	err = bmarks.addBookmark(bmark)
