@@ -14,9 +14,9 @@ export type Props = {
 
 export default class AddBookmarkPostMenuAction extends PureComponent<Props, null> {
     handleClick = (e: React.MouseEvent) => {
-        const {open, postId} = this.props;
+        const {open, post} = this.props;
         e.preventDefault();
-        open(postId);
+        open(post.id);
     }
     render() {
         const content = (
