@@ -12,6 +12,7 @@ import FormButton from 'components/form_button';
 
 export type Props = {
     bookmark: () => void;
+    close: () => void;
     post: Post;
     postId: string;
     visible: boolean;
@@ -50,11 +51,11 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
         }
     }
 
-    handleClose = (e: React.MouseEvent) => {
+    handleClose = (e?: Event) => {
         if (e && e.preventDefault) {
             e.preventDefault();
         }
-        this.setState({showModal: false});
+        this.props.close();
     };
 
     handleTitleChange = (e) => {
