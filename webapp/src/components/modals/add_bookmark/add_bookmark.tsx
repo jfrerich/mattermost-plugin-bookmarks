@@ -22,6 +22,8 @@ export type State = {
     submitting: false;
     bookmark: Bookmark;
     fetchError: any;
+    title: string;
+    labelIds: string;
 };
 
 export default class AddBookmarkModal extends PureComponent<Props, State> {
@@ -38,9 +40,10 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
         if (this.props.post && (!prevProps.post || this.props.post.id !== prevProps.post.id)) {
             const postId = this.props.post.id;
             this.props.bookmark(postId).then((fetched) => {
-                // this.setState({bookmark: fetched.error.message, submitting: false});
                 this.setState({
                     bookmark: fetched.data,
+                    title: fetched.data.title,
+                    labelIds: fetched.data.labelIds,
                     submitting: false}
                 );
             });
@@ -54,19 +57,36 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
         this.setState({showModal: false});
     };
 
+    handleTitleChange = (e) => {
+        this.setState({
+            title: e.target.value,
+        });
+    }
+
+    handleLabelsChange = (e) => {
+        this.setState({
+            labelIds: e.target.value,
+        });
+    }
+
     render() {
         const {showModal, submitting} = this.state;
         const {post} = this.props;
+        const style = getStyle();
 
         let postMessageComponent;
         if (post && post.message) {
             const message = post.message;
             postMessageComponent = (
-                <div>
-                    <h2>
-                        {'Post Message'}
-                    </h2>
-                    {message}
+                <div className='form-group'>
+                    <label className='control-label'>{'Post Message'}</label>
+                    <textarea
+                        style={style.textarea}
+                        className='form-control'
+                        value={message}
+                        resize={'none'}
+                        disabled={true}
+                    />
                 </div>
             );
         }
@@ -75,28 +95,28 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
         let titleComponent;
         if (this.state && this.state.bookmark) {
             const {bookmark} = this.state;
-            if (bookmark.labelIds) {
-                const labelMessage = bookmark.labelIds.join();
-                labelComponent = (
-                    <div>
-                        <h2>
-                            {'Labels'}
-                        </h2>
-                        {labelMessage}
-                    </div>
-                );
-            }
-            if (bookmark.title) {
-                const title = bookmark.title;
-                titleComponent = (
-                    <div>
-                        <h2>
-                            {'Title'}
-                        </h2>
-                        {title}
-                    </div>
-                );
-            }
+
+            titleComponent = (
+                <div className='form-group'>
+                    <label className='control-label'>{'Title'}</label>
+                    <input
+                        onInput={this.handleTitleChange}
+                        className='form-control'
+                        value={this.state.title ? this.state.title : ''}
+                    />
+                </div>
+            );
+
+            labelComponent = (
+                <div className='form-group'>
+                    <label className='control-label'>{'Labels'}</label>
+                    <input
+                        onInput={this.handleLabelsChange}
+                        className='form-control'
+                        value={this.state.labelIds ? this.state.labelIds : ''}
+                    />
+                </div>
+            );
         }
 
         return (
@@ -145,6 +165,11 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
         );
     }
 }
+const getStyle = () => ({
+    textarea: {
+        resize: 'none',
+    },
+});
 
 // const getStyle = (theme) => ({
 //     modalBody: {
