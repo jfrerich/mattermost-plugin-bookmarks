@@ -29,10 +29,10 @@ export function fetchBookmark(postID: string) {
     };
 }
 
-export function saveBookmark(postID: string, bookmark: Bookmark) {
+export function saveBookmark(bookmark: Bookmark) {
     let data;
     try {
-        data = (new Client()).saveBookmark(postID, bookmark);
+        data = (new Client()).saveBookmark(bookmark);
     } catch (error) {
         return {error};
     }

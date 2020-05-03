@@ -13,6 +13,7 @@ import FormButton from 'components/form_button';
 export type Props = {
     bookmark: () => void;
     close: () => void;
+    save: () => void;
     post: Post;
     postId: string;
     visible: boolean;
@@ -24,7 +25,7 @@ export type State = {
     bookmark: Bookmark;
     fetchError: any;
     title: string;
-    labelIds: string;
+    label_ids: string;
 };
 
 export default class AddBookmarkModal extends PureComponent<Props, State> {
@@ -32,6 +33,7 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
         super(props);
 
         this.state = {
+            title: '',
             showModal: true,
             submitting: false,
         };
@@ -44,7 +46,7 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
                 this.setState({
                     bookmark: fetched.data,
                     title: fetched.data.title,
-                    labelIds: fetched.data.labelIds,
+                    label_ids: fetched.data.label_ids,
                     submitting: false}
                 );
             });
@@ -58,6 +60,42 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
         this.props.close();
     };
 
+    handleSubmit = (e?: Event) => {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
+
+        const timestamp = Date.now();
+        const bookmark = {
+            postid: this.props.postId,
+            title: this.state.title,
+            label_ids: this.state.label_ids,
+            create_at: timestamp,
+            update_at: timestamp,
+        };
+
+        this.props.save(bookmark).then((saved) => {
+            console.log('1. IN HERE');
+            if (saved.error) {
+                console.log('2. IN HERE');
+                this.setState({error: saved.error.message, submitting: false});
+                return;
+            }
+            console.log('3. IN HERE');
+            this.handleClose();
+        });
+
+        // this.setState({submitting: true});
+
+        // this.props.create(issue).then((created) => {
+        // if (created.error) {
+        // this.setState({error: created.error.message, submitting: false});
+        // return;
+        // }
+        // this.handleClose();
+        // });
+    };
+
     handleTitleChange = (e) => {
         this.setState({
             title: e.target.value,
@@ -66,7 +104,7 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
 
     handleLabelsChange = (e) => {
         this.setState({
-            labelIds: e.target.value,
+            label_ids: e.target.value,
         });
     }
 
@@ -92,33 +130,32 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
             );
         }
 
-        let labelComponent;
-        let titleComponent;
-        if (this.state && this.state.bookmark) {
-            const {bookmark} = this.state;
+        // if (this.state && this.state.bookmark) {
+        const {bookmark} = this.state;
 
-            titleComponent = (
-                <div className='form-group'>
-                    <label className='control-label'>{'Title'}</label>
-                    <input
-                        onInput={this.handleTitleChange}
-                        className='form-control'
-                        value={this.state.title ? this.state.title : ''}
-                    />
-                </div>
-            );
+        const titleComponent = (
+            <div className='form-group'>
+                <label className='control-label'>{'Title'}</label>
+                <input
+                    onInput={this.handleTitleChange}
+                    className='form-control'
+                    value={this.state.title ? this.state.title : ''}
+                />
+            </div>
+        );
 
-            labelComponent = (
-                <div className='form-group'>
-                    <label className='control-label'>{'Labels'}</label>
-                    <input
-                        onInput={this.handleLabelsChange}
-                        className='form-control'
-                        value={this.state.labelIds ? this.state.labelIds : ''}
-                    />
-                </div>
-            );
-        }
+        const labelComponent = (
+            <div className='form-group'>
+                <label className='control-label'>{'Labels'}</label>
+                <input
+                    onInput={this.handleLabelsChange}
+                    className='form-control'
+                    value={this.state.label_ids ? this.state.label_ids : []}
+                />
+            </div>
+        );
+
+        // }
 
         return (
             <Modal
@@ -136,9 +173,7 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
                     role='form'
                     onSubmit={() => null}
                 >
-                    <Modal.Body
-                        ref='modalBody'
-                    >
+                    <Modal.Body ref='modalBody' >
                         {titleComponent}
                         {labelComponent}
                         {postMessageComponent}
@@ -156,8 +191,9 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
                                 type='submit'
                                 btnClass='btn btn-primary'
                                 saving={submitting}
+                                onClick={this.handleSubmit}
                             >
-                                {'Create'}
+                                {'Submit'}
                             </FormButton>
                         </React.Fragment>
                     </Modal.Footer>
@@ -171,19 +207,3 @@ const getStyle = () => ({
         resize: 'none',
     },
 });
-
-// const getStyle = (theme) => ({
-//     modalBody: {
-//         padding: '2em 2em 3em',
-//         color: theme.centerChannelColor,
-//         backgroundColor: theme.centerChannelBg,
-//     },
-//     modalFooter: {
-//         padding: '2rem 15px',
-//     },
-//     descriptionArea: {
-//         height: 'auto',
-//         width: '100%',
-//         color: '#000',
-//     },
-// });

@@ -2,9 +2,9 @@
 export type Bookmark = {
     postID: string;
     title: string;
-    createAt: number;
-    modifiedAt: number;
-    labelIds: string[];
+    create_at: number;
+    update_at: number;
+    label_ids: string[];
 };
 
 export type Label = {
