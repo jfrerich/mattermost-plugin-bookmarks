@@ -30,9 +30,8 @@ const mapStateToProps = (state: GlobalState) => {
     };
 };
 
-// const mapDispatchToProps = (dispatch: Dispatch) => bindActionCreators({
-//     bookmark: fetchBookmark,
-// }, dispatch);
+const mapDispatchToProps = (dispatch: Dispatch) => bindActionCreators({
+    bookmark: fetchBookmark,
+}, dispatch);
 
-// export default connect(mapStateToProps, mapDispatchToProps)(AddBookmarkModal);
-export default connect(mapStateToProps, null)(AddBookmarkModal);
+export default connect(mapStateToProps, mapDispatchToProps)(AddBookmarkModal);

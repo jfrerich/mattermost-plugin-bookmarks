@@ -12,7 +12,6 @@ import AddBookmarkPostMenuAction from './add_bookmark';
 
 const mapStateToProps = (state, ownProps) => {
     const post = getPost(state, ownProps.postId);
-
     return {
         post,
     };

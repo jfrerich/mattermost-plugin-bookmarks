@@ -4,7 +4,7 @@ export type Bookmark = {
     title: string;
     createAt: number;
     modifiedAt: number;
-    labelIDs: string[];
+    labelIds: string[];
 };
 
 export type Label = {

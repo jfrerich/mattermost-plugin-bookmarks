@@ -6,18 +6,22 @@ import {Modal} from 'react-bootstrap';
 
 import {Post} from 'mattermost-redux/types/posts';
 
+import {Bookmark} from 'src/types/model';
+
 import FormButton from 'components/form_button';
 
 export type Props = {
-    visible: boolean;
-
+    bookmark: () => void;
     post: Post;
     postId: string;
+    visible: boolean;
 }
 
 export type State = {
     showModal: boolean;
     submitting: false;
+    bookmark: Bookmark;
+    fetchError: any;
 };
 
 export default class AddBookmarkModal extends PureComponent<Props, State> {
@@ -28,6 +32,19 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
             showModal: true,
             submitting: false,
         };
+    }
+
+    componentDidUpdate(prevProps) {
+        if (this.props.post && (!prevProps.post || this.props.post.id !== prevProps.post.id)) {
+            const postId = this.props.post.id;
+            this.props.bookmark(postId).then((fetched) => {
+                // this.setState({bookmark: fetched.error.message, submitting: false});
+                this.setState({
+                    bookmark: fetched.data,
+                    submitting: false}
+                );
+            });
+        }
     }
 
     handleClose = (e: React.MouseEvent) => {
@@ -41,9 +58,45 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
         const {showModal, submitting} = this.state;
         const {post} = this.props;
 
-        let message = '';
+        let postMessageComponent;
         if (post && post.message) {
-            message = post.message;
+            const message = post.message;
+            postMessageComponent = (
+                <div>
+                    <h2>
+                        {'Post Message'}
+                    </h2>
+                    {message}
+                </div>
+            );
+        }
+
+        let labelComponent;
+        let titleComponent;
+        if (this.state && this.state.bookmark) {
+            const {bookmark} = this.state;
+            if (bookmark.labelIds) {
+                const labelMessage = bookmark.labelIds.join();
+                labelComponent = (
+                    <div>
+                        <h2>
+                            {'Labels'}
+                        </h2>
+                        {labelMessage}
+                    </div>
+                );
+            }
+            if (bookmark.title) {
+                const title = bookmark.title;
+                titleComponent = (
+                    <div>
+                        <h2>
+                            {'Title'}
+                        </h2>
+                        {title}
+                    </div>
+                );
+            }
         }
 
         return (
@@ -65,7 +118,9 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
                     <Modal.Body
                         ref='modalBody'
                     >
-                        {message}
+                        {titleComponent}
+                        {labelComponent}
+                        {postMessageComponent}
                     </Modal.Body>
                     <Modal.Footer >
                         <React.Fragment>

@@ -15,7 +15,7 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 	switch r.URL.Path {
 	case "/add":
 		p.handleAdd(w, r)
-	case "/view":
+	case "/get":
 		p.handleView(w, r)
 	// case "/delete":
 	// 	p.handleDelete(w, r)
@@ -75,27 +75,30 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var bmark Bookmark
-	fmt.Printf("r.Body = %+v\n", r.Body)
-	decoder := json.NewDecoder(r.Body)
-	decoderD, _ := json.MarshalIndent(decoder, "", "    ")
-	fmt.Printf("decoder = %+v\n", string(decoderD))
-	err := decoder.Decode(&bmark)
-	if err != nil {
-		p.API.LogError("Unable to decode JSON err=" + err.Error())
-		p.handleErrorWithCode(w, http.StatusBadRequest, "Unable to decode JSON", err)
-		return
-	}
+	query := r.URL.Query()
+	postID := query["postID"][0]
+	fmt.Printf("postID = %+v\n", postID)
 
 	b := NewBookmarksWithUser(p.API, userID)
 	bmarks, err := b.getBookmarks()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	err = bmarks.addBookmark(&bmark)
+
+	bmark, err := bmarks.getBookmark(postID)
+	fmt.Printf("bmark = %+v\n", bmark)
 	if err != nil {
-		p.handleErrorWithCode(w, http.StatusBadRequest, "Unable to add bookmark", err)
+		p.handleErrorWithCode(w, http.StatusBadRequest, "Unable to get bookmark", err)
 	}
+
+	resp, err := json.Marshal(bmark)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(resp)
+
 }
 
 func (p *Plugin) handleErrorWithCode(w http.ResponseWriter, code int, errTitle string, err error) {
