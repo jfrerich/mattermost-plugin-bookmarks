@@ -37,7 +37,10 @@ export function saveBookmark(bookmark: Bookmark) {
         return {error};
     }
 
-    return {data};
+    return {
+        type: ActionTypes.CLOSE_ADD_BOOKMARK_MODAL,
+        data,
+    };
 }
 
 export const openAddBookmarkModal = (postID: string) => {

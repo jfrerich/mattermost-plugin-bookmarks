@@ -33,7 +33,6 @@ export default class Client {
     }
 
     doPost = async (url, body, headers = {}) => {
-        console.log('body', body);
         headers['X-Requested-With'] = 'XMLHttpRequest';
         headers['X-Timezone-Offset'] = new Date().getTimezoneOffset();
 

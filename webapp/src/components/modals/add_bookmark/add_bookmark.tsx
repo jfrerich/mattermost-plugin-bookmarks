@@ -6,8 +6,6 @@ import {Modal} from 'react-bootstrap';
 
 import {Post} from 'mattermost-redux/types/posts';
 
-import {Bookmark} from 'src/types/model';
-
 import FormButton from 'components/form_button';
 
 export type Props = {
@@ -75,25 +73,11 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
         };
 
         this.props.save(bookmark).then((saved) => {
-            console.log('1. IN HERE');
             if (saved.error) {
-                console.log('2. IN HERE');
                 this.setState({error: saved.error.message, submitting: false});
-                return;
             }
-            console.log('3. IN HERE');
-            this.handleClose();
         });
-
-        // this.setState({submitting: true});
-
-        // this.props.create(issue).then((created) => {
-        // if (created.error) {
-        // this.setState({error: created.error.message, submitting: false});
-        // return;
-        // }
-        // this.handleClose();
-        // });
+        this.props.close();
     };
 
     handleTitleChange = (e) => {
@@ -130,9 +114,6 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
             );
         }
 
-        // if (this.state && this.state.bookmark) {
-        const {bookmark} = this.state;
-
         const titleComponent = (
             <div className='form-group'>
                 <label className='control-label'>{'Title'}</label>
@@ -166,7 +147,7 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
             >
                 <Modal.Header closeButton={true}>
                     <Modal.Title>
-                        {'Add Your Bookmark'}
+                        {'Create or Edit Bookmark'}
                     </Modal.Title>
                 </Modal.Header>
                 <form
