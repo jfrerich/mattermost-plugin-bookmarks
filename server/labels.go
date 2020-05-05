@@ -59,26 +59,6 @@ func (l *Labels) getLabels() (*Labels, error) {
 	return l, nil
 }
 
-// getLabelsForUser returns a users labels
-func (l *Labels) getLabelsForUser() (*Labels, error) {
-	// if a user does not have labels, bb will be nil
-	bb, appErr := l.api.KVGet(getLabelsKey(l.userID))
-	if appErr != nil {
-		return nil, appErr
-	}
-	if bb == nil {
-		return nil, nil
-	}
-
-	var labels *Labels
-	jsonErr := json.Unmarshal(bb, &labels)
-	if jsonErr != nil {
-		return nil, jsonErr
-	}
-
-	return labels, nil
-}
-
 // getLabelByName returns a label with the provided label name
 func (l *Labels) getLabelByName(labelName string) *Label {
 	for _, label := range l.ByID {

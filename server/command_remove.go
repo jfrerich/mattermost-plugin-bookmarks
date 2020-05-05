@@ -32,7 +32,7 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 	}
 
 	labels := NewLabelsWithUser(p.API, args.UserId)
-	labels, err = labels.getLabelsForUser()
+	labels, err = labels.getLabels()
 	if err != nil {
 		return p.responsef(args, "Unable to get labels for user, %s", err)
 	}
