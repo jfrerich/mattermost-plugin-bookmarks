@@ -12,3 +12,7 @@ export type Label = {
     color: string;
     description: number;
 };
+
+export type Labels = {
+    [ByID: string]: Label;
+};

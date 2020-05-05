@@ -29,6 +29,24 @@ export function fetchBookmark(postID: string) {
     };
 }
 
+export function fetchLabels() {
+    return async (dispatch: Dispatch) => {
+        let data;
+        try {
+            data = await (new Client()).fetchLabels();
+        } catch (error) {
+            return {error};
+        }
+
+        dispatch({
+            type: ActionTypes.RECEIVED_LABELS,
+            data,
+        });
+
+        return {data};
+    };
+}
+
 export function saveBookmark(bookmark: Bookmark) {
     let data;
     try {

@@ -13,6 +13,7 @@ import {addBookmarksModalState, getAddBookmarksModalPostId} from 'selectors';
 import {
     closeAddBookmarkModal,
     fetchBookmark,
+    fetchLabels,
     saveBookmark,
 } from 'actions';
 
@@ -36,6 +37,7 @@ const mapStateToProps = (state: GlobalState) => {
 
 const mapDispatchToProps = (dispatch: Dispatch) => bindActionCreators({
     bookmark: fetchBookmark,
+    labels: fetchLabels,
     close: closeAddBookmarkModal,
     save: saveBookmark,
 }, dispatch);

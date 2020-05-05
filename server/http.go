@@ -19,6 +19,9 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 		p.handleView(w, r)
 	// case "/delete":
 	// 	p.handleDelete(w, r)
+	case "/labels/get":
+		p.handleLabelsGet(w, r)
+	// case "/delete":
 	default:
 		http.NotFound(w, r)
 	}
@@ -99,6 +102,28 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 
 	w.Write(resp)
 
+}
+
+func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("Mattermost-User-ID")
+	if userID == "" {
+		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		return
+	}
+
+	l := NewLabelsWithUser(p.API, userID)
+	labels, err := l.getLabels()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	resp, err := json.Marshal(labels)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(resp)
 }
 
 func (p *Plugin) handleErrorWithCode(w http.ResponseWriter, code int, errTitle string, err error) {

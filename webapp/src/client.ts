@@ -20,6 +20,10 @@ export default class Client {
         return this.doPost(`${this.url}/add`, bookmark);
     }
 
+    fetchLabels = async () => {
+        return this.doGet(`${this.url}/labels/get`);
+    }
+
     doGet = async (url, headers = {}) => {
         headers['X-Requested-With'] = 'XMLHttpRequest';
         headers['X-Timezone-Offset'] = new Date().getTimezoneOffset();

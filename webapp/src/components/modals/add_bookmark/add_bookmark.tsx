@@ -10,6 +10,7 @@ import FormButton from 'components/form_button';
 
 export type Props = {
     bookmark: () => void;
+    labels: () => void;
     close: () => void;
     save: () => void;
     post: Post;
@@ -21,6 +22,7 @@ export type State = {
     showModal: boolean;
     submitting: false;
     bookmark: Bookmark;
+    labels: Labels;
     fetchError: any;
     title: string;
     label_ids: string;
@@ -47,6 +49,12 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
                     label_ids: fetched.data.label_ids,
                     submitting: false}
                 );
+            });
+
+            this.props.labels().then((fetched) => {
+                this.setState({
+                    labels: fetched.data,
+                });
             });
         }
     }
@@ -87,6 +95,7 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
     }
 
     handleLabelsChange = (e) => {
+        console.log('this.state.labels', this.state.labels);
         this.setState({
             label_ids: e.target.value,
         });
