@@ -61,6 +61,7 @@ func (b *Bookmarks) addBookmark(bmark *Bookmark) error {
 	if ok {
 		b.updateTimes(bmark.PostID)
 		b.updateLabels(bmark)
+		b.add(bmark)
 
 		if err := b.storeBookmarks(); err != nil {
 			return errors.New(err.Error())

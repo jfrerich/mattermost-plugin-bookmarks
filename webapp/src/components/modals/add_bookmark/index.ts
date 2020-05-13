@@ -20,26 +20,20 @@ import {
 
 import AddBookmarkModal from './add_bookmark';
 
-// type Props = {
-//     post: Post;
-// }
-
-// const mapStateToProps = (state: GlobalState, ownProps: Props) => {
 const mapStateToProps = (state: GlobalState) => {
     const postId = getAddBookmarksModalPostId(state);
     const post = getPost(state, postId);
 
     return {
         visible: addBookmarksModalState(state),
-        postId,
         post,
     };
 };
 
 const mapDispatchToProps = (dispatch: Dispatch) => bindActionCreators({
-    bookmark: fetchBookmark,
+    getBookmark: fetchBookmark,
     addLabelByName,
-    labels: fetchLabels,
+    getAllLabels: fetchLabels,
     close: closeAddBookmarkModal,
     save: saveBookmark,
 }, dispatch);

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -116,15 +115,19 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 
 	query := r.URL.Query()
 	postID := query["postID"][0]
-	fmt.Printf("postID = %+v\n", postID)
 
 	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
+	// return nil if bookmark does not exist
 	bmark, err := bmarks.getBookmark(postID)
-	fmt.Printf("bmark = %+v\n", bmark)
+	if bmark == nil {
+		var bb []byte
+		w.Write(bb)
+		return
+	}
 	if err != nil {
 		p.handleErrorWithCode(w, http.StatusBadRequest, "Unable to get bookmark", err)
 	}
