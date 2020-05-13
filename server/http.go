@@ -118,8 +118,7 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 	postID := query["postID"][0]
 	fmt.Printf("postID = %+v\n", postID)
 
-	b := NewBookmarksWithUser(p.API, userID)
-	bmarks, err := b.getBookmarks()
+	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
