@@ -56,7 +56,7 @@ func TestExecuteCommandView(t *testing.T) {
 			bookmarks:         getExecuteCommandTestBookmarks(),
 			expectedMsgPrefix: "",
 			expectedContains: []string{
-				"#### Bookmark Title [:link:](https://myhost.com//pl/ID2)",
+				"#### Bookmark Title [:link:](https://myhost.com/_redirect/pl/ID2)",
 				"`label1` `label2`",
 				"**Title2 - bookmarks initialized. Times created and same**",
 				"##### Post Message",
@@ -77,10 +77,10 @@ func TestExecuteCommandView(t *testing.T) {
 			expectedMsgPrefix: strings.TrimSpace("#### Bookmarks List"),
 			expectedContains: []string{
 				"Bookmarks List",
-				"[:link:](https://myhost.com//pl/ID1) `label1` `label2` Title1 - New Bookmark - times are zero",
-				"[:link:](https://myhost.com//pl/ID2) `label1` `label2` Title2 - bookmarks initialized. Times created and same",
-				"[:link:](https://myhost.com//pl/ID3) Title3 - bookmarks already updated once",
-				"[:link:](https://myhost.com//pl/ID4) `TitleFromPost`"},
+				"[:link:](https://myhost.com/_redirect/pl/ID1) `label1` `label2` Title1 - New Bookmark - times are zero",
+				"[:link:](https://myhost.com/_redirect/pl/ID2) `label1` `label2` Title2 - bookmarks initialized. Times created and same",
+				"[:link:](https://myhost.com/_redirect/pl/ID3) Title3 - bookmarks already updated once",
+				"[:link:](https://myhost.com/_redirect/pl/ID4) `TitleFromPost`"},
 		},
 	}
 	for name, tt := range tests {

@@ -1,53 +1,76 @@
 package main
 
 import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestHandleAdd(t *testing.T) {
-	// makePlugin := func(api *plugintest.API) *Plugin {
-	// 	p := &Plugin{}
-	// 	p.SetAPI(api)
-	// 	return p
-	// }
+	b1 := &Bookmark{
+		Title:  "PostID-Title",
+		PostID: "PostID1",
+	}
 
-	// t.Run("add bookmark", func(t *testing.T) {
-	// 	api := makeAPIMock()
-	// 	p := makePlugin(api)
-	//
-	// 	// get default bmark
-	// 	bmark := &Bookmark{
-	// 		Title:  "PostID-Title",
-	// 		PostID: "PostID1",
-	// 	}
-	//
-	// 	jsonBmark, err := json.Marshal(bmark)
-	// 	assert.Nil(t, err)
-	//
-	// 	api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
-	// 	api.On("KVGet", getBookmarksKey("theuserid")).Return(nil, nil)
-	//
-	// 	r := httptest.NewRequest(http.MethodPost, "/add", strings.NewReader(string(jsonBmark)))
-	// 	r.Header.Add("Mattermost-User-Id", "theuserid")
-	//
-	// 	w := httptest.NewRecorder()
-	// 	p.ServeHTTP(nil, w, r)
-	//
-	// 	result := w.Result()
-	// 	assert.NotNil(t, result)
-	// 	assert.Equal(t, http.StatusOK, result.StatusCode)
-	//
-	// 	api.On("KVGet", getBookmarksKey("theuserid2")).Return(jsonBmark, nil)
-	//
-	// 	r2 := httptest.NewRequest(http.MethodPost, "/add", strings.NewReader(string(jsonBmark)))
-	// 	r2.Header.Add("Mattermost-User-Id", "theuserid2")
-	//
-	// 	w2 := httptest.NewRecorder()
-	// 	p.ServeHTTP(nil, w2, r2)
-	//
-	// 	result2 := w2.Result()
-	// 	assert.NotNil(t, result2)
-	// 	assert.Equal(t, http.StatusOK, result2.StatusCode)
-	//
-	// })
+	b2 := &Bookmark{
+		Title:  "PostID-Title",
+		PostID: "ID1",
+	}
+
+	api := makeAPIMock()
+	p := makePlugin(api)
+
+	bmarks := getExecuteCommandTestBookmarks()
+
+	tests := map[string]struct {
+		userID       string
+		bookmark     *Bookmark
+		bookmarks    *Bookmarks
+		expectedCode int
+	}{
+		"Unauthed User": {
+			bookmark:     b1,
+			bookmarks:    bmarks,
+			expectedCode: http.StatusUnauthorized,
+		},
+		"Add first bookmark": {
+			userID:       UserID,
+			bookmark:     b1,
+			bookmarks:    bmarks,
+			expectedCode: http.StatusOK,
+		},
+		"overwrite bookmark that exists": {
+			userID:       UserID,
+			bookmark:     b2,
+			bookmarks:    bmarks,
+			expectedCode: http.StatusOK,
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			jsonBmark, err := json.Marshal(tt.bookmark)
+			assert.Nil(t, err)
+			jsonBmarks, err := json.Marshal(tt.bookmarks)
+			assert.Nil(t, err)
+
+			api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
+			api.On("KVGet", getBookmarksKey(UserID)).Return(jsonBmarks, nil)
+			api.On("KVGet", getLabelsKey(UserID)).Return(nil, nil)
+
+			r := httptest.NewRequest(http.MethodPost, "/add", strings.NewReader(string(jsonBmark)))
+			r.Header.Add("Mattermost-User-Id", tt.userID)
+
+			w := httptest.NewRecorder()
+			p.ServeHTTP(nil, w, r)
+
+			result := w.Result()
+			assert.NotNil(t, result)
+			assert.Equal(t, tt.expectedCode, result.StatusCode)
+		})
+	}
 }

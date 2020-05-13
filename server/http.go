@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -15,10 +14,15 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 	switch r.URL.Path {
 	case "/add":
 		p.handleAdd(w, r)
-	case "/view":
+	case "/get":
 		p.handleView(w, r)
 	// case "/delete":
 	// 	p.handleDelete(w, r)
+	case "/labels/get":
+		p.handleLabelsGet(w, r)
+	case "/labels/add":
+		p.handleLabelsAdd(w, r)
+	// case "/delete":
 	default:
 		http.NotFound(w, r)
 	}
@@ -43,21 +47,61 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b := NewBookmarksWithUser(p.API, userID)
-	bmarks, err := b.getBookmarks()
+	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// if bmarks == nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
+
+	// check if labelIDs exist.  If not, this is a label name and needs to be
+	// converted to label struct with UUID value
+	l, err := NewLabelsWithUser(p.API, userID).getLabels()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	labelIDs := bmark.getLabelIDs()
+
+	var labelIDsForBookmark []string
+	var label *Label
+	for _, labelID := range labelIDs {
+		label, err = l.get(labelID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		// if doesn't exist, this is a name and needs to be added to the labels
+		// store.  also save the id to the bookmark, not the name
+		if label == nil {
+			var labelNew *Label
+			labelNew, err = l.addLabel(labelID)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			labelIDsForBookmark = append(labelIDsForBookmark, labelNew.ID)
+			continue
+		}
+		labelIDsForBookmark = append(labelIDsForBookmark, labelID)
+	}
+
+	bmark.LabelIDs = labelIDsForBookmark
 	err = bmarks.addBookmark(bmark)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	// text, err := p.getBmarkTextOneLine(bmark, bmark.LabelIDs, nil)
+	// if err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// post := &model.Post{
+	// 	UserId: p.getBotID(),
+	// ChannelId: args.ChannelId,
+	// Message: text,
+	// }
+	// _ = p.API.SendEphemeralPost(args.UserId, post)
 }
 
 // func (p *Plugin) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -71,26 +115,100 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var bmark Bookmark
-	fmt.Printf("r.Body = %+v\n", r.Body)
-	decoder := json.NewDecoder(r.Body)
-	decoderD, _ := json.MarshalIndent(decoder, "", "    ")
-	fmt.Printf("decoder = %+v\n", string(decoderD))
-	err := decoder.Decode(&bmark)
-	if err != nil {
-		p.API.LogError("Unable to decode JSON err=" + err.Error())
-		p.handleErrorWithCode(w, http.StatusBadRequest, "Unable to decode JSON", err)
-		return
-	}
+	query := r.URL.Query()
+	postID := query["postID"][0]
 
-	b := NewBookmarksWithUser(p.API, userID)
-	bmarks, err := b.getBookmarks()
+	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	err = bmarks.addBookmark(&bmark)
+
+	// return nil if bookmark does not exist
+	bmark, err := bmarks.getBookmark(postID)
+	if bmark == nil {
+		var bb []byte
+		_, err = w.Write(bb)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		return
+	}
 	if err != nil {
-		p.handleErrorWithCode(w, http.StatusBadRequest, "Unable to add bookmark", err)
+		p.handleErrorWithCode(w, http.StatusBadRequest, "Unable to get bookmark", err)
+	}
+
+	resp, err := json.Marshal(bmark)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = w.Write(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("Mattermost-User-ID")
+	if userID == "" {
+		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		return
+	}
+
+	l := NewLabelsWithUser(p.API, userID)
+	labels, err := l.getLabels()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	resp, err := json.Marshal(labels)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = w.Write(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("Mattermost-User-ID")
+	if userID == "" {
+		http.Error(w, "Not authorized", http.StatusUnauthorized)
+		return
+	}
+
+	query := r.URL.Query()
+	labelName := query["labelName"][0]
+	l := NewLabelsWithUser(p.API, userID)
+	labels, err := l.getLabels()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	label, err := labels.addLabel(labelName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := json.Marshal(label)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = w.Write(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 

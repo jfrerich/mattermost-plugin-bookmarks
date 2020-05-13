@@ -636,10 +636,17 @@
   "overrides": [
     {
       "files": ["**/*.tsx", "**/*.ts"],
-      "extends": "plugin:@typescript-eslint/recommended",
+      "parser": "@typescript-eslint/parser",
+      "plugins": ["@typescript-eslint"],
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
+       ],
       "rules": {
         "@typescript-eslint/no-var-requires": 0,
         "@typescript-eslint/prefer-interface": 0,
+        "@typescript-eslint/explicit-function-return-type": 0,
         "@typescript-eslint/indent": [
           2,
           4,

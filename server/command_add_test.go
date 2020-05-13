@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const addPrefixMsg = "Added bookmark: [:link:](https://myhost.com//pl/"
+const addPrefixMsg = "Added bookmark: [:link:](https://myhost.com/_redirect/pl/"
 
 func TestExecuteCommandAdd(t *testing.T) {
 	tests := map[string]struct {

@@ -131,11 +131,6 @@ func (p *Plugin) getTitleFromPost(bmark *Bookmark) (string, error) {
 }
 
 func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, labelNames []string, args *model.CommandArgs) (string, error) {
-	team, appErr := p.API.GetTeam(args.TeamId)
-	if appErr != nil {
-		return "", appErr
-	}
-
 	codeBlockedNames := ""
 
 	if bmark.hasLabels(bmark) {
@@ -152,7 +147,7 @@ func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, labelNames []string, args 
 		title = bmark.getTitle()
 	}
 
-	text := fmt.Sprintf("%s%s %s\n", p.getIconLink(bmark, team), codeBlockedNames, title)
+	text := fmt.Sprintf("%s%s %s\n", p.getIconLink(bmark), codeBlockedNames, title)
 
 	return text, nil
 }
@@ -167,11 +162,6 @@ func (p *Plugin) getCodeBlockedLabels(names []string) string {
 }
 
 func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, labelNames []string, args *model.CommandArgs) (string, error) {
-	team, appErr := p.API.GetTeam(args.TeamId)
-	if appErr != nil {
-		return "", appErr
-	}
-
 	title, err := p.getTitleFromPost(bmark)
 	if err != nil {
 		return "", err
@@ -187,7 +177,7 @@ func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, labelNames []string, args
 		return "", appErr
 	}
 
-	iconLink := p.getIconLink(bmark, team)
+	iconLink := p.getIconLink(bmark)
 
 	text := fmt.Sprintf("%s\n#### Bookmark Title %s\n", codeBlockedNames, iconLink)
 	text += fmt.Sprintf("**%s**\n", title)
@@ -197,13 +187,13 @@ func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, labelNames []string, args
 	return text, nil
 }
 
-func (p *Plugin) getIconLink(bmark *Bookmark, team *model.Team) string {
-	iconLink := fmt.Sprintf("[:link:](%s)", p.getPermaLink(bmark.PostID, team.Name))
+func (p *Plugin) getIconLink(bmark *Bookmark) string {
+	iconLink := fmt.Sprintf("[:link:](%s)", p.getPermaLink(bmark.PostID))
 	return iconLink
 }
 
-func (p *Plugin) getPermaLink(postID string, currentTeam string) string {
-	return fmt.Sprintf("%v/%v/pl/%v", p.GetSiteURL(), currentTeam, postID)
+func (p *Plugin) getPermaLink(postID string) string {
+	return fmt.Sprintf("%v/_redirect/pl/%v", p.GetSiteURL(), postID)
 }
 
 func (p *Plugin) getPostIDFromLink(s string) string {
