@@ -48,20 +48,15 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b := NewBookmarksWithUser(p.API, userID)
-	bmarks, err := b.getBookmarks()
+	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	bmarkD, _ := json.MarshalIndent(bmark, "", "    ")
-	fmt.Printf("bmark = %+v\n", string(bmarkD))
-
 	// check if labelIDs exist.  If not, this is a label name and needs to be
 	// converted to label struct with UUID value
-	l := NewLabelsWithUser(p.API, userID)
-	l, err = l.getLabels()
+	l, err := NewLabelsWithUser(p.API, userID).getLabels()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -74,8 +69,6 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		fmt.Printf("label = %+v\n", label)
-
 		// if doesn't exist, this is a name and needs to be added to the labels
 		// store.  also save the id to the bookmark, not the name
 		if label == nil {
@@ -83,7 +76,6 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			fmt.Printf("label is nil = %+v\n", label)
 			labelIDsForBookmark = append(labelIDsForBookmark, labelNew.ID)
 			continue
 		}
@@ -91,7 +83,6 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bmark.LabelIDs = labelIDsForBookmark
-	fmt.Printf("labelIDsForBookmark = %+v\n", labelIDsForBookmark)
 	err = bmarks.addBookmark(bmark)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
