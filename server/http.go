@@ -180,23 +180,6 @@ func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request) {
 
 	query := r.URL.Query()
 	labelName := query["labelName"][0]
-	fmt.Println("1. IN HERE!")
-	fmt.Printf("labelName = %+v\n", labelName)
-	// body, err := ioutil.ReadAll(r.Body)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
-	//
-	// fmt.Printf("body = %+v\n", body)
-	// fmt.Println("2. IN HERE!")
-	// var label *Label
-	// if err = json.Unmarshal(body, &labelName); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
-
-	fmt.Println("3. IN HERE!")
 	l := NewLabelsWithUser(p.API, userID)
 	labels, err := l.getLabels()
 	if err != nil {
@@ -208,14 +191,12 @@ func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("4. IN HERE!")
 	label, err := labels.addLabel(labelName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Println("5. IN HERE!")
 	resp, err := json.Marshal(label)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
