@@ -4,12 +4,20 @@
 import React, {PureComponent} from 'react';
 import {Modal} from 'react-bootstrap';
 
+import CreatableSelect from 'react-select/creatable';
+
 import {Post} from 'mattermost-redux/types/posts';
 
 import FormButton from 'components/form_button';
 
+const createOption = (label: string) => ({
+    label,
+    value: label.toLowerCase().replace(/\W/g, ''),
+});
+
 export type Props = {
     bookmark: () => void;
+    addLabelByName: () => void;
     labels: () => void;
     close: () => void;
     save: () => void;
@@ -22,10 +30,12 @@ export type State = {
     showModal: boolean;
     submitting: false;
     bookmark: Bookmark;
-    labels: Labels;
+    allLabels: Labels;
+    bmarkLabels: Labels;
     fetchError: any;
     title: string;
     label_ids: string;
+    selectLabelValues: any;
 };
 
 export default class AddBookmarkModal extends PureComponent<Props, State> {
@@ -50,10 +60,9 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
                     submitting: false}
                 );
             });
-
             this.props.labels().then((fetched) => {
                 this.setState({
-                    labels: fetched.data,
+                    allLabels: fetched.data,
                 });
             });
         }
@@ -71,11 +80,16 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
             e.preventDefault();
         }
 
+        const labelIds = this.state.selectLabelValues.map((selectValue) => {
+            return selectValue.value;
+        });
+        console.log('labelIds', labelIds);
+        console.log('this.state', this.state);
         const timestamp = Date.now();
         const bookmark = {
             postid: this.props.postId,
             title: this.state.title,
-            label_ids: this.state.label_ids,
+            label_ids: labelIds,
             create_at: timestamp,
             update_at: timestamp,
         };
@@ -94,11 +108,22 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
         });
     }
 
-    handleLabelsChange = (e) => {
-        console.log('this.state.labels', this.state.labels);
+    handleLabelChange = (e) => {
         this.setState({
-            label_ids: e.target.value,
+            selectLabelValues: e,
         });
+    }
+
+    getLabelOptions = () => {
+        if (this.state.allLabels) {
+            const labelIds = Object.keys(this.state.allLabels.ByID);
+            const newLabels = labelIds.map((id) => {
+                const labelName = this.state.allLabels.ByID[id].name;
+                return {value: id, label: labelName};
+            });
+            return newLabels;
+        }
+        return {};
     }
 
     render() {
@@ -111,7 +136,7 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
             const message = post.message;
             postMessageComponent = (
                 <div className='form-group'>
-                    <label className='control-label'>{'Post Message'}</label>
+                    <label className='control-label'>{'Post Message Preview'}</label>
                     <textarea
                         style={style.textarea}
                         className='form-control'
@@ -134,22 +159,21 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
             </div>
         );
 
-        const labelComponent = (
+        const labelCreateComponent = (
             <div className='form-group'>
                 <label className='control-label'>{'Labels'}</label>
-                <input
-                    onInput={this.handleLabelsChange}
-                    className='form-control'
-                    value={this.state.label_ids ? this.state.label_ids : []}
+                <CreatableSelect
+                    isMulti={true}
+                    options={this.getLabelOptions()}
+                    onChange={this.handleLabelChange}
                 />
             </div>
         );
 
-        // }
-
         return (
             <Modal
                 dialogClassName='modal--scroll'
+                style={style.modal}
                 show={this.props.visible && showModal}
                 bsSize='large'
                 backdrop='static'
@@ -165,7 +189,7 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
                 >
                     <Modal.Body ref='modalBody' >
                         {titleComponent}
-                        {labelComponent}
+                        {labelCreateComponent}
                         {postMessageComponent}
                     </Modal.Body>
                     <Modal.Footer >
@@ -195,5 +219,8 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
 const getStyle = () => ({
     textarea: {
         resize: 'none',
+    },
+    modal: {
+        height: '100%',
     },
 });

@@ -14,6 +14,7 @@ type Labels struct {
 // Label defines the parameters of a label
 type Label struct {
 	Name string `json:"name"`
+	ID   string `json:"id"`
 	// Color string `json:"color"`
 }
 

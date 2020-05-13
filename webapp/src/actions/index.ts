@@ -61,6 +61,24 @@ export function saveBookmark(bookmark: Bookmark) {
     };
 }
 
+export function addLabelByName(labelName: string) {
+    return async (dispatch: Dispatch) => {
+        let data;
+        try {
+            data = await (new Client()).addLabelByName(labelName);
+        } catch (error) {
+            return {error};
+        }
+
+        dispatch({
+            type: ActionTypes.ADDED_LABEL_BY_NAME,
+            data,
+        });
+
+        return {data};
+    };
+}
+
 export const openAddBookmarkModal = (postID: string) => {
     return {
         type: ActionTypes.OPEN_ADD_BOOKMARK_MODAL,

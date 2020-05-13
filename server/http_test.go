@@ -60,6 +60,7 @@ func TestHandleAdd(t *testing.T) {
 
 			api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 			api.On("KVGet", getBookmarksKey(UserID)).Return(jsonBmarks, nil)
+			api.On("KVGet", getLabelsKey(UserID)).Return(nil, nil)
 
 			r := httptest.NewRequest(http.MethodPost, "/add", strings.NewReader(string(jsonBmark)))
 			r.Header.Add("Mattermost-User-Id", tt.userID)

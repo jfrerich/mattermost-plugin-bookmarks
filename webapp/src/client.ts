@@ -20,6 +20,10 @@ export default class Client {
         return this.doPost(`${this.url}/add`, bookmark);
     }
 
+    addLabelByName = async (labelName: string) => {
+        return this.doPost(`${this.url}/labels/add?labelName=${labelName}`);
+    }
+
     fetchLabels = async () => {
         return this.doGet(`${this.url}/labels/get`);
     }

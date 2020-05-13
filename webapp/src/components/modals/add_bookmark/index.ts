@@ -15,6 +15,7 @@ import {
     fetchBookmark,
     fetchLabels,
     saveBookmark,
+    addLabelByName,
 } from 'actions';
 
 import AddBookmarkModal from './add_bookmark';
@@ -37,6 +38,7 @@ const mapStateToProps = (state: GlobalState) => {
 
 const mapDispatchToProps = (dispatch: Dispatch) => bindActionCreators({
     bookmark: fetchBookmark,
+    addLabelByName,
     labels: fetchLabels,
     close: closeAddBookmarkModal,
     save: saveBookmark,

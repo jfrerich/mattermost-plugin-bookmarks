@@ -85,7 +85,7 @@ func (l *Labels) getIDFromName(labelName string) (string, error) {
 }
 
 // addLabel stores a label into the users label store
-func (l *Labels) addLabel(labelName string) (*Labels, error) {
+func (l *Labels) addLabel(labelName string) (*Label, error) {
 	// check if name already exists
 	label := l.getLabelByName(labelName)
 
@@ -97,6 +97,7 @@ func (l *Labels) addLabel(labelName string) (*Labels, error) {
 	labelID := NewID()
 	label = &Label{
 		Name: labelName,
+		ID:   labelID,
 	}
 	l.add(labelID, label)
 
@@ -104,7 +105,7 @@ func (l *Labels) addLabel(labelName string) (*Labels, error) {
 		return nil, err
 	}
 
-	return l, nil
+	return label, nil
 }
 
 // deleteByID deletes a label from the store
