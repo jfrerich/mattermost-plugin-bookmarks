@@ -1,8 +1,8 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-import React, { PureComponent } from 'react';
-import { Modal } from 'react-bootstrap';
+import React, {PureComponent} from 'react';
+import {Modal} from 'react-bootstrap';
 
 import AddBookmarkForm from './add_bookmark_form';
 

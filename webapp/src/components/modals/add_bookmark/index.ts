@@ -7,7 +7,6 @@ import {bindActionCreators, Dispatch} from 'redux';
 
 import {getPost} from 'mattermost-redux/selectors/entities/posts';
 import {GlobalState} from 'mattermost-redux/types/store';
-import {Post} from 'mattermost-redux/types/posts';
 
 import {addBookmarksModalState, getAddBookmarksModalPostId} from 'selectors';
 import {
@@ -15,7 +14,6 @@ import {
     fetchBookmark,
     fetchLabels,
     saveBookmark,
-    addLabelByName,
 } from 'actions';
 
 import AddBookmarkModal from './add_bookmark';
@@ -32,7 +30,6 @@ const mapStateToProps = (state: GlobalState) => {
 
 const mapDispatchToProps = (dispatch: Dispatch) => bindActionCreators({
     getBookmark: fetchBookmark,
-    addLabelByName,
     getAllLabels: fetchLabels,
     close: closeAddBookmarkModal,
     save: saveBookmark,

@@ -62,8 +62,9 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 	labelIDs := bmark.getLabelIDs()
 
 	var labelIDsForBookmark []string
+	var label *Label
 	for _, labelID := range labelIDs {
-		label, err := l.get(labelID)
+		label, err = l.get(labelID)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -71,7 +72,8 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		// if doesn't exist, this is a name and needs to be added to the labels
 		// store.  also save the id to the bookmark, not the name
 		if label == nil {
-			labelNew, err := l.addLabel(labelID)
+			var labelNew *Label
+			labelNew, err = l.addLabel(labelID)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
@@ -125,7 +127,11 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 	bmark, err := bmarks.getBookmark(postID)
 	if bmark == nil {
 		var bb []byte
-		w.Write(bb)
+		_, err = w.Write(bb)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	if err != nil {
@@ -138,8 +144,11 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(resp)
-
+	_, err = w.Write(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request) {
@@ -161,7 +170,11 @@ func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(resp)
+	_, err = w.Write(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request) {
@@ -179,10 +192,6 @@ func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 
 	label, err := labels.addLabel(labelName)
 	if err != nil {
@@ -196,7 +205,11 @@ func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write(resp)
+	_, err = w.Write(resp)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 func (p *Plugin) handleErrorWithCode(w http.ResponseWriter, code int, errTitle string, err error) {
