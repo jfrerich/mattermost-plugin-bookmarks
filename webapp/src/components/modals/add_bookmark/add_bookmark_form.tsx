@@ -20,6 +20,7 @@ export type Props = {
     getAllLabels: () => void;
     close: () => void;
     save: () => void;
+    channelId: string;
     post: Post;
     visible: boolean;
 }
@@ -102,7 +103,8 @@ export default class CreateBookmarkModal extends PureComponent<Props, State> {
             update_at: timestamp,
         };
 
-        this.props.save(bookmark).then((saved) => {
+        const currentChannelId = this.props.channelId;
+        this.props.save(bookmark, currentChannelId).then((saved) => {
             if (saved.error) {
                 this.setState({error: saved.error.message, submitting: false});
             }
