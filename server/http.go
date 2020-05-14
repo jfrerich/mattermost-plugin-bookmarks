@@ -61,18 +61,16 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// check if labelIDs exist.  If not, this is a label name and needs to be
-	// converted to label struct with UUID value
 	l, err := NewLabelsWithUser(p.API, userID).getLabels()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	labelIDs := bmark.getLabelIDs()
+	ids := bmark.getLabelIDs()
 
-	var labelIDsForBookmark []string
+	var newIDs []string
 	var label *Label
-	for _, labelID := range labelIDs {
-		label, err = l.get(labelID)
+	for _, id := range ids {
+		label, err = l.get(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -81,24 +79,35 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		// store.  also save the id to the bookmark, not the name
 		if label == nil {
 			var labelNew *Label
-			labelNew, err = l.addLabel(labelID)
+			labelNew, err = l.addLabel(id)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
-			labelIDsForBookmark = append(labelIDsForBookmark, labelNew.ID)
+			newIDs = append(newIDs, labelNew.ID)
 			continue
 		}
-		labelIDsForBookmark = append(labelIDsForBookmark, labelID)
+		newIDs = append(newIDs, id)
 	}
 
-	bmark.LabelIDs = labelIDsForBookmark
+	// update bmark with UUID values, not the names
+	bmark.LabelIDs = newIDs
 	err = bmarks.addBookmark(bmark)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	text, err := p.getBmarkTextOneLine(bmark, bmark.LabelIDs, nil)
+	var names []string
+	var name string
+	for _, id := range newIDs {
+		name, err = l.getNameFromID(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		names = append(names, name)
+	}
+
+	text, err := p.getBmarkTextOneLine(bmark, names, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
