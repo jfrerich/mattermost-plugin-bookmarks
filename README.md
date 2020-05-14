@@ -12,6 +12,17 @@ Mattermost allows users to flag a post (similar to bookmarking), but you cannot 
 
 Additionally, the plugin adds slash commands which provide methods to add, view, and remove bookmarks. The `bookmarks view` command prints a condensed view of the bookmarks allowing a user to easily scan bookmark titles
 
+## ScreenShots (Post Dropdown Menu UI)
+
+Via the post menu action dropdown, users can add a new bookmark, or edit an
+existing bookmark. The modal makes it easy for users to modify a bookmark's
+data.
+
+* add a title for the bookmark
+* add existing labels
+* create new labels
+
+![bookmarks add post](./assets/PostMenuAction_AddBookmark.gif)
 
 ## Slash Commands
 
@@ -97,19 +108,19 @@ the list of labels and removed from any bookmarks currently using the label.
 /bookmarks label remove <label> --force
 ```
 
-## ScreenShots
+## ScreenShots (Slash Commands)
 
-#### Add a bookmark
+### Add a bookmark
 
 `/bookmarks add http://localhost:8065/demoteam/pl/5p4xi5hqmjddzfgggtqafk4iga ThisPostHasEmojisAndCodeBlock`
 ![bookmarks add post](./assets/commandAddPost.png)
 
-##### Add a bookmark with labels
+#### Add a bookmark with labels
 
 `/bookmarks add http://localhost:8065/demoteam/pl/1frnfjxiubrzie68wozecxorxo --labels Label1,OtherLabel2`
 ![bookmarks add post with labels](./assets/commandAddPostWithLabels.png)
 
-#### View a bookmark
+### View a bookmark
 
 `/bookmarks view`
 
@@ -120,13 +131,13 @@ the list of labels and removed from any bookmarks currently using the label.
 
 ![bookmarks view post](./assets/commandViewWithPostID.png)
 
-#### Remove a bookmark
+### Remove a bookmark
 
 `/bookmarks remove http://localhost:8065/demoteam/pl/1frnfjxiubrzie68wozecxorxo h79hegdtgtbqxn89co1b1iwu7ho`
 
 ![bookmarks remove post](./assets/commandRemovePost.png)
 
-#### Remove a label
+### Remove a label
 
 This example shows the reponse when a user attempts to first delete a label
 that is being used by 1 bookmark.  The `--force` option is used to force the
@@ -138,30 +149,5 @@ deletion.
 ```
 
 ![bookmarks remove label force](./assets/commandLabelRemoveForce.png)
-
-### Future Implementations
-
-- **Done** `/bookmarks add <permalink> <title> <labels>` - bookmark a post with optional labels
-  - if labels omitted, `unlabeled` autoadded
-- **Done** `/bookmarks label <post_id> <labels>` - add labels to a bookmark
-  - if labels omitted, unlabeled autoadded
-- **Done** `/bookmarks label add <labels>` - create a new label
-- **Done** `/bookmarks label list` - list all labels 
-  - include number of bookmarks per label
-- **Done** `/bookmarks remove label <label>` - remove label from all bookmarks
-- `/bookmarks view <label>` - view bookmarks with optional labels for filtering
-- `/bookmarks rename <label-old> <label-new>`- rename a label
-
-## UI Enhancements
-
-The following UI Enhancements are planned for future release.
-
-- post action menu
-  - `bookmark/add` (submenu) - same action as /edit but when post_id has not not been bookmarked
-  - `bookmark/labels` (submenu) - shows submenus to quickly add / remove labels from current post
-  - `bookmark/edit` (submenu) - open modal showing previously saved bookmark
-  - `quickmark` - quickly bookmark the current post without labels (similar to Mattermost flag option)
-
-### Future Implementations
 
 To learn more about plugins, see [Mattermost plugin documentation](https://developers.mattermost.com/extend/plugins/).
