@@ -32,7 +32,7 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 	type bmarkWithChannel struct {
 		Bookmark  *Bookmark `json:"bookmark"`
-		ChannelId string    `json:"channelId"`
+		ChannelID string    `json:"channelId"`
 	}
 
 	userID := r.Header.Get("Mattermost-User-ID")
@@ -53,7 +53,7 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bmark := req.Bookmark
-	channelID := req.ChannelId
+	channelID := req.ChannelID
 
 	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
 	if err != nil {

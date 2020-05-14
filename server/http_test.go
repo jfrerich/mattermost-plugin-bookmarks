@@ -26,7 +26,7 @@ func TestHandleAdd(t *testing.T) {
 
 	type bmarkWithChannel struct {
 		Bookmark  *Bookmark `json:"bookmark"`
-		ChannelId string    `json:"channelId"`
+		ChannelID string    `json:"channelId"`
 	}
 
 	api := makeAPIMock()
@@ -71,9 +71,10 @@ func TestHandleAdd(t *testing.T) {
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
-			var bWithChannel bmarkWithChannel
-			bWithChannel.Bookmark = tt.bookmark
-			bWithChannel.ChannelId = "SomeChannel"
+			bWithChannel := bmarkWithChannel{
+				Bookmark:  tt.bookmark,
+				ChannelID: "SomeChannel",
+			}
 			jsonBmark, err := json.Marshal(bWithChannel)
 			assert.Nil(t, err)
 			jsonBmarks, err := json.Marshal(tt.bookmarks)
