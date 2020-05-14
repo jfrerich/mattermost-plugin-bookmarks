@@ -16,8 +16,8 @@ export default class Client {
         return this.doGet(`${this.url}/get?postID=${postID}`);
     }
 
-    saveBookmark = async (bookmark: Bookmark) => {
-        return this.doPost(`${this.url}/add`, bookmark);
+    saveBookmark = async (bookmark: Bookmark, channelId: string) => {
+        return this.doPost(`${this.url}/add`, {bookmark, channelId});
     }
 
     addLabelByName = async (labelName: string) => {

@@ -47,10 +47,10 @@ export function fetchLabels() {
     };
 }
 
-export function saveBookmark(bookmark: Bookmark) {
+export function saveBookmark(bookmark: Bookmark, channelId: string) {
     let data;
     try {
-        data = (new Client()).saveBookmark(bookmark);
+        data = (new Client()).saveBookmark(bookmark, channelId);
     } catch (error) {
         return {error};
     }

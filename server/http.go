@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
 
@@ -29,6 +30,12 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 }
 
 func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
+
+	type bmarkWithChannel struct {
+		Bookmark  *Bookmark `json:"bookmark"`
+		ChannelId string    `json:"channelId"`
+	}
+
 	userID := r.Header.Get("Mattermost-User-ID")
 	if userID == "" {
 		http.Error(w, "Not authorized", http.StatusUnauthorized)
@@ -41,11 +48,13 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var bmark *Bookmark
-	if err = json.Unmarshal(body, &bmark); err != nil {
+	var req *bmarkWithChannel
+	if err = json.Unmarshal(body, &req); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	bmark := req.Bookmark
+	channelId := req.ChannelId
 
 	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
 	if err != nil {
@@ -90,18 +99,19 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// text, err := p.getBmarkTextOneLine(bmark, bmark.LabelIDs, nil)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// 	return
-	// }
+	text, err := p.getBmarkTextOneLine(bmark, bmark.LabelIDs, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	message := "Saved Bookmark:\n" + text
 
-	// post := &model.Post{
-	// 	UserId: p.getBotID(),
-	// ChannelId: args.ChannelId,
-	// Message: text,
-	// }
-	// _ = p.API.SendEphemeralPost(args.UserId, post)
+	post := &model.Post{
+		UserId:    p.getBotID(),
+		ChannelId: channelId,
+		Message:   message,
+	}
+	_ = p.API.SendEphemeralPost(userID, post)
 }
 
 // func (p *Plugin) handleDelete(w http.ResponseWriter, r *http.Request) {
