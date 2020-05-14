@@ -30,7 +30,6 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 }
 
 func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
-
 	type bmarkWithChannel struct {
 		Bookmark  *Bookmark `json:"bookmark"`
 		ChannelId string    `json:"channelId"`
@@ -54,7 +53,7 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bmark := req.Bookmark
-	channelId := req.ChannelId
+	channelID := req.ChannelId
 
 	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
 	if err != nil {
@@ -108,7 +107,7 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 
 	post := &model.Post{
 		UserId:    p.getBotID(),
-		ChannelId: channelId,
+		ChannelId: channelID,
 		Message:   message,
 	}
 	_ = p.API.SendEphemeralPost(userID, post)
