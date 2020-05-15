@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/mattermost/mattermost-server/v5/model"
@@ -11,10 +9,6 @@ import (
 )
 
 const (
-	// MaxTitleCharacters is the maximum length of characters displayed in a
-	// bookmark title
-	// MaxTitleCharacters = 30
-
 	commandTriggerBookmarks = "bookmarks"
 
 	addCommandText = `
@@ -82,10 +76,6 @@ func (p *Plugin) responsef(commandArgs *model.CommandArgs, format string, args .
 	return &model.CommandResponse{}
 }
 
-func (p *Plugin) getBotID() string {
-	return p.BotUserID
-}
-
 func (p *Plugin) executeCommandHelp(args *model.CommandArgs) *model.CommandResponse {
 	return p.responsef(args, getHelp(helpCommandText))
 }
@@ -115,91 +105,4 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	default:
 		return p.responsef(args, fmt.Sprintf("Unknown command: "+args.Command)), nil
 	}
-}
-
-// getTitleFromPost returns a title generated from a Post.Message
-func (p *Plugin) getTitleFromPost(bmark *Bookmark) (string, error) {
-	// TODO: set limit to number of character from post.Message
-	// numChars := math.Min(float64(len(post.Message)), MaxTitleCharacters)
-	// bookmark.Title = post.Message[0:int(numChars)]
-	post, appErr := p.API.GetPost(bmark.PostID)
-	if appErr != nil {
-		return "", appErr
-	}
-	title := post.Message
-	return title, nil
-}
-
-func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, labelNames []string, args *model.CommandArgs) (string, error) {
-	codeBlockedNames := ""
-
-	if bmark.hasLabels(bmark) {
-		codeBlockedNames = p.getCodeBlockedLabels(labelNames)
-	}
-
-	postMessage, err := p.getTitleFromPost(bmark)
-	if err != nil {
-		return "", err
-	}
-
-	title := "`TitleFromPost` " + postMessage
-	if bmark.hasUserTitle(bmark) {
-		title = bmark.getTitle()
-	}
-
-	text := fmt.Sprintf("%s%s %s\n", p.getIconLink(bmark), codeBlockedNames, title)
-
-	return text, nil
-}
-
-func (p *Plugin) getCodeBlockedLabels(names []string) string {
-	labels := ""
-	sort.Strings(names)
-	for _, name := range names {
-		labels += fmt.Sprintf(" `%s`", name)
-	}
-	return labels
-}
-
-func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, labelNames []string, args *model.CommandArgs) (string, error) {
-	title, err := p.getTitleFromPost(bmark)
-	if err != nil {
-		return "", err
-	}
-
-	if bmark.hasUserTitle(bmark) {
-		title = bmark.Title
-	}
-
-	codeBlockedNames := p.getCodeBlockedLabels(labelNames)
-	post, appErr := p.API.GetPost(bmark.PostID)
-	if appErr != nil {
-		return "", appErr
-	}
-
-	iconLink := p.getIconLink(bmark)
-
-	text := fmt.Sprintf("%s\n#### Bookmark Title %s\n", codeBlockedNames, iconLink)
-	text += fmt.Sprintf("**%s**\n", title)
-	text += "##### Post Message \n"
-	text += post.Message
-
-	return text, nil
-}
-
-func (p *Plugin) getIconLink(bmark *Bookmark) string {
-	iconLink := fmt.Sprintf("[:link:](%s)", p.getPermaLink(bmark.PostID))
-	return iconLink
-}
-
-func (p *Plugin) getPermaLink(postID string) string {
-	return fmt.Sprintf("%v/_redirect/pl/%v", p.GetSiteURL(), postID)
-}
-
-func (p *Plugin) getPostIDFromLink(s string) string {
-	r := regexp.MustCompile(`http:.*\/\w+\/\w+\/(\w+)`)
-	if len(r.FindStringSubmatch(s)) == 2 {
-		return r.FindStringSubmatch(s)[1]
-	}
-	return s
 }

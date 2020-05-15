@@ -24,3 +24,7 @@ func (p *Plugin) PostBotDM(userID string, message string) error {
 
 	return appError
 }
+
+func (p *Plugin) getBotID() string {
+	return p.BotUserID
+}
