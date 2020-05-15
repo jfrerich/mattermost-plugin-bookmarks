@@ -74,6 +74,38 @@ func TestExecuteCommandLabel(t *testing.T) {
 			expectedContains:  []string{"Added Label: NewLabelName"},
 		},
 
+		// RENAME - successfully renames a label
+		"RENAME User provides only one label": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks label rename label1"},
+			labels:            nil,
+			expectedMsgPrefix: "Please specify a `to` and `from` label name",
+			expectedContains:  nil,
+		},
+		"RENAME User tries renaming label that doesn't exist": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks label rename label1 label2"},
+			labels:            nil,
+			expectedMsgPrefix: "Label `label1` does not exist",
+			expectedContains:  nil,
+		},
+		"RENAME User tries renaming a label to itself": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks label rename label1 label1"},
+			labels:            getExecuteCommandTestLabels(),
+			expectedMsgPrefix: "Cannot rename Label `label1` to `label1`. Label already exists. Please choose a different label name",
+			expectedContains:  nil,
+		},
+		"RENAME User tries renaming a label to another label name that exists": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks label rename label1 label2"},
+			labels:            getExecuteCommandTestLabels(),
+			expectedMsgPrefix: "Cannot rename Label `label1` to `label2`. Label already exists. Please choose a different label name",
+			expectedContains:  nil,
+		},
+		"RENAME User successfully renames label": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks label rename label1 labelthatdoesntexist"},
+			labels:            getExecuteCommandTestLabels(),
+			expectedMsgPrefix: "Renamed label from `label1` to `labelthatdoesntexist`",
+			expectedContains:  nil,
+		},
+
 		// REMOVE - user does not have any saved labels
 		"REMOVE User does not provide label name": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove"},

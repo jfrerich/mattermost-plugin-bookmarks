@@ -96,6 +96,14 @@ To view all of you labels, the following command is provided
 /bookmarks label view
 ```
 
+### Rename a label
+
+Label names can be changed using the following slash command
+
+```
+/bookmarks label rename <from> <to>
+```
+
 ### Delete a label
 
 Labels can be deleted with the label remove command. This will remove a label

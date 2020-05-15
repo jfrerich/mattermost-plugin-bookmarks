@@ -54,8 +54,8 @@ func (p *Plugin) executeCommandLabel(args *model.CommandArgs) *model.CommandResp
 		return p.executeCommandLabelAdd(args)
 	case "remove":
 		return p.executeCommandLabelRemove(args)
-	// case "rename":
-	// 	return p.executeCommandLabelRename(args)
+	case "rename":
+		return p.executeCommandLabelRename(args)
 	case "view":
 		return p.executeCommandLabelView(args)
 	case "help":
@@ -87,6 +87,48 @@ func (p *Plugin) executeCommandLabelAdd(args *model.CommandArgs) *model.CommandR
 
 	text := "Added Label: "
 	text += fmt.Sprintf("%v", labelName)
+
+	return p.responsef(args, fmt.Sprint(text))
+}
+
+func (p *Plugin) executeCommandLabelRename(args *model.CommandArgs) *model.CommandResponse {
+	subCommand := strings.Fields(args.Command)
+	if len(subCommand) < 5 {
+		return p.responsef(args, "Please specify a `to` and `from` label name%v", getHelp(labelCommandText))
+	}
+
+	from := subCommand[3]
+	to := subCommand[4]
+
+	labels, err := NewLabelsWithUser(p.API, args.UserId).getLabels()
+	if err != nil {
+		return p.responsef(args, err.Error())
+	}
+
+	lfrom := labels.getLabelByName(from)
+	if err != nil {
+		return p.responsef(args, err.Error())
+	}
+	if lfrom == nil {
+		return p.responsef(args, fmt.Sprintf("Label `%v` does not exist", from))
+	}
+
+	// if the "to" label already exists, alert the user with options
+	lto := labels.getLabelByName(to)
+	if err != nil {
+		return p.responsef(args, err.Error())
+	}
+	if lto != nil {
+		return p.responsef(args, fmt.Sprintf("Cannot rename Label `%v` to `%v`. Label already exists. Please choose a different label name", from, to))
+	}
+
+	lfrom.Name = to
+	err = labels.add(lfrom.ID, lfrom)
+	if err != nil {
+		return p.responsef(args, err.Error())
+	}
+
+	text := fmt.Sprintf("Renamed label from `%v` to `%v`", from, to)
 
 	return p.responsef(args, fmt.Sprint(text))
 }
