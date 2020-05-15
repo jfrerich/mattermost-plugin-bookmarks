@@ -13,22 +13,6 @@ import (
 // StoreLabelsKey is the key used to store labels in the plugin KV store
 const StoreLabelsKey = "labels"
 
-// storeLabels stores all the users labels
-func (l *Labels) storeLabels() error {
-	bb, jsonErr := json.Marshal(l)
-	if jsonErr != nil {
-		return jsonErr
-	}
-
-	key := getLabelsKey(l.userID)
-	appErr := l.api.KVSet(key, bb)
-	if appErr != nil {
-		return errors.New(appErr.Error())
-	}
-
-	return nil
-}
-
 // getNameFromID returns the Name of a Label
 func (l *Labels) getNameFromID(id string) (string, error) {
 	label, err := l.get(id)
@@ -99,9 +83,7 @@ func (l *Labels) addLabel(labelName string) (*Label, error) {
 		Name: labelName,
 		ID:   labelID,
 	}
-	l.add(labelID, label)
-
-	if err := l.storeLabels(); err != nil {
+	if err := l.add(labelID, label); err != nil {
 		return nil, err
 	}
 
@@ -110,8 +92,7 @@ func (l *Labels) addLabel(labelName string) (*Label, error) {
 
 // deleteByID deletes a label from the store
 func (l *Labels) deleteByID(labelID string) error {
-	l.delete(labelID)
-	if err := l.storeLabels(); err != nil {
+	if err := l.delete(labelID); err != nil {
 		return err
 	}
 	return nil

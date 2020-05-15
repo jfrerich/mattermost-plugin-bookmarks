@@ -24,10 +24,11 @@ func getExecuteCommandTestLabels() *Labels {
 	}
 
 	api := makeAPIMock()
+	api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 	labels := NewLabelsWithUser(api, UserID)
-	labels.add("UUID1", l1)
-	labels.add("UUID2", l2)
-	labels.add("UUID3", l3)
+	_ = labels.add("UUID1", l1)
+	_ = labels.add("UUID2", l2)
+	_ = labels.add("UUID3", l3)
 
 	return labels
 }
