@@ -106,18 +106,12 @@ func (p *Plugin) executeCommandLabelRename(args *model.CommandArgs) *model.Comma
 	}
 
 	lfrom := labels.getLabelByName(from)
-	if err != nil {
-		return p.responsef(args, err.Error())
-	}
 	if lfrom == nil {
 		return p.responsef(args, fmt.Sprintf("Label `%v` does not exist", from))
 	}
 
 	// if the "to" label already exists, alert the user with options
 	lto := labels.getLabelByName(to)
-	if err != nil {
-		return p.responsef(args, err.Error())
-	}
 	if lto != nil {
 		return p.responsef(args, fmt.Sprintf("Cannot rename Label `%v` to `%v`. Label already exists. Please choose a different label name", from, to))
 	}
