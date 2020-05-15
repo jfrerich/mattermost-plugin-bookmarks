@@ -18,6 +18,7 @@ func makePlugin(api *plugintest.API) *Plugin {
 
 func TestStoreBookmarks(t *testing.T) {
 	api := makeAPIMock()
+	api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 	p := makePlugin(api)
 
 	// initialize test Bookmarks
@@ -29,8 +30,10 @@ func TestStoreBookmarks(t *testing.T) {
 
 	// Add Bookmarks
 	bmarks := NewBookmarksWithUser(p.API, u1)
-	bmarks.add(b1)
-	bmarks.add(b2)
+	err := bmarks.add(b1)
+	assert.Nil(t, err)
+	err = bmarks.add(b2)
+	assert.Nil(t, err)
 
 	// Markshal the bmarks and mock api call
 	jsonBookmarks, err := json.Marshal(bmarks)
@@ -59,11 +62,14 @@ func TestAddBookmark(t *testing.T) {
 	u1 := "userID1"
 	bmarksU1 := NewBookmarksWithUser(p.API, u1)
 
+	api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 	// User 2 has 2 existing bookmarks
 	u2 := "userID2"
 	bmarksU2 := NewBookmarksWithUser(p.API, u2)
-	bmarksU2.add(b1)
-	bmarksU2.add(b2)
+	err := bmarksU2.add(b1)
+	assert.Nil(t, err)
+	err = bmarksU2.add(b2)
+	assert.Nil(t, err)
 
 	tests := []struct {
 		name    string
@@ -107,6 +113,7 @@ func TestAddBookmark(t *testing.T) {
 
 func TestDeleteBookmark(t *testing.T) {
 	api := makeAPIMock()
+	api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 	p := makePlugin(api)
 
 	// create some test bookmarks
@@ -124,8 +131,10 @@ func TestDeleteBookmark(t *testing.T) {
 	// User 2 has 2 existing bookmarks
 	u2 := "userID2"
 	bmarksU2 := NewBookmarksWithUser(p.API, u2)
-	bmarksU2.add(b1)
-	bmarksU2.add(b2)
+	err := bmarksU2.add(b1)
+	assert.Nil(t, err)
+	err = bmarksU2.add(b2)
+	assert.Nil(t, err)
 
 	tests := []struct {
 		name       string

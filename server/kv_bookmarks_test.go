@@ -6,10 +6,12 @@ import (
 
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func getTestBookmarks() *Bookmarks {
 	api := makeAPIMock()
+	api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 	p := makePlugin(api)
 	bmarks := NewBookmarksWithUser(p.API, UserID)
 
@@ -31,9 +33,9 @@ func getTestBookmarks() *Bookmarks {
 		ModifiedAt: model.GetMillis(),
 	}
 
-	bmarks.add(b1)
-	bmarks.add(b2)
-	bmarks.add(b3)
+	_ = bmarks.add(b1)
+	_ = bmarks.add(b2)
+	_ = bmarks.add(b3)
 
 	return bmarks
 }
@@ -49,7 +51,8 @@ func TestBookmarks_add(t *testing.T) {
 	b4 := &Bookmark{PostID: "ID4", Title: "Title4"}
 	bmarks := getTestBookmarks()
 	assert.Equal(t, 3, len(bmarks.ByID))
-	bmarks.add(b4)
+	err := bmarks.add(b4)
+	assert.Nil(t, err)
 	assert.Equal(t, 4, len(bmarks.ByID))
 }
 

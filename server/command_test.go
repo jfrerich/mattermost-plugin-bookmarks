@@ -31,6 +31,7 @@ const (
 
 func getExecuteCommandTestBookmarks() *Bookmarks {
 	api := makeAPIMock()
+	api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 	p := makePlugin(api)
 	bmarks := NewBookmarksWithUser(p.API, UserID)
 
@@ -58,17 +59,17 @@ func getExecuteCommandTestBookmarks() *Bookmarks {
 		ModifiedAt: model.GetMillis(),
 	}
 
-	bmarks.add(b1)
-	bmarks.add(b2)
-	bmarks.add(b3)
-	bmarks.add(b4)
+	_ = bmarks.add(b1)
+	_ = bmarks.add(b2)
+	_ = bmarks.add(b3)
+	_ = bmarks.add(b4)
 
 	l1 := &Label{
 		Name: "label1",
 	}
 
 	labels := NewLabels(api)
-	labels.add("UUID1", l1)
+	_ = labels.add("UUID1", l1)
 
 	return bmarks
 }

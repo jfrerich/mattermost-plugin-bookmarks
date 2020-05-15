@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
+
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
+	"github.com/pkg/errors"
 )
 
 // Bookmarks contains a map of bookmarks
@@ -30,8 +33,12 @@ func NewBookmarksWithUser(api plugin.API, userID string) *Bookmarks {
 	}
 }
 
-func (b *Bookmarks) add(bmark *Bookmark) {
+func (b *Bookmarks) add(bmark *Bookmark) error {
 	b.ByID[bmark.PostID] = bmark
+	if err := b.storeBookmarks(); err != nil {
+		return errors.Wrap(err, "failed to add bookmark")
+	}
+	return nil
 }
 
 func (b *Bookmarks) get(bmarkID string) *Bookmark {
@@ -87,4 +94,20 @@ func (b *Bookmark) getLabelIDs() []string {
 
 func (b *Bookmark) addLabelIDs(ids []string) {
 	b.LabelIDs = ids
+}
+
+// storeBookmarks stores all the users bookmarks
+func (b *Bookmarks) storeBookmarks() error {
+	jsonBookmarks, jsonErr := json.Marshal(b)
+	if jsonErr != nil {
+		return jsonErr
+	}
+
+	key := getBookmarksKey(b.userID)
+	appErr := b.api.KVSet(key, jsonBookmarks)
+	if appErr != nil {
+		return appErr
+	}
+
+	return nil
 }
