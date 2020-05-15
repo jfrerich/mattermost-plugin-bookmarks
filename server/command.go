@@ -20,9 +20,9 @@ const (
 **/bookmarks label**
 * |/bookmarks label <post_id> --labels <labels>| - add labels (comma-separated) to a bookmark
 * |/bookmarks label add <labels> | - create a new label
+* |/bookmarks label rename <old> <new>| - rename a label
 * |/bookmarks label remove <labels> | - remove a label
-* |/bookmarks label remove <labels> --force | - forces removal of labels from
-* bookmarks currently using the label as well as the label list
+* |/bookmarks label remove <labels> --force | - forces removal of labels from bookmarks currently using the label as well as the label list
 * |/bookmarks label view | - list all labels
 `
 	viewCommandText = `
@@ -35,16 +35,11 @@ const (
 * |/bookmarks remove <post_id>| - remove bookmarks by post_id, or permalink
 * |/bookmarks remove <post_id1> <post_id2>| - remove multiple bookmarks by post_id, or permalink
 `
-	// 	renameCommandText = `
-	// **/bookmarks rename**
-	// * |/bookmarks rename <label-old> <label-new>| - rename a label
-	// `
 	helpCommandText = `###### Bookmarks Slash Command Help` +
 		addCommandText +
 		labelCommandText +
 		viewCommandText +
 		removeCommandText
-	// renameCommandText
 )
 
 func getHelp(text string) string {
