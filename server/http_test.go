@@ -18,10 +18,14 @@ func TestHandleAdd(t *testing.T) {
 		Title:  "PostID-Title",
 		PostID: "PostID1",
 	}
-
 	b2 := &Bookmark{
 		Title:  "PostID-Title",
 		PostID: "ID1",
+	}
+	b3 := &Bookmark{
+		Title:    "PostID-Title",
+		PostID:   "ID3",
+		LabelIDs: []string{"newLabel"},
 	}
 
 	type bmarkWithChannel struct {
@@ -68,6 +72,15 @@ func TestHandleAdd(t *testing.T) {
 			expectedContains: []string{
 				fmt.Sprintf("[:link:](https://myhost.com/_redirect/pl/%v) PostID-Title", b2.PostID)},
 		},
+		"bookmark contains labelID that is name of a bookmark": {
+			userID:            UserID,
+			bookmark:          b3,
+			bookmarks:         bmarks,
+			expectedCode:      http.StatusOK,
+			expectedMsgPrefix: "Saved Bookmark",
+			expectedContains: []string{
+				fmt.Sprintf("[:link:](https://myhost.com/_redirect/pl/%v) `newLabel` PostID-Title", b3.PostID)},
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -109,6 +122,158 @@ func TestHandleAdd(t *testing.T) {
 			}
 
 			r := httptest.NewRequest(http.MethodPost, "/add", strings.NewReader(string(jsonBmark)))
+			r.Header.Add("Mattermost-User-Id", tt.userID)
+
+			w := httptest.NewRecorder()
+			p.ServeHTTP(nil, w, r)
+
+			result := w.Result()
+			assert.NotNil(t, result)
+			assert.Equal(t, tt.expectedCode, result.StatusCode)
+		})
+	}
+}
+
+func TestHandleLabelsGet(t *testing.T) {
+	l1 := &Label{
+		Name: "Label1",
+		ID:   "LabelID1",
+	}
+
+	api := makeAPIMock()
+	p := makePlugin(api)
+
+	labels := getExecuteCommandTestLabels()
+	tests := map[string]struct {
+		userID              string
+		label               *Label
+		labels              *Labels
+		expectedCode        int
+		expectedMsgPrefix   string
+		expectedContains    []string
+		expectedNotContains []string
+	}{
+		"Unauthed User": {
+			label:             l1,
+			labels:            labels,
+			expectedCode:      http.StatusUnauthorized,
+			expectedMsgPrefix: "",
+			expectedContains:  nil,
+		},
+		"No Errors": {
+			userID:            UserID,
+			label:             l1,
+			labels:            labels,
+			expectedCode:      http.StatusOK,
+			expectedMsgPrefix: "",
+			expectedContains:  nil,
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			jsonLabel, err := json.Marshal(tt.label)
+			assert.Nil(t, err)
+
+			siteURL := "https://myhost.com"
+			api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
+			api.On("KVGet", getLabelsKey(UserID)).Return(nil, nil)
+			// api.On("GetPost", tt.bookmark.PostID).Return(&model.Post{Message: "this is the post.Message"}, nil)
+			api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
+
+			if tt.expectedCode == http.StatusOK {
+				api.On("SendEphemeralPost", mock.AnythingOfType("string"), mock.AnythingOfType("*model.Post")).Run(func(args mock.Arguments) {
+					// isSendEphemeralPostCalled = true
+
+					post := args.Get(1).(*model.Post)
+					actual := strings.TrimSpace(post.Message)
+					assert.True(t, strings.HasPrefix(actual, tt.expectedMsgPrefix), "Expected returned message to start with: \n%s\nActual:\n%s", tt.expectedMsgPrefix, actual)
+					if tt.expectedContains != nil {
+						for i := range tt.expectedContains {
+							assert.Contains(t, actual, tt.expectedContains[i])
+						}
+					}
+					if tt.expectedNotContains != nil {
+						for i := range tt.expectedNotContains {
+							assert.NotContains(t, actual, tt.expectedNotContains[i])
+						}
+					}
+					// assert.Contains(t, actual, tt.expectedMsgPrefix)
+				}).Once().Return(&model.Post{})
+			}
+
+			r := httptest.NewRequest(http.MethodPost, "/labels/get", strings.NewReader(string(jsonLabel)))
+			r.Header.Add("Mattermost-User-Id", tt.userID)
+
+			w := httptest.NewRecorder()
+			p.ServeHTTP(nil, w, r)
+
+			result := w.Result()
+			assert.NotNil(t, result)
+			assert.Equal(t, tt.expectedCode, result.StatusCode)
+		})
+	}
+}
+
+func TestHandleLabelsAdd(t *testing.T) {
+	l1 := &Label{
+		Name: "Label1",
+		ID:   "LabelID1",
+	}
+
+	api := makeAPIMock()
+	p := makePlugin(api)
+
+	labels := getExecuteCommandTestLabels()
+	tests := map[string]struct {
+		userID              string
+		label               *Label
+		labels              *Labels
+		expectedCode        int
+		expectedMsgPrefix   string
+		expectedContains    []string
+		expectedNotContains []string
+	}{
+		"Unauthed User": {
+			label:             l1,
+			labels:            labels,
+			expectedCode:      http.StatusUnauthorized,
+			expectedMsgPrefix: "",
+			expectedContains:  nil,
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			jsonLabel, err := json.Marshal(tt.label)
+			assert.Nil(t, err)
+
+			siteURL := "https://myhost.com"
+			api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
+			api.On("KVGet", getLabelsKey(UserID)).Return(nil, nil)
+			// api.On("GetPost", tt.bookmark.PostID).Return(&model.Post{Message: "this is the post.Message"}, nil)
+			api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
+
+			if tt.expectedCode == http.StatusOK {
+				api.On("SendEphemeralPost", mock.AnythingOfType("string"), mock.AnythingOfType("*model.Post")).Run(func(args mock.Arguments) {
+					// isSendEphemeralPostCalled = true
+
+					post := args.Get(1).(*model.Post)
+					actual := strings.TrimSpace(post.Message)
+					assert.True(t, strings.HasPrefix(actual, tt.expectedMsgPrefix), "Expected returned message to start with: \n%s\nActual:\n%s", tt.expectedMsgPrefix, actual)
+					if tt.expectedContains != nil {
+						for i := range tt.expectedContains {
+							assert.Contains(t, actual, tt.expectedContains[i])
+						}
+					}
+					if tt.expectedNotContains != nil {
+						for i := range tt.expectedNotContains {
+							assert.NotContains(t, actual, tt.expectedNotContains[i])
+						}
+					}
+					// assert.Contains(t, actual, tt.expectedMsgPrefix)
+				}).Once().Return(&model.Post{})
+			}
+
+			r := httptest.NewRequest(http.MethodPost, "/labels/add", strings.NewReader(string(jsonLabel)))
 			r.Header.Add("Mattermost-User-Id", tt.userID)
 
 			w := httptest.NewRecorder()
