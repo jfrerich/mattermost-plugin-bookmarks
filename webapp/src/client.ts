@@ -6,10 +6,7 @@ import pluginId from './plugin_id';
 
 export default class Client {
     constructor() {
-        this.url = `/plugins/${pluginId}`;
-
-        // good idea, but not setup this way yet
-        // this.url = `/plugins/${pluginId}/api/v1`;
+        this.url = `/plugins/${pluginId}/api/v1`;
     }
 
     fetchBookmark = async (postID: string) => {

@@ -5,6 +5,8 @@ import (
 
 	"github.com/pkg/errors"
 
+	"github.com/gorilla/mux"
+
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
@@ -22,6 +24,8 @@ type Plugin struct {
 
 	// BotId of the created bot account.
 	BotUserID string
+
+	router *mux.Router
 }
 
 // OnActivate runs when the plugin activates and ensures the plugin is properly
@@ -35,6 +39,8 @@ func (p *Plugin) OnActivate() error {
 	options := []plugin.EnsureBotOption{
 		plugin.ProfileImagePath("assets/profile.png"),
 	}
+
+	p.initialiseAPI()
 
 	botID, err := p.Helpers.EnsureBot(bot, options...)
 	if err != nil {

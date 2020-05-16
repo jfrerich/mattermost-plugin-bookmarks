@@ -1,0 +1,61 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`components/AddBookmark snapshot modal not visible 1`] = `
+<Bootstrap(Modal)
+  backdrop="static"
+  bsSize="large"
+  dialogClassName="modal--scroll"
+  show={false}
+  style={
+    Object {
+      "height": "100%",
+    }
+  }
+>
+  <ModalHeader
+    closeButton={true}
+    closeLabel="Close"
+  >
+    <ModalTitle>
+      Edit Bookmark
+    </ModalTitle>
+  </ModalHeader>
+</Bootstrap(Modal)>
+`;
+
+exports[`components/AddBookmark snapshot modal visible 1`] = `
+<Bootstrap(Modal)
+  backdrop="static"
+  bsSize="large"
+  dialogClassName="modal--scroll"
+  show={true}
+  style={
+    Object {
+      "height": "100%",
+    }
+  }
+>
+  <ModalHeader
+    closeButton={true}
+    closeLabel="Close"
+  >
+    <ModalTitle>
+      Edit Bookmark
+    </ModalTitle>
+  </ModalHeader>
+  <AddBookmarkForm
+    channelId="channelID"
+    close={[MockFunction]}
+    getAllLabels={[MockFunction]}
+    getBookmark={[MockFunction]}
+    post={
+      Object {
+        "id": "asdfasdf",
+        "message": "This is the post message",
+      }
+    }
+    save={[MockFunction]}
+    visible={true}
+  />
+</Bootstrap(Modal)>
+`;

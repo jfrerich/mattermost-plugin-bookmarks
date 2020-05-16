@@ -1,4 +1,3 @@
-
 export type Bookmark = {
     postID: string;
     title: string;
@@ -15,4 +14,9 @@ export type Label = {
 
 export type Labels = {
     [ByID: string]: Label;
+};
+
+export type SelectValue = {
+    name: string;
+    label: string;
 };
