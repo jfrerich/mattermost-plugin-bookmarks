@@ -121,9 +121,10 @@ func TestHandleAdd(t *testing.T) {
 				}).Once().Return(&model.Post{})
 			}
 
-			r := httptest.NewRequest(http.MethodPost, "/add", strings.NewReader(string(jsonBmark)))
+			r := httptest.NewRequest(http.MethodPost, "/api/v1/add", strings.NewReader(string(jsonBmark)))
 			r.Header.Add("Mattermost-User-Id", tt.userID)
 
+			p.initialiseAPI()
 			w := httptest.NewRecorder()
 			p.ServeHTTP(nil, w, r)
 
@@ -201,9 +202,10 @@ func TestHandleLabelsGet(t *testing.T) {
 				}).Once().Return(&model.Post{})
 			}
 
-			r := httptest.NewRequest(http.MethodPost, "/labels/get", strings.NewReader(string(jsonLabel)))
+			r := httptest.NewRequest(http.MethodGet, "/api/v1/labels/get", strings.NewReader(string(jsonLabel)))
 			r.Header.Add("Mattermost-User-Id", tt.userID)
 
+			p.initialiseAPI()
 			w := httptest.NewRecorder()
 			p.ServeHTTP(nil, w, r)
 
@@ -273,9 +275,10 @@ func TestHandleLabelsAdd(t *testing.T) {
 				}).Once().Return(&model.Post{})
 			}
 
-			r := httptest.NewRequest(http.MethodPost, "/labels/add", strings.NewReader(string(jsonLabel)))
+			r := httptest.NewRequest(http.MethodPost, "/api/v1/labels/add", strings.NewReader(string(jsonLabel)))
 			r.Header.Add("Mattermost-User-Id", tt.userID)
 
+			p.initialiseAPI()
 			w := httptest.NewRecorder()
 			p.ServeHTTP(nil, w, r)
 
