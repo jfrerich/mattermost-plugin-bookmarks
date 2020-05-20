@@ -5,40 +5,61 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/gorilla/mux"
+
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
 
+type HTTPHandlerFuncWithUser func(w http.ResponseWriter, r *http.Request, userID string)
+
+type APIErrorResponse struct {
+	ID         string `json:"id"`
+	Message    string `json:"message"`
+	StatusCode int    `json:"status_code"`
+}
+
+func writeAPIError(w http.ResponseWriter, err *APIErrorResponse) {
+	b, _ := json.Marshal(err)
+	w.WriteHeader(err.StatusCode)
+	_, _ = w.Write(b)
+}
+
+func (p *Plugin) initialiseAPI() {
+	p.router = mux.NewRouter()
+	apiRouter := p.router.PathPrefix("/api/v1").Subrouter()
+
+	apiRouter.HandleFunc("/add", p.extractUserMiddleWare(p.handleAdd, true)).Methods("POST")
+	apiRouter.HandleFunc("/get", p.extractUserMiddleWare(p.handleView, true)).Methods("GET")
+	apiRouter.HandleFunc("/labels/get", p.extractUserMiddleWare(p.handleLabelsGet, true)).Methods("GET")
+	apiRouter.HandleFunc("/labels/add", p.extractUserMiddleWare(p.handleLabelsAdd, true)).Methods("POST")
+}
+
 func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	p.router.ServeHTTP(w, r)
+}
 
-	switch r.URL.Path {
-	case "/add":
-		p.handleAdd(w, r)
-	case "/get":
-		p.handleView(w, r)
-	// case "/delete":
-	// 	p.handleDelete(w, r)
-	case "/labels/get":
-		p.handleLabelsGet(w, r)
-	case "/labels/add":
-		p.handleLabelsAdd(w, r)
-	// case "/delete":
-	default:
-		http.NotFound(w, r)
+func (p *Plugin) extractUserMiddleWare(handler HTTPHandlerFuncWithUser, jsonResponse bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		userID := r.Header.Get("Mattermost-User-ID")
+		if userID == "" {
+			if jsonResponse {
+				writeAPIError(w, &APIErrorResponse{ID: "", Message: "Not authorized.", StatusCode: http.StatusUnauthorized})
+			} else {
+				http.Error(w, "Not authorized", http.StatusUnauthorized)
+			}
+			return
+		}
+
+		handler(w, r, userID)
 	}
 }
 
-func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
+func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request, userID string) {
 	type bmarkWithChannel struct {
 		Bookmark  *Bookmark `json:"bookmark"`
 		ChannelID string    `json:"channelId"`
-	}
-
-	userID := r.Header.Get("Mattermost-User-ID")
-	if userID == "" {
-		http.Error(w, "Not authorized", http.StatusUnauthorized)
-		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -126,13 +147,7 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request) {
 // 	return
 // }
 
-func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("Mattermost-User-ID")
-	if userID == "" {
-		http.Error(w, "Not authorized", http.StatusUnauthorized)
-		return
-	}
-
+func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request, userID string) {
 	query := r.URL.Query()
 	postID := query["postID"][0]
 
@@ -169,13 +184,7 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("Mattermost-User-ID")
-	if userID == "" {
-		http.Error(w, "Not authorized", http.StatusUnauthorized)
-		return
-	}
-
+func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request, userID string) {
 	l := NewLabelsWithUser(p.API, userID)
 	labels, err := l.getLabels()
 	if err != nil {
@@ -195,13 +204,7 @@ func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("Mattermost-User-ID")
-	if userID == "" {
-		http.Error(w, "Not authorized", http.StatusUnauthorized)
-		return
-	}
-
+func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request, userID string) {
 	query := r.URL.Query()
 	labelName := query["labelName"][0]
 	l := NewLabelsWithUser(p.API, userID)
