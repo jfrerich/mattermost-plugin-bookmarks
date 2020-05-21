@@ -8,12 +8,9 @@ import CreatableSelect from 'react-select/creatable';
 
 import {Post} from 'mattermost-redux/types/posts';
 
-import FormButton from 'components/form_button';
+import {Bookmark, Labels, SelectValue} from 'types/model';
 
-const createOption = (label: string) => ({
-    label,
-    value: label.toLowerCase().replace(/\W/g, ''),
-});
+import FormButton from 'components/form_button';
 
 export type Props = {
     getBookmark: () => void;
@@ -26,18 +23,22 @@ export type Props = {
 }
 
 export type State = {
-    submitting: false;
+    submitting: boolean;
     bookmark: Bookmark;
     allLabels: Labels;
     title: string;
     bmarkLabelIds: string;
-    selectLabelValues: any;
+    selectLabelValues: SelectValue[];
 };
 
-export default class CreateBookmarkModal extends PureComponent<Props, State> {
+export default class AddBookmarkForm extends PureComponent<Props, State> {
     state = {
-        title: '',
         submitting: false,
+        bookmark: null,
+        allLabels: null,
+        title: '',
+        bmarkLabelIds: '',
+        selectLabelValues: [],
     };
 
     componentDidMount() {
