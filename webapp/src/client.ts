@@ -1,4 +1,5 @@
-import request from 'superagent';
+import {Client4} from 'mattermost-redux/client';
+import {ClientError} from 'mattermost-redux/client/client4';
 
 import {Bookmark} from 'types/model';
 
@@ -25,29 +26,50 @@ export default class Client {
         return this.doGet(`${this.url}/labels/get`);
     }
 
-    doGet = async (url, headers = {}) => {
-        headers['X-Requested-With'] = 'XMLHttpRequest';
+    doGet = async (url: string, headers = {}) => {
         headers['X-Timezone-Offset'] = new Date().getTimezoneOffset();
 
-        const response = await request.
-            get(url).
-            set(headers).
-            accept('application/json');
+        const options = {
+            method: 'get',
+            headers,
+        };
 
-        return response.body;
+        const response = await fetch(url, Client4.getOptions(options));
+
+        if (response.ok) {
+            return response.json();
+        }
+
+        const text = await response.text();
+
+        throw new ClientError(Client4.url, {
+            message: text || '',
+            status_code: response.status,
+            url,
+        });
     }
 
-    doPost = async (url, body, headers = {}) => {
-        headers['X-Requested-With'] = 'XMLHttpRequest';
+    doPost = async (url: string, body, headers = {}) => {
         headers['X-Timezone-Offset'] = new Date().getTimezoneOffset();
 
-        const response = await request.
-            post(url).
-            send(body).
-            set(headers).
-            type('application/json').
-            accept('application/json');
+        const options = {
+            method: 'post',
+            body: JSON.stringify(body),
+            headers,
+        };
 
-        return response.body;
+        const response = await fetch(url, Client4.getOptions(options));
+
+        if (response.ok) {
+            return response.json();
+        }
+
+        const text = await response.text();
+
+        throw new ClientError(Client4.url, {
+            message: text || '',
+            status_code: response.status,
+            url,
+        });
     }
 }
