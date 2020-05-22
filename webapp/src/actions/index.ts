@@ -61,6 +61,20 @@ export function saveBookmark(bookmark: Bookmark, channelId: string) {
     };
 }
 
+export function postEphemeralBookmarks(channelId: string) {
+    let data;
+    try {
+        data = (new Client()).postEphemeralBookmarks(channelId);
+    } catch (error) {
+        return {error};
+    }
+
+    return {
+        type: ActionTypes.CLOSE_ADD_BOOKMARK_MODAL,
+        data,
+    };
+}
+
 export function addLabelByName(labelName: string) {
     return async (dispatch: Dispatch) => {
         let data;

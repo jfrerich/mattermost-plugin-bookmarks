@@ -29,8 +29,9 @@ func (p *Plugin) initialiseAPI() {
 	p.router = mux.NewRouter()
 	apiRouter := p.router.PathPrefix("/api/v1").Subrouter()
 
+	apiRouter.HandleFunc("/view", p.extractUserMiddleWare(p.handleViewBookmarks, true)).Methods("POST")
 	apiRouter.HandleFunc("/add", p.extractUserMiddleWare(p.handleAdd, true)).Methods("POST")
-	apiRouter.HandleFunc("/get", p.extractUserMiddleWare(p.handleView, true)).Methods("GET")
+	apiRouter.HandleFunc("/get", p.extractUserMiddleWare(p.handleGetBookmark, true)).Methods("GET")
 	apiRouter.HandleFunc("/labels/get", p.extractUserMiddleWare(p.handleLabelsGet, true)).Methods("GET")
 	apiRouter.HandleFunc("/labels/add", p.extractUserMiddleWare(p.handleLabelsAdd, true)).Methods("POST")
 }
@@ -56,6 +57,7 @@ func (p *Plugin) extractUserMiddleWare(handler HTTPHandlerFuncWithUser, jsonResp
 	}
 }
 
+// handleAdd saves a bookmark to the bookmarks store
 func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request, userID string) {
 	type bmarkWithChannel struct {
 		Bookmark  *Bookmark `json:"bookmark"`
@@ -147,7 +149,69 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request, userID string
 // 	return
 // }
 
-func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request, userID string) {
+// handleViewBookmarks makes an ephemeral post listing a users bookmarks
+func (p *Plugin) handleViewBookmarks(w http.ResponseWriter, r *http.Request, userID string) {
+	type requestStruct struct {
+		ChannelID string `json:"channelId"`
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var req *requestStruct
+	if err = json.Unmarshal(body, &req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	channelID := req.ChannelID
+
+	labels := NewLabelsWithUser(p.API, userID)
+	labels, err = labels.getLabels()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	text := "#### Bookmarks List\n"
+	bmarksSorted, err := bmarks.ByPostCreateAt(bmarks)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for _, bmark := range bmarksSorted {
+		labelNames, err := labels.getLabelNames(userID, bmark)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		nextText, err := p.getBmarkTextOneLine(bmark, labelNames, nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		text += nextText
+	}
+
+	post := &model.Post{
+		UserId:    p.getBotID(),
+		ChannelId: channelID,
+		Message:   text,
+	}
+	_ = p.API.SendEphemeralPost(userID, post)
+}
+
+// handleGetBookmark returns a bookmark
+func (p *Plugin) handleGetBookmark(w http.ResponseWriter, r *http.Request, userID string) {
 	query := r.URL.Query()
 	postID := query["postID"][0]
 
@@ -184,6 +248,7 @@ func (p *Plugin) handleView(w http.ResponseWriter, r *http.Request, userID strin
 	}
 }
 
+// handleLabelsGet returns all labels
 func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request, userID string) {
 	l := NewLabelsWithUser(p.API, userID)
 	labels, err := l.getLabels()
@@ -204,6 +269,7 @@ func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request, userID 
 	}
 }
 
+// handleLabelsAdd adds a label to the labels store
 func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request, userID string) {
 	query := r.URL.Query()
 	labelName := query["labelName"][0]
