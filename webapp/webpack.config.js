@@ -9,7 +9,7 @@ if (NPM_TARGET === 'run') {
 
 const config = {
     entry: [
-        './src/index.ts',
+        './src/index.tsx',
     ],
     resolve: {
         modules: [

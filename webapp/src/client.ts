@@ -18,6 +18,10 @@ export default class Client {
         return this.doPost(`${this.url}/add`, {bookmark, channelId});
     }
 
+    postEphemeralBookmarks = async (channelId: string) => {
+        return this.doPost(`${this.url}/view`, {channelId});
+    }
+
     addLabelByName = async (labelName: string) => {
         return this.doPost(`${this.url}/labels/add?labelName=${labelName}`);
     }
