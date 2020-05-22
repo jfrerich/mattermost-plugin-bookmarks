@@ -181,7 +181,7 @@ func (p *Plugin) handleViewBookmarks(w http.ResponseWriter, r *http.Request, use
 		return
 	}
 
-	text := "#### Bookmarks List\n"
+	text := "#### Bookmarks\n"
 	bmarksSorted, err := bmarks.ByPostCreateAt(bmarks)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
