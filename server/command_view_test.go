@@ -30,13 +30,21 @@ func TestExecuteCommandView(t *testing.T) {
 		CreateAt: model.GetMillis() + 3,
 	}
 
+	defaultSortString := []string{
+		"#### Bookmarks List",
+		"[:link:](https://myhost.com/_redirect/pl/ID1) `label1` `label2` Title1 - New Bookmark - times are zero",
+		"[:link:](https://myhost.com/_redirect/pl/ID3) Title3 - bookmarks already updated once",
+		"[:link:](https://myhost.com/_redirect/pl/ID4) `TitleFromPost` this is the post.Message",
+		"[:link:](https://myhost.com/_redirect/pl/ID2) `label1` `label2` Title2 - bookmarks initialized. Times created and same",
+	}
+
 	tests := map[string]struct {
 		commandArgs       *model.CommandArgs
 		bookmarks         *Bookmarks
 		expectedMsgPrefix string
 		expectedContains  []string
 	}{
-		// USER HAS NO BOOKMARKS
+		// User has no bookmarks
 		"User has no bookmarks": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
 			bookmarks:         nil,
@@ -50,7 +58,7 @@ func TestExecuteCommandView(t *testing.T) {
 			expectedContains:  nil,
 		},
 
-		// VIEW INDIVIDUAL BOOKMARK
+		// View individual bookmark
 		"User requests to view bookmark by ID that has a title defined": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view ID2"},
 			bookmarks:         getExecuteCommandTestBookmarks(),
@@ -64,7 +72,7 @@ func TestExecuteCommandView(t *testing.T) {
 			},
 		},
 
-		// VIEW ALL BOOKMARKS
+		// View all bookmarks
 		"User has 3 bookmarks  All with titles provided": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
 			bookmarks:         getExecuteCommandTestBookmarks(),
@@ -75,12 +83,15 @@ func TestExecuteCommandView(t *testing.T) {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
 			bookmarks:         getExecuteCommandTestBookmarks(),
 			expectedMsgPrefix: strings.TrimSpace("#### Bookmarks List"),
-			expectedContains: []string{
-				"Bookmarks List",
-				"[:link:](https://myhost.com/_redirect/pl/ID1) `label1` `label2` Title1 - New Bookmark - times are zero",
-				"[:link:](https://myhost.com/_redirect/pl/ID2) `label1` `label2` Title2 - bookmarks initialized. Times created and same",
-				"[:link:](https://myhost.com/_redirect/pl/ID3) Title3 - bookmarks already updated once",
-				"[:link:](https://myhost.com/_redirect/pl/ID4) `TitleFromPost`"},
+			expectedContains:  defaultSortString,
+		},
+
+		// View Sorting
+		"Sorted by createdAt - default sort": {
+			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
+			bookmarks:         getExecuteCommandTestBookmarks(),
+			expectedMsgPrefix: strings.TrimSpace(strings.Join(defaultSortString, "\n")),
+			expectedContains:  nil,
 		},
 	}
 	for name, tt := range tests {

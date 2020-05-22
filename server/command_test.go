@@ -43,19 +43,19 @@ func getExecuteCommandTestBookmarks() *Bookmarks {
 	b2 := &Bookmark{
 		PostID:     p2ID,
 		Title:      b2Title,
-		CreateAt:   model.GetMillis(),
+		CreateAt:   model.GetMillis() + 5,
 		ModifiedAt: model.GetMillis(),
 		LabelIDs:   []string{"UUID1", "UUID2"},
 	}
 	b3 := &Bookmark{
 		PostID:     p3ID,
 		Title:      b3Title,
-		CreateAt:   model.GetMillis(),
+		CreateAt:   model.GetMillis() + 2,
 		ModifiedAt: model.GetMillis(),
 	}
 	b4 := &Bookmark{
 		PostID:     p4ID,
-		CreateAt:   model.GetMillis(),
+		CreateAt:   model.GetMillis() + 3,
 		ModifiedAt: model.GetMillis(),
 	}
 
