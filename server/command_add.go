@@ -114,7 +114,7 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 		return p.responsef(args, "Unable to add bookmark")
 	}
 
-	text, err := p.getBmarkTextOneLine(&bookmark, options.labels, args)
+	text, err := p.getBmarkTextOneLine(&bookmark, options.labels)
 	if err != nil {
 		return p.responsef(args, "Unable to get bookmarks list bookmark")
 	}

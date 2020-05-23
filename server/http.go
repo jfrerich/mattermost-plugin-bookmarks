@@ -130,7 +130,7 @@ func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request, userID string
 		names = append(names, name)
 	}
 
-	text, err := p.getBmarkTextOneLine(bmark, names, nil)
+	text, err := p.getBmarkTextOneLine(bmark, names)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -168,38 +168,10 @@ func (p *Plugin) handleViewBookmarks(w http.ResponseWriter, r *http.Request, use
 	}
 	channelID := req.ChannelID
 
-	labels := NewLabelsWithUser(p.API, userID)
-	labels, err = labels.getLabels()
+	text, err := p.getBmarksEphemeralText(userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
-	}
-
-	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	text := "#### Bookmarks\n"
-	bmarksSorted, err := bmarks.ByPostCreateAt(bmarks)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	for _, bmark := range bmarksSorted {
-		labelNames, err := labels.getLabelNames(userID, bmark)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		nextText, err := p.getBmarkTextOneLine(bmark, labelNames, nil)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		text += nextText
 	}
 
 	post := &model.Post{
