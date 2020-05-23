@@ -50,8 +50,7 @@ func (p *Plugin) executeCommandRemove(args *model.CommandArgs) *model.CommandRes
 			labelNames = append(labelNames, name)
 		}
 
-		newText, err := p.getBmarkTextOneLine(bmark, labelNames, args)
-		// FIXME newText, err := p.getBmarkTextOneLine(bmark, args)
+		newText, err := p.getBmarkTextOneLine(bmark, labelNames)
 		if err != nil {
 			return p.responsef(args, err.Error())
 		}

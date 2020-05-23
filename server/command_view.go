@@ -10,8 +10,7 @@ import (
 func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandResponse {
 	subCommand := strings.Fields(args.Command)
 
-	b := NewBookmarksWithUser(p.API, args.UserId)
-	bmarks, err := b.getBookmarks()
+	bmarks, err := NewBookmarksWithUser(p.API, args.UserId).getBookmarks()
 	if err != nil {
 		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
 	}
@@ -21,12 +20,6 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 	// it and now has 0 bookmarks
 	if bmarks == nil || len(bmarks.ByID) == 0 {
 		return p.responsef(args, "You do not have any saved bookmarks")
-	}
-
-	labels := NewLabelsWithUser(p.API, args.UserId)
-	labels, err = labels.getLabels()
-	if err != nil {
-		return p.responsef(args, "Unable to get labels for user, %s", err)
 	}
 
 	// user requests to view an individual bookmark
@@ -41,7 +34,7 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 		}
 
 		var labelNames []string
-		labelNames, err = labels.getLabelNames(args.UserId, bmark)
+		labelNames, err = bmarks.getBmarkLabelNames(bmark)
 		if err != nil {
 			return p.responsef(args, err.Error())
 		}
@@ -54,22 +47,9 @@ func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandRespo
 		return p.responsef(args, text)
 	}
 
-	text := "#### Bookmarks List\n"
-	bmarksSorted, err := b.ByPostCreateAt(bmarks)
+	text, err := p.getBmarksEphemeralText(args.UserId)
 	if err != nil {
-		return p.responsef(args, err.Error())
-	}
-
-	for _, bmark := range bmarksSorted {
-		labelNames, err := labels.getLabelNames(args.UserId, bmark)
-		if err != nil {
-			return p.responsef(args, err.Error())
-		}
-		nextText, err := p.getBmarkTextOneLine(bmark, labelNames, args)
-		if err != nil {
-			return p.responsef(args, "Unable to get bookmarks text %s", err)
-		}
-		text += nextText
+		return p.responsef(args, text)
 	}
 
 	return p.responsef(args, text)

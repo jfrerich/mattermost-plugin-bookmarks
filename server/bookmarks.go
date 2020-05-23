@@ -81,10 +81,10 @@ func (b *Bookmarks) getBookmarks() (*Bookmarks, error) {
 }
 
 // ByPostCreateAt returns an array of bookmarks sorted by post.CreateAt times
-func (b *Bookmarks) ByPostCreateAt(bmarks *Bookmarks) ([]*Bookmark, error) {
+func (b *Bookmarks) ByPostCreateAt() ([]*Bookmark, error) {
 	// build temp map
 	tempMap := make(map[int64]string)
-	for _, bmark := range bmarks.ByID {
+	for _, bmark := range b.ByID {
 		post, appErr := b.api.GetPost(bmark.PostID)
 		if appErr != nil {
 			return nil, appErr
@@ -102,7 +102,7 @@ func (b *Bookmarks) ByPostCreateAt(bmarks *Bookmarks) ([]*Bookmark, error) {
 	// reconstruct the bookmarks in a sorted array
 	var bookmarks []*Bookmark
 	for _, k := range keys {
-		bmark := bmarks.ByID[tempMap[int64(k)]]
+		bmark := b.ByID[tempMap[int64(k)]]
 		bookmarks = append(bookmarks, bmark)
 	}
 
@@ -175,7 +175,13 @@ func (b *Bookmarks) deleteLabel(bmarkID string, labelID string) error {
 	return nil
 }
 
-func (l *Labels) getLabelNames(userID string, bmark *Bookmark) ([]string, error) {
+// getLabelNames returns an array of labelNames for a given bookmark
+func (b *Bookmarks) getBmarkLabelNames(bmark *Bookmark) ([]string, error) {
+	l, err := NewLabelsWithUser(b.api, b.userID).getLabels()
+	if err != nil {
+		return nil, err
+	}
+
 	var labelNames []string
 	for _, id := range bmark.getLabelIDs() {
 		name, err := l.getNameFromID(id)
