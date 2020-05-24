@@ -142,11 +142,10 @@ func TestHandleGetBookmark(t *testing.T) {
 	bmarks := getExecuteCommandTestBookmarks()
 
 	tests := map[string]struct {
-		userID            string
-		bookmark          *Bookmark
-		bookmarks         *Bookmarks
-		expectedCode      int
-		expectedMsgPrefix string
+		userID       string
+		bookmark     *Bookmark
+		bookmarks    *Bookmarks
+		expectedCode int
 	}{
 		"Unauthed User": {
 			bookmark:     bmarks.ByID["ID1"],
@@ -189,9 +188,6 @@ func TestHandleViewBookmarks(t *testing.T) {
 	p := makePlugin(api)
 
 	bmarks := getExecuteCommandTestBookmarks()
-	type channelReq struct {
-		ChannelID string `json:"channelId"`
-	}
 
 	tests := map[string]struct {
 		userID       string
