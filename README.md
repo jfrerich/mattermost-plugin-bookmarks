@@ -13,7 +13,7 @@ Mattermost allows users to flag a post (similar to bookmarking), but you cannot 
 
 Additionally, the plugin adds slash commands which provide methods to add, view, and remove bookmarks. The `bookmarks view` command prints a condensed view of the bookmarks allowing a user to easily scan bookmark titles
 
-## ScreenShots 
+## ScreenShots
 
 ### Post Dropdown Menu UI
 
@@ -32,6 +32,11 @@ data.
 View bookmarks in an ephemeral post
 
 ![channel header icon](./assets/channelHeaderAction.gif)
+
+The legend describes the markdown format shown with each bookmark. Use the channel header icon or `/bookmarks view` to see your
+bookmarks
+
+![channel header icon](./assets/commandViewWithLegend.png)
 
 ## Slash Commands
 
