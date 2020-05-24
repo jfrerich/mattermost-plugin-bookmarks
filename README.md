@@ -25,18 +25,18 @@ data.
 * add existing labels
 * create new labels
 
-![bookmarks add post](./assets/PostMenuAction_AddBookmark.gif)
+<img src="./assets/PostMenuAction_AddBookmark.gif" alt="Post Menu Pulldown" width="1000">
 
 ### Channel Header Icon
 
 View bookmarks in an ephemeral post
 
-![channel header icon](./assets/channelHeaderAction.gif)
+<img src="./assets/channelHeaderAction.gif" alt="channel header icon" width="1000">
 
 The legend describes the markdown format shown with each bookmark. Use the channel header icon or `/bookmarks view` to see your
 bookmarks
 
-![channel header icon](./assets/commandViewWithLegend.png)
+<img src="./assets/commandViewWithLegend.png" alt="bookmarks view with legend" width="1000">
 
 ## Slash Commands
 
@@ -135,29 +135,32 @@ the list of labels and removed from any bookmarks currently using the label.
 ### Add a bookmark
 
 `/bookmarks add http://localhost:8065/demoteam/pl/5p4xi5hqmjddzfgggtqafk4iga ThisPostHasEmojisAndCodeBlock`
-![bookmarks add post](./assets/commandAddPost.png)
+
+<img src="./assets/commandAddPost.png" alt="bookmarks add post" width="900">
 
 #### Add a bookmark with labels
 
 `/bookmarks add http://localhost:8065/demoteam/pl/1frnfjxiubrzie68wozecxorxo --labels Label1,OtherLabel2`
-![bookmarks add post with labels](./assets/commandAddPostWithLabels.png)
+
+<img src="./assets/commandAddPostWithLabels.png" alt="bookmarks add post with labels" width="900">
 
 ### View a bookmark
 
 `/bookmarks view`
 
-![bookmarks view](./assets/commandView.png)
-![bookmarks view 2](./assets/commandView2.png)
+<img src="./assets/commandView.png" alt="bookmarks view" width="900">
+
+<img src="./assets/commandView2.png" alt="bookmarks view 2" width="900">
 
 `/bookmarks view http://localhost:8065/demoteam/pl/75ga1c6pm7n48en8sshn9bgjhy`
 
-![bookmarks view post](./assets/commandViewWithPostID.png)
+<img src="./assets/commandViewWithPostID.png" alt="bookmarks view post" width="900">
 
 ### Remove a bookmark
 
 `/bookmarks remove http://localhost:8065/demoteam/pl/1frnfjxiubrzie68wozecxorxo h79hegdtgtbqxn89co1b1iwu7ho`
 
-![bookmarks remove post](./assets/commandRemovePost.png)
+<img src="./assets/commandRemovePost.png" alt="bookmarks remove post" width="900">
 
 ### Remove a label
 
@@ -170,6 +173,6 @@ deletion.
 /bookmarks label remove <label> --force
 ```
 
-![bookmarks remove label force](./assets/commandLabelRemoveForce.png)
+<img src="./assets/commandLabelRemoveForce.png" alt="bookmarks remove label force" width="900">
 
 To learn more about plugins, see [Mattermost plugin documentation](https://developers.mattermost.com/extend/plugins/).
