@@ -40,7 +40,7 @@ func TestExecuteCommandAdd(t *testing.T) {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v", p1ID)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
 			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1) `TitleFromPost` this is the post.Message", addPrefixMsg)),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID1) **`TFP`** this is the post.Message", addPrefixMsg)),
 			expectedContains:  nil,
 		},
 
@@ -71,7 +71,7 @@ func TestExecuteCommandAdd(t *testing.T) {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v %v --labels %v", PostIDExists, "Title Provided By User", "label1,label2")},
 			bookmarks:         getExecuteCommandTestBookmarks(),
 			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID2) `label1` `label2` Title Provided By User", addPrefixMsg)),
+			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("%sID2) `label1` `label2` **_Title Provided By User_**", addPrefixMsg)),
 			expectedContains:  []string{"label1", "label2", "Title Provided By User"},
 		},
 		"Bookmark added  title provided with labels": {
@@ -125,7 +125,7 @@ func TestExecuteCommandAdd(t *testing.T) {
 			// commandArgs: &model.CommandArgs{Command: fmt.Sprintf("/bookmarks add %v --labels label1,xx", p1ID)},
 			bookmarks:           getExecuteCommandTestBookmarks(),
 			labels:              getExecuteCommandTestLabels(),
-			expectedMsgPrefix:   strings.TrimSpace(fmt.Sprintf("%sID1) `aa` `bb` `cc` `l2` `l8` `label1` `xx`", addPrefixMsg)),
+			expectedMsgPrefix:   strings.TrimSpace(fmt.Sprintf("%sID1) **`TFP`** `aa` `bb` `cc` `l2` `l8` `label1` `xx`", addPrefixMsg)),
 			expectedContains:    []string{"l1", "l2", "l8"},
 			expectedNotContains: []string{"--labels"},
 			// expectedContains: nil,

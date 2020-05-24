@@ -41,7 +41,7 @@ func TestExecuteCommandRemove(t *testing.T) {
 		"User successfully deletes 1 bookmark": {
 			commandArgs:       &model.CommandArgs{Command: fmt.Sprintf("/bookmarks remove %v", PostIDExists)},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace("Removed bookmark: [:link:](https://myhost.com/_redirect/pl/ID2) `label1` `label2` Title2 - "),
+			expectedMsgPrefix: strings.TrimSpace("Removed bookmark: [:link:](https://myhost.com/_redirect/pl/ID2) `label1` `label2` **_Title2 - "),
 			expectedContains:  nil,
 		},
 		"User successfully deletes 3 bookmark": {
@@ -50,9 +50,9 @@ func TestExecuteCommandRemove(t *testing.T) {
 			expectedMsgPrefix: "",
 			expectedContains: []string{
 				"Removed bookmarks:",
-				"[:link:](https://myhost.com/_redirect/pl/ID1) `label1` `label2` Title1 - New Bookmark - times are zero",
-				"[:link:](https://myhost.com/_redirect/pl/ID2) `label1` `label2` Title2 - bookmarks initialized. Times created and same",
-				"[:link:](https://myhost.com/_redirect/pl/ID3) Title3 - bookmarks already updated once",
+				"[:link:](https://myhost.com/_redirect/pl/ID1) `label1` `label2` **_Title1 - New Bookmark - times are zero",
+				"[:link:](https://myhost.com/_redirect/pl/ID2) `label1` `label2` **_Title2 - bookmarks initialized. Times created and same",
+				"[:link:](https://myhost.com/_redirect/pl/ID3) **_Title3 - bookmarks already updated once_**",
 			},
 		},
 	}
