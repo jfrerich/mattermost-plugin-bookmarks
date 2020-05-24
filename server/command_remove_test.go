@@ -69,7 +69,6 @@ func TestExecuteCommandRemove(t *testing.T) {
 		api.On("GetTeam", mock.Anything).Return(&model.Team{Id: teamID1}, nil)
 		api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
 		api.On("exists", mock.Anything).Return(true)
-		// api.On("ByID", mock.Anything).Return(true)
 
 		jsonBmarks, err := json.Marshal(tt.bookmarks)
 		api.On("KVGet", getBookmarksKey(tt.commandArgs.UserId)).Return(jsonBmarks, nil)
@@ -81,10 +80,7 @@ func TestExecuteCommandRemove(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 			assert.Nil(t, err)
-			// isSendEphemeralPostCalled := false
 			api.On("SendEphemeralPost", mock.AnythingOfType("string"), mock.AnythingOfType("*model.Post")).Run(func(args mock.Arguments) {
-				// isSendEphemeralPostCalled = true
-
 				post := args.Get(1).(*model.Post)
 				actual := strings.TrimSpace(post.Message)
 				assert.True(t, strings.HasPrefix(actual, tt.expectedMsgPrefix), "Expected returned message to start with: \n%s\nActual:\n%s", tt.expectedMsgPrefix, actual)
@@ -95,13 +91,11 @@ func TestExecuteCommandRemove(t *testing.T) {
 				}
 				// assert.Contains(t, actual, tt.expectedMsgPrefix)
 			}).Once().Return(&model.Post{})
-			// assert.Equal(t, true, isSendEphemeralPostCalled)
 
 			p := makePlugin(api)
 			cmdResponse, appError := p.ExecuteCommand(&plugin.Context{}, tt.commandArgs)
 			require.Nil(t, appError)
 			require.NotNil(t, cmdResponse)
-			// assert.True(t, isSendEphemeralPostCalled)
 		})
 	}
 }

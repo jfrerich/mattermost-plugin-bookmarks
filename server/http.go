@@ -30,7 +30,7 @@ func (p *Plugin) initialiseAPI() {
 	apiRouter := p.router.PathPrefix("/api/v1").Subrouter()
 
 	apiRouter.HandleFunc("/view", p.extractUserMiddleWare(p.handleViewBookmarks, true)).Methods("POST")
-	apiRouter.HandleFunc("/add", p.extractUserMiddleWare(p.handleAdd, true)).Methods("POST")
+	apiRouter.HandleFunc("/add", p.extractUserMiddleWare(p.handleAddBookmark, true)).Methods("POST")
 	apiRouter.HandleFunc("/get", p.extractUserMiddleWare(p.handleGetBookmark, true)).Methods("GET")
 	apiRouter.HandleFunc("/labels/get", p.extractUserMiddleWare(p.handleLabelsGet, true)).Methods("GET")
 	apiRouter.HandleFunc("/labels/add", p.extractUserMiddleWare(p.handleLabelsAdd, true)).Methods("POST")
@@ -57,8 +57,8 @@ func (p *Plugin) extractUserMiddleWare(handler HTTPHandlerFuncWithUser, jsonResp
 	}
 }
 
-// handleAdd saves a bookmark to the bookmarks store
-func (p *Plugin) handleAdd(w http.ResponseWriter, r *http.Request, userID string) {
+// handleAddBookmark saves a bookmark to the bookmarks store
+func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userID string) {
 	type bmarkWithChannel struct {
 		Bookmark  *Bookmark `json:"bookmark"`
 		ChannelID string    `json:"channelId"`
