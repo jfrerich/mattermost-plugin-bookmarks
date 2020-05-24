@@ -81,7 +81,6 @@ func TestExecuteCommandRemove(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			assert.Nil(t, err)
 			api.On("SendEphemeralPost", mock.AnythingOfType("string"), mock.AnythingOfType("*model.Post")).Run(func(args mock.Arguments) {
-
 				post := args.Get(1).(*model.Post)
 				actual := strings.TrimSpace(post.Message)
 				assert.True(t, strings.HasPrefix(actual, tt.expectedMsgPrefix), "Expected returned message to start with: \n%s\nActual:\n%s", tt.expectedMsgPrefix, actual)
