@@ -61,7 +61,7 @@ func TestHandleAdd(t *testing.T) {
 			expectedCode:      http.StatusOK,
 			expectedMsgPrefix: "Saved Bookmark",
 			expectedContains: []string{
-				fmt.Sprintf("[:link:](https://myhost.com/_redirect/pl/%v) PostID-Title", b1.PostID)},
+				fmt.Sprintf("[:link:](https://myhost.com/_redirect/pl/%v) **_PostID-Title_**", b1.PostID)},
 		},
 		"overwrite bookmark that exists": {
 			userID:            UserID,
@@ -70,7 +70,7 @@ func TestHandleAdd(t *testing.T) {
 			expectedCode:      http.StatusOK,
 			expectedMsgPrefix: "Saved Bookmark",
 			expectedContains: []string{
-				fmt.Sprintf("[:link:](https://myhost.com/_redirect/pl/%v) PostID-Title", b2.PostID)},
+				fmt.Sprintf("[:link:](https://myhost.com/_redirect/pl/%v) **_PostID-Title_**", b2.PostID)},
 		},
 		"bookmark contains labelID that is name of a bookmark": {
 			userID:            UserID,
@@ -79,7 +79,7 @@ func TestHandleAdd(t *testing.T) {
 			expectedCode:      http.StatusOK,
 			expectedMsgPrefix: "Saved Bookmark",
 			expectedContains: []string{
-				fmt.Sprintf("[:link:](https://myhost.com/_redirect/pl/%v) `newLabel` PostID-Title", b3.PostID)},
+				fmt.Sprintf("[:link:](https://myhost.com/_redirect/pl/%v) `newLabel` **_PostID-Title_**", b3.PostID)},
 		},
 	}
 	for name, tt := range tests {

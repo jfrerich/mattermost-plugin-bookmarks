@@ -31,11 +31,12 @@ func TestExecuteCommandView(t *testing.T) {
 	}
 
 	defaultSortString := []string{
-		"#### Bookmarks List",
-		"[:link:](https://myhost.com/_redirect/pl/ID1) `label1` `label2` Title1 - New Bookmark - times are zero",
-		"[:link:](https://myhost.com/_redirect/pl/ID3) Title3 - bookmarks already updated once",
-		"[:link:](https://myhost.com/_redirect/pl/ID4) `TitleFromPost` this is the post.Message",
-		"[:link:](https://myhost.com/_redirect/pl/ID2) `label1` `label2` Title2 - bookmarks initialized. Times created and same",
+		strings.TrimSpace(getLegendText()),
+		"#### Bookmarks",
+		"[:link:](https://myhost.com/_redirect/pl/ID1) `label1` `label2` **_Title1 - New Bookmark - times are zero_**",
+		"[:link:](https://myhost.com/_redirect/pl/ID3) **_Title3 - bookmarks already updated once_**",
+		"[:link:](https://myhost.com/_redirect/pl/ID4) **`TFP`** this is the post.Message",
+		"[:link:](https://myhost.com/_redirect/pl/ID2) `label1` `label2` **_Title2 - bookmarks initialized. Times created and same_**",
 	}
 
 	tests := map[string]struct {
@@ -76,13 +77,13 @@ func TestExecuteCommandView(t *testing.T) {
 		"User has 3 bookmarks  All with titles provided": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace("#### Bookmarks List"),
-			expectedContains:  []string{"Bookmarks List", "ID1", "ID2", "ID3"},
+			expectedMsgPrefix: strings.TrimSpace(getLegendText()),
+			expectedContains:  []string{"Bookmarks", "ID1", "ID2", "ID3"},
 		},
 		"User has 4 bookmarks  All with titles  One without": {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks view"},
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: strings.TrimSpace("#### Bookmarks List"),
+			expectedMsgPrefix: strings.TrimSpace(getLegendText()),
 			expectedContains:  defaultSortString,
 		},
 
