@@ -310,6 +310,12 @@ func TestHandleLabelsAdd(t *testing.T) {
 			labels:       labels,
 			expectedCode: http.StatusUnauthorized,
 		},
+		"Add a Label": {
+			userID:       UserID,
+			label:        l1,
+			labels:       labels,
+			expectedCode: http.StatusOK,
+		},
 	}
 	for name, tt := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -321,7 +327,7 @@ func TestHandleLabelsAdd(t *testing.T) {
 			api.On("KVGet", getLabelsKey(UserID)).Return(nil, nil)
 			api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
 
-			r := httptest.NewRequest(http.MethodPost, "/api/v1/labels/add", strings.NewReader(string(jsonLabel)))
+			r := httptest.NewRequest(http.MethodPost, "/api/v1/labels/add?labelName=LabelID1", strings.NewReader(string(jsonLabel)))
 			r.Header.Add("Mattermost-User-Id", tt.userID)
 
 			p.initialiseAPI()
