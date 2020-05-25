@@ -8,9 +8,17 @@ import AddBookmarkForm from './add_bookmark_form';
 
 export type Props = {
     visible: boolean;
+    close: () => void;
 }
 
 export default class AddBookmarkModal extends PureComponent<Props, State> {
+    handleClose = (e) => {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
+        this.props.close();
+    };
+
     render() {
         let content;
         if (this.props.visible) {
@@ -27,6 +35,8 @@ export default class AddBookmarkModal extends PureComponent<Props, State> {
                 dialogClassName='modal--scroll'
                 style={style.modal}
                 show={this.props.visible}
+                onHide={this.handleClose}
+                onExited={this.handleClose}
                 bsSize='large'
                 backdrop='static'
             >

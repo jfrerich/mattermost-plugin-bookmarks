@@ -5,6 +5,8 @@ exports[`components/AddBookmark snapshot modal not visible 1`] = `
   backdrop="static"
   bsSize="large"
   dialogClassName="modal--scroll"
+  onExited={[Function]}
+  onHide={[Function]}
   show={false}
   style={
     Object {
@@ -28,6 +30,8 @@ exports[`components/AddBookmark snapshot modal visible 1`] = `
   backdrop="static"
   bsSize="large"
   dialogClassName="modal--scroll"
+  onExited={[Function]}
+  onHide={[Function]}
   show={true}
   style={
     Object {

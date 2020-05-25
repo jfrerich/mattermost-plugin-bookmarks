@@ -57,6 +57,19 @@ func (b *Bookmarks) addBookmark(bmark *Bookmark) error {
 	return nil
 }
 
+// BookmarksFromJSON returns unmarshalled bookmark or initialized bookmarks if
+// bytes are empty
+func (b *Bookmarks) BookmarksFromJSON(bytes []byte) (*Bookmarks, error) {
+	bmarks := NewBookmarksWithUser(b.api, b.userID)
+	if len(bytes) != 0 {
+		jsonErr := json.Unmarshal(bytes, &bmarks)
+		if jsonErr != nil {
+			return nil, jsonErr
+		}
+	}
+	return bmarks, nil
+}
+
 // getBookmarks returns a users bookmarks.  If the user has no bookmarks,
 // return nil bookmarks
 func (b *Bookmarks) getBookmarks() (*Bookmarks, error) {
@@ -66,18 +79,7 @@ func (b *Bookmarks) getBookmarks() (*Bookmarks, error) {
 		return nil, errors.Wrapf(appErr, "Unable to get bookmarks for user %s", b.userID)
 	}
 
-	if bb == nil {
-		return nil, nil
-	}
-
-	// return initialized bookmarks
-	bmarks := NewBookmarksWithUser(b.api, b.userID)
-	jsonErr := json.Unmarshal(bb, &bmarks)
-	if jsonErr != nil {
-		return nil, jsonErr
-	}
-
-	return bmarks, nil
+	return b.BookmarksFromJSON(bb)
 }
 
 // ByPostCreateAt returns an array of bookmarks sorted by post.CreateAt times
@@ -113,7 +115,7 @@ func (b *Bookmarks) getBookmarksWithLabelID(labelID string) (*Bookmarks, error) 
 	bmarksWithLabel := NewBookmarksWithUser(b.api, b.userID)
 
 	for _, bmark := range b.ByID {
-		if bmark.hasLabels(bmark) {
+		if bmark.hasLabels() {
 			for _, id := range bmark.getLabelIDs() {
 				if labelID == id {
 					if err := bmarksWithLabel.add(bmark); err != nil {

@@ -168,7 +168,7 @@ func (p *Plugin) handleViewBookmarks(w http.ResponseWriter, r *http.Request, use
 	}
 	channelID := req.ChannelID
 
-	text, err := p.getBmarksEphemeralText(userID)
+	text, err := p.getBmarksEphemeralText(userID, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -105,10 +105,6 @@ func (p *Plugin) executeCommandAdd(args *model.CommandArgs) *model.CommandRespon
 		return p.responsef(args, "Unable to get bookmarks")
 	}
 
-	// no marks, initialize the store first
-	if bmarks == nil {
-		bmarks = NewBookmarksWithUser(p.API, args.UserId)
-	}
 	err = bmarks.addBookmark(&bookmark)
 	if err != nil {
 		return p.responsef(args, "Unable to add bookmark")
