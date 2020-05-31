@@ -12,7 +12,6 @@ export type Props = {
 }
 
 export default class AddBookmarkModal extends PureComponent<Props, State> {
-
     handleClose = (e) => {
         if (e && e.preventDefault) {
             e.preventDefault();
