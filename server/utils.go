@@ -74,6 +74,13 @@ func (p *Plugin) getBmarksEphemeralText(userID string) (string, error) {
 		return "", err
 	}
 
+	// bookmarks is nil if user has never added a bookmark.
+	// bookmarks.ByID will be empty if user created a bookmark and then deleted
+	// it and now has 0 bookmarks
+	if b == nil || len(b.ByID) == 0 {
+		return "You do not have any saved bookmarks", nil
+	}
+
 	bmarksSorted, err := b.ByPostCreateAt()
 	if err != nil {
 		return "", err
