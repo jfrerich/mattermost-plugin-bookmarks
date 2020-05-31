@@ -57,9 +57,9 @@ func (b *Bookmarks) addBookmark(bmark *Bookmark) error {
 	return nil
 }
 
-// BookmarksFromJson returns unmarshalled bookmark or initialized bookmarks if
-// bytes are emtpy
-func (b *Bookmarks) BookmarksFromJson(bytes []byte) (*Bookmarks, error) {
+// BookmarksFromJSON returns unmarshalled bookmark or initialized bookmarks if
+// bytes are empty
+func (b *Bookmarks) BookmarksFromJSON(bytes []byte) (*Bookmarks, error) {
 	bmarks := NewBookmarksWithUser(b.api, b.userID)
 	if len(bytes) != 0 {
 		jsonErr := json.Unmarshal(bytes, &bmarks)
@@ -79,7 +79,7 @@ func (b *Bookmarks) getBookmarks() (*Bookmarks, error) {
 		return nil, errors.Wrapf(appErr, "Unable to get bookmarks for user %s", b.userID)
 	}
 
-	return b.BookmarksFromJson(bb)
+	return b.BookmarksFromJSON(bb)
 }
 
 // ByPostCreateAt returns an array of bookmarks sorted by post.CreateAt times
