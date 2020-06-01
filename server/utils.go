@@ -68,10 +68,17 @@ func getLegendText() string {
 
 // getBmarksEphemeralText returns a the text for posting all bookmarks in an
 // ephemeral message
-func (p *Plugin) getBmarksEphemeralText(userID string) (string, error) {
+func (p *Plugin) getBmarksEphemeralText(userID string, filters *BookmarksFilters) (string, error) {
 	b, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
 	if err != nil {
 		return "", err
+	}
+
+	if filters != nil {
+		b, err = b.applyFilters(filters)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	// bookmarks is nil if user has never added a bookmark.
@@ -114,7 +121,7 @@ func (p *Plugin) getBmarkTextOneLine(bmark *Bookmark, labelNames []string) (stri
 	// bold and italicize titles saved by the user
 	title := "**_" + bmark.getTitle() + "_**"
 
-	if !bmark.hasUserTitle(bmark) {
+	if !bmark.hasUserTitle() {
 		// display the first portion of the post message in place of a title
 		title = postMessage
 		// prepend the title from post label before other labels
@@ -133,7 +140,7 @@ func (p *Plugin) getBmarkTextDetailed(bmark *Bookmark, labelNames []string, args
 		return "", err
 	}
 
-	if bmark.hasUserTitle(bmark) {
+	if bmark.hasUserTitle() {
 		title = bmark.Title
 	}
 

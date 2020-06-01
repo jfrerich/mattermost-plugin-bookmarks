@@ -139,8 +139,6 @@ func TestHandleGetBookmark(t *testing.T) {
 	api := makeAPIMock()
 	p := makePlugin(api)
 
-	bmarks := getExecuteCommandTestBookmarks()
-
 	tests := map[string]struct {
 		userID       string
 		bookmark     *Bookmark
@@ -148,25 +146,24 @@ func TestHandleGetBookmark(t *testing.T) {
 		expectedCode int
 	}{
 		"Unauthed User": {
-			bookmark:     bmarks.ByID["ID1"],
-			bookmarks:    bmarks,
 			expectedCode: http.StatusUnauthorized,
 		},
 		"get bookmark1": {
 			userID:       UserID,
-			bookmark:     bmarks.ByID["ID1"],
-			bookmarks:    bmarks,
 			expectedCode: http.StatusOK,
 		},
 	}
 	for name, tt := range tests {
+		bmarks := getExecuteCommandTestBookmarks()
+		bookmark := bmarks.ByID["ID1"]
+
 		t.Run(name, func(t *testing.T) {
-			jsonBmark, err := json.Marshal(tt.bookmark)
+			jsonBmark, err := json.Marshal(bookmark)
 			assert.Nil(t, err)
-			jsonBmarks, err := json.Marshal(tt.bookmarks)
+			jsonBmarks, err := json.Marshal(bmarks)
 			assert.Nil(t, err)
 
-			api.On("getBookmark", tt.bookmark.PostID).Return(tt.bookmark)
+			api.On("getBookmark", bookmark.PostID).Return(bookmark)
 			api.On("KVGet", getBookmarksKey(UserID)).Return(jsonBmarks, nil)
 
 			r := httptest.NewRequest(http.MethodGet, "/api/v1/get?postID=ID1", strings.NewReader(string(jsonBmark)))

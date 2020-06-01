@@ -115,7 +115,7 @@ func (b *Bookmarks) getBookmarksWithLabelID(labelID string) (*Bookmarks, error) 
 	bmarksWithLabel := NewBookmarksWithUser(b.api, b.userID)
 
 	for _, bmark := range b.ByID {
-		if bmark.hasLabels(bmark) {
+		if bmark.hasLabels() {
 			for _, id := range bmark.getLabelIDs() {
 				if labelID == id {
 					if err := bmarksWithLabel.add(bmark); err != nil {
