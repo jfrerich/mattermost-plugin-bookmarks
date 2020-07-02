@@ -6,12 +6,13 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
 
-type HTTPHandlerFuncWithUser func(w http.ResponseWriter, r *http.Request, userID string)
+type HTTPHandlerFuncWithUser func(w http.ResponseWriter, r *http.Request, userID string) (int, error)
 
 type APIErrorResponse struct {
 	ID         string `json:"id"`
@@ -25,10 +26,18 @@ func writeAPIError(w http.ResponseWriter, err *APIErrorResponse) {
 	_, _ = w.Write(b)
 }
 
+const (
+	routeAPIPrefix             = "/api/v1"
+	routeAutocompleteLabels    = "/autocomplete/labels"
+	routeAutocompleteBookmarks = "/autocomplete/bookmarks"
+)
+
 func (p *Plugin) initialiseAPI() {
 	p.router = mux.NewRouter()
-	apiRouter := p.router.PathPrefix("/api/v1").Subrouter()
+	apiRouter := p.router.PathPrefix(routeAPIPrefix).Subrouter()
 
+	apiRouter.HandleFunc(routeAutocompleteLabels, p.extractUserMiddleWare(p.handleAutoCompleteLabels, true)).Methods("GET")
+	apiRouter.HandleFunc(routeAutocompleteBookmarks, p.extractUserMiddleWare(p.handleAutoCompleteBookmarks, true)).Methods("GET")
 	apiRouter.HandleFunc("/view", p.extractUserMiddleWare(p.handleViewBookmarks, true)).Methods("POST")
 	apiRouter.HandleFunc("/add", p.extractUserMiddleWare(p.handleAddBookmark, true)).Methods("POST")
 	apiRouter.HandleFunc("/get", p.extractUserMiddleWare(p.handleGetBookmark, true)).Methods("GET")
@@ -53,12 +62,12 @@ func (p *Plugin) extractUserMiddleWare(handler HTTPHandlerFuncWithUser, jsonResp
 			return
 		}
 
-		handler(w, r, userID)
+		_, _ = handler(w, r, userID)
 	}
 }
 
 // handleAddBookmark saves a bookmark to the bookmarks store
-func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userID string) {
+func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
 	type bmarkWithChannel struct {
 		Bookmark  *Bookmark `json:"bookmark"`
 		ChannelID string    `json:"channelId"`
@@ -66,27 +75,24 @@ func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userI
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return respondErr(w, http.StatusBadRequest, err)
 	}
 
 	var req *bmarkWithChannel
 	if err = json.Unmarshal(body, &req); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 	bmark := req.Bookmark
 	channelID := req.ChannelID
 
 	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 
 	l, err := NewLabelsWithUser(p.API, userID).getLabels()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 	ids := bmark.getLabelIDs()
 
@@ -116,8 +122,7 @@ func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userI
 	bmark.LabelIDs = newIDs
 	err = bmarks.addBookmark(bmark)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 
 	var names []string
@@ -132,8 +137,7 @@ func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userI
 
 	text, err := p.getBmarkTextOneLine(bmark, names)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 	message := "Saved Bookmark:\n" + text
 
@@ -143,6 +147,8 @@ func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userI
 		Message:   message,
 	}
 	_ = p.API.SendEphemeralPost(userID, post)
+
+	return http.StatusOK, nil
 }
 
 // func (p *Plugin) handleDelete(w http.ResponseWriter, r *http.Request) {
@@ -150,28 +156,25 @@ func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userI
 // }
 
 // handleViewBookmarks makes an ephemeral post listing a users bookmarks
-func (p *Plugin) handleViewBookmarks(w http.ResponseWriter, r *http.Request, userID string) {
+func (p *Plugin) handleViewBookmarks(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
 	type requestStruct struct {
 		ChannelID string `json:"channelId"`
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return respondErr(w, http.StatusBadRequest, err)
 	}
 
 	var req *requestStruct
 	if err = json.Unmarshal(body, &req); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 	channelID := req.ChannelID
 
 	text, err := p.getBmarksEphemeralText(userID, nil)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 
 	post := &model.Post{
@@ -180,10 +183,12 @@ func (p *Plugin) handleViewBookmarks(w http.ResponseWriter, r *http.Request, use
 		Message:   text,
 	}
 	_ = p.API.SendEphemeralPost(userID, post)
+
+	return http.StatusOK, nil
 }
 
 // handleGetBookmark returns a bookmark
-func (p *Plugin) handleGetBookmark(w http.ResponseWriter, r *http.Request, userID string) {
+func (p *Plugin) handleGetBookmark(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
 	query := r.URL.Query()
 	postID := query["postID"][0]
 
@@ -198,10 +203,9 @@ func (p *Plugin) handleGetBookmark(w http.ResponseWriter, r *http.Request, userI
 		var bb []byte
 		_, err = w.Write(bb)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return respondErr(w, http.StatusInternalServerError, err)
 		}
-		return
+		return http.StatusOK, nil
 	}
 	if err != nil {
 		p.handleErrorWithCode(w, http.StatusBadRequest, "Unable to get bookmark", err)
@@ -209,66 +213,114 @@ func (p *Plugin) handleGetBookmark(w http.ResponseWriter, r *http.Request, userI
 
 	resp, err := json.Marshal(bmark)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 
 	_, err = w.Write(resp)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
+
+	return http.StatusOK, nil
 }
 
-// handleLabelsGet returns all labels
-func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request, userID string) {
+// handleAutoCompleteLabels returns all autocomplete labels
+func (p *Plugin) handleAutoCompleteLabels(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
 	l := NewLabelsWithUser(p.API, userID)
 	labels, err := l.getLabels()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	resp, err := json.Marshal(labels)
+	out := []model.AutocompleteListItem{}
+	for _, label := range labels.ByID {
+		out = append(out, model.AutocompleteListItem{
+			Item: label.Name,
+		})
+	}
+	return respondJSON(w, out)
+}
+
+// handleAutoCompleteBookmarks returns all autocomplete bookmark postIDs
+func (p *Plugin) handleAutoCompleteBookmarks(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
+	b := NewBookmarksWithUser(p.API, userID)
+	bmarks, err := b.getBookmarks()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	}
+
+	out := []model.AutocompleteListItem{}
+	for _, bmark := range bmarks.ByID {
+		out = append(out, model.AutocompleteListItem{
+			Item: bmark.PostID,
+		})
+	}
+	return respondJSON(w, out)
+}
+
+func respondErr(w http.ResponseWriter, code int, err error) (int, error) {
+	http.Error(w, err.Error(), code)
+	return code, err
+}
+
+func respondJSON(w http.ResponseWriter, obj interface{}) (int, error) {
+	data, err := json.Marshal(obj)
+	if err != nil {
+		return respondErr(w, http.StatusInternalServerError, errors.WithMessage(err, "failed to marshal response"))
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	if err != nil {
+		return http.StatusInternalServerError, errors.WithMessage(err, "failed to write response")
+	}
+	return http.StatusOK, nil
+}
+
+// handleLabelsGet returns all labels
+func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
+	l := NewLabelsWithUser(p.API, userID)
+	labels, err := l.getLabels()
+	if err != nil {
+		return respondErr(w, http.StatusInternalServerError, err)
+	}
+
+	resp, err := json.Marshal(labels)
+	if err != nil {
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 
 	_, err = w.Write(resp)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
+	return http.StatusOK, nil
 }
 
 // handleLabelsAdd adds a label to the labels store
-func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request, userID string) {
+func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
 	query := r.URL.Query()
 	labelName := query["labelName"][0]
 	l := NewLabelsWithUser(p.API, userID)
 	labels, err := l.getLabels()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 
 	label, err := labels.addLabel(labelName)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 
 	resp, err := json.Marshal(label)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
 
 	_, err = w.Write(resp)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return respondErr(w, http.StatusInternalServerError, err)
 	}
+	return http.StatusOK, nil
 }
 
 func (p *Plugin) handleErrorWithCode(w http.ResponseWriter, code int, errTitle string, err error) {

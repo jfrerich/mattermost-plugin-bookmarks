@@ -46,15 +46,98 @@ func getHelp(text string) string {
 	return strings.Replace(text, "|", "`", -1)
 }
 
-func getCommand() *model.Command {
+func createBookmarksCommand() *model.Command {
+	bookmarks := model.NewAutocompleteData(
+		commandTriggerBookmarks, "[command]", "Available commands: add, label, remove, view, help")
+
+	// top-level commands
+	bookmarks.AddCommand(createAddCommand())
+	bookmarks.AddCommand(createLabelCommand())
+	bookmarks.AddCommand(createRemoveCommand())
+	bookmarks.AddCommand(createViewCommand())
+	bookmarks.AddCommand(createHelpCommand())
+
 	return &model.Command{
 		Trigger:          commandTriggerBookmarks,
 		DisplayName:      commandTriggerBookmarks,
 		Description:      "Manage Mattermost messages!",
 		AutoComplete:     true,
+		AutocompleteData: bookmarks,
 		AutoCompleteHint: "[command]",
-		AutoCompleteDesc: "Available commands: add, view, remove, label help",
+		AutoCompleteDesc: "Available commands: add, label, remove, view, help",
 	}
+}
+
+func prefixWithAPI(route string) string {
+	return routeAPIPrefix + route
+}
+
+// createHelpCommand adds the help autocomplete option
+func createHelpCommand() *model.AutocompleteData {
+	add := model.NewAutocompleteData(
+		"help", "", "show help")
+	return add
+}
+
+// createAddCommand adds the add autocomplete option
+func createAddCommand() *model.AutocompleteData {
+	add := model.NewAutocompleteData(
+		"add", "[post-id OR permalink] --labels", "Add a bookmark")
+	return add
+}
+
+// createLabelCommand adds the label autocomplete with suboptions
+func createLabelCommand() *model.AutocompleteData {
+	label := model.NewAutocompleteData(
+		"label", "[add|remove|rename|view]", "Create, remove, modify, or view labels")
+	label.AddCommand(createLabelAddCommand())
+	label.AddCommand(createLabelRemoveCommand())
+	label.AddCommand(createLabelRenameCommand())
+	label.AddCommand(createLabelViewCommand())
+	return label
+}
+
+func createLabelRemoveCommand() *model.AutocompleteData {
+	remove := model.NewAutocompleteData(
+		"remove", "[label-name] --force", "Remove a label")
+	remove.AddDynamicListArgument("Label Name", prefixWithAPI(routeAutocompleteLabels), false)
+	return remove
+}
+
+func createLabelViewCommand() *model.AutocompleteData {
+	remove := model.NewAutocompleteData(
+		"view", "", "View all labels")
+	return remove
+}
+
+func createLabelAddCommand() *model.AutocompleteData {
+	remove := model.NewAutocompleteData(
+		"add", "[label-name]", "add a label")
+	remove.AddDynamicListArgument("Label Name", "", false)
+	return remove
+}
+
+func createLabelRenameCommand() *model.AutocompleteData {
+	remove := model.NewAutocompleteData(
+		"rename", "[label-name] [new-label-name]", "Rename a label")
+	remove.AddDynamicListArgument("Label Name", prefixWithAPI(routeAutocompleteLabels), false)
+	return remove
+}
+
+// createRemoveCommand adds the remove autocomplete option
+func createRemoveCommand() *model.AutocompleteData {
+	remove := model.NewAutocompleteData(
+		"remove", "[post-id]", "Remove a bookmark")
+	remove.AddDynamicListArgument("[post_id] OR [permalink]", prefixWithAPI(routeAutocompleteBookmarks), false)
+	return remove
+}
+
+// createViewCommand adds the View autocomplete option with suboptions
+func createViewCommand() *model.AutocompleteData {
+	view := model.NewAutocompleteData(
+		"view", "[post_id] OR [permalink]", "View a bookmark or all bookmarks")
+	view.AddDynamicListArgument("[post_id] OR [permalink]", prefixWithAPI(routeAutocompleteBookmarks), false)
+	return view
 }
 
 func (p *Plugin) postCommandResponse(args *model.CommandArgs, text string) {

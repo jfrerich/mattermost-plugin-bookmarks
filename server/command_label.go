@@ -171,7 +171,7 @@ func (p *Plugin) executeCommandLabelRemove(args *model.CommandArgs) *model.Comma
 		if numBmarksWithLabel != 0 && !options.force {
 			return p.responsef(
 				args,
-				fmt.Sprintf("There are %v bookmarks with the label:%s. Use the --force flag remove the label from the bookmarks.",
+				fmt.Sprintf("There are %v bookmarks with the label:%s. Use the `--force` flag remove the label from the bookmarks.",
 					numBmarksWithLabel, getCodeBlockedLabels([]string{labelName})),
 			)
 		}
