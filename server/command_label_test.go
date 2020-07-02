@@ -139,7 +139,7 @@ func TestExecuteCommandLabel(t *testing.T) {
 			commandArgs:       &model.CommandArgs{Command: "/bookmarks label remove label1"},
 			labels:            getExecuteCommandTestLabels(),
 			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: "There are 2 bookmarks with the label: `label1`. Use the --force flag remove the label from the bookmarks.",
+			expectedMsgPrefix: "There are 2 bookmarks with the label: `label1`. Use the `--force` flag remove the label from the bookmarks.",
 			expectedContains:  nil,
 		},
 		"REMOVE User tries to remove a label that exists in a bookmark using the force flag": {
