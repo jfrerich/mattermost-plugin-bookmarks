@@ -1,53 +1,55 @@
-package main
+package bookmarks
 
 import (
 	"encoding/json"
 	"testing"
 
+	gomock "github.com/golang/mock/gomock"
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/pluginapi/mock_pluginapi"
+	"github.com/mattermost/mattermost-server/v5/plugin"
 	"github.com/mattermost/mattermost-server/v5/plugin/plugintest"
+
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
 //nolint
-func makePlugin(api *plugintest.API) *Plugin {
-	p := &Plugin{}
+func makePlugin(api *plugintest.API) *plugin.MattermostPlugin {
+	p := &plugin.MattermostPlugin{}
 	p.SetAPI(api)
 	return p
 }
 
 func TestStoreBookmarks(t *testing.T) {
-	api := makeAPIMock()
-	api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
-	p := makePlugin(api)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockPluginAPI := mock_pluginapi.NewMockAPI(ctrl)
 
 	// initialize test Bookmarks
 	u1 := "userID1"
-	// u2 := "userID2"
 
 	b1 := &Bookmark{PostID: "ID1", Title: "Title1"}
 	b2 := &Bookmark{PostID: "ID2", Title: "Title2"}
 
 	// Add Bookmarks
-	bmarks := NewBookmarksWithUser(p.API, u1)
-	err := bmarks.add(b1)
-	assert.Nil(t, err)
-	err = bmarks.add(b2)
-	assert.Nil(t, err)
+	bmarks := NewBookmarks(u1)
+	bmarks.ByID[b1.PostID] = b1
+	bmarks.ByID[b2.PostID] = b2
+	bmarks.api = mockPluginAPI
 
 	// Markshal the bmarks and mock api call
 	jsonBookmarks, err := json.Marshal(bmarks)
 	assert.Nil(t, err)
-	api.On("KVSet", "bookmarks_userID1", jsonBookmarks).Return(nil)
+	mockPluginAPI.EXPECT().KVSet("bookmarks_userID1", jsonBookmarks).Return(nil)
 
 	// store bmarks using API
-	err = bmarks.storeBookmarks()
+	err = bmarks.StoreBookmarks()
 	assert.Nil(t, err)
 }
 
 func TestAddBookmark(t *testing.T) {
-	api := makeAPIMock()
-	p := makePlugin(api)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockPluginAPI := mock_pluginapi.NewMockAPI(ctrl)
 
 	// create some test bookmarks
 	b1 := &Bookmark{PostID: "ID1", Title: "Title1"}
@@ -60,16 +62,14 @@ func TestAddBookmark(t *testing.T) {
 
 	// User 1 has no bookmarks
 	u1 := "userID1"
-	bmarksU1 := NewBookmarksWithUser(p.API, u1)
-
-	api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
-	// User 2 has 2 existing bookmarks
 	u2 := "userID2"
-	bmarksU2 := NewBookmarksWithUser(p.API, u2)
-	err := bmarksU2.add(b1)
-	assert.Nil(t, err)
-	err = bmarksU2.add(b2)
-	assert.Nil(t, err)
+	bmarksU1 := NewBookmarks(u1)
+	bmarksU1.api = mockPluginAPI
+
+	bmarksU2 := NewBookmarks(u2)
+	bmarksU2.ByID[b1.PostID] = b1
+	bmarksU2.ByID[b2.PostID] = b2
+	bmarksU2.api = mockPluginAPI
 
 	tests := []struct {
 		name    string
@@ -95,16 +95,14 @@ func TestAddBookmark(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			jsonBookmarks, err := json.Marshal(tt.bmarks)
+			jsonBmarks, err := json.Marshal(tt.bmarks)
 			assert.Nil(t, err)
 
-			key := getBookmarksKey(tt.userID)
-			api.On("KVSet", key, mock.Anything).Return(nil)
-			api.On("KVGet", key).Return(jsonBookmarks, nil)
+			mockPluginAPI.EXPECT().KVGet(GetBookmarksKey(UserID)).Return(jsonBmarks, nil).AnyTimes()
+			mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Return(nil)
 
 			// store bmarks using API
-			// bmarks, err := p.addBookmark(tt.userID, b3)
-			err = tt.bmarks.addBookmark(b3)
+			err = tt.bmarks.AddBookmark(b3)
 			assert.Nil(t, err)
 			assert.Equal(t, tt.want, len(tt.bmarks.ByID))
 		})
@@ -112,9 +110,9 @@ func TestAddBookmark(t *testing.T) {
 }
 
 func TestDeleteBookmark(t *testing.T) {
-	api := makeAPIMock()
-	api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
-	p := makePlugin(api)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockPluginAPI := mock_pluginapi.NewMockAPI(ctrl)
 
 	// create some test bookmarks
 	b1 := &Bookmark{PostID: "ID1", Title: "Title1"}
@@ -126,15 +124,16 @@ func TestDeleteBookmark(t *testing.T) {
 
 	// User 1 has no bookmarks
 	u1 := "userID1"
-	bmarksU1 := NewBookmarksWithUser(p.API, u1)
+	u2 := "userID2"
 
 	// User 2 has 2 existing bookmarks
-	u2 := "userID2"
-	bmarksU2 := NewBookmarksWithUser(p.API, u2)
-	err := bmarksU2.add(b1)
-	assert.Nil(t, err)
-	err = bmarksU2.add(b2)
-	assert.Nil(t, err)
+	bmarksU1 := NewBookmarks(u1)
+	bmarksU1.ByID[b1.PostID] = b1
+	bmarksU1.api = mockPluginAPI
+
+	bmarksU2 := NewBookmarks(u2)
+	bmarksU2.ByID[b2.PostID] = b2
+	bmarksU2.api = mockPluginAPI
 
 	tests := []struct {
 		name       string
@@ -151,28 +150,30 @@ func TestDeleteBookmark(t *testing.T) {
 			wantErrMsg: "Bookmark `ID2` does not exist",
 		},
 		{
-			name:       "u2 two previous bookmarks  delete one bookmark",
-			userID:     u2,
-			bmarks:     bmarksU2,
-			wantErr:    false,
-			wantErrMsg: "Bookmark `ID2` does not exist",
+			name:    "u2 two previous bookmarks  delete one bookmark",
+			userID:  u2,
+			bmarks:  bmarksU2,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			jsonBookmarks, err := json.Marshal(tt.bmarks)
+			jsonBmarks, err := json.Marshal(tt.bmarks)
 			assert.Nil(t, err)
 
-			key := getBookmarksKey(tt.userID)
-			api.On("KVSet", key, mock.Anything).Return(nil)
-			api.On("KVGet", key).Return(jsonBookmarks, nil)
+			if !tt.wantErr {
+				mockPluginAPI.EXPECT().KVGet(GetBookmarksKey(tt.userID)).Return(jsonBmarks, nil).AnyTimes()
+			}
 
-			// store bmarks using API
-			_, err = tt.bmarks.deleteBookmark(b2.PostID)
+			// not testing store in this test.  mock to accept anything
+			mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+			_, err = tt.bmarks.DeleteBookmark(b2.PostID)
 			if tt.wantErr {
 				assert.Equal(t, err.Error(), tt.wantErrMsg)
 				return
 			}
+
 			assert.Nil(t, err)
 		})
 	}

@@ -8,6 +8,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/bookmarks"
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/pluginapi"
+
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
@@ -68,9 +71,11 @@ func (p *Plugin) extractUserMiddleWare(handler HTTPHandlerFuncWithUser, jsonResp
 
 // handleAddBookmark saves a bookmark to the bookmarks store
 func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
+	pluginapi := pluginapi.New(p.API)
+
 	type bmarkWithChannel struct {
-		Bookmark  *Bookmark `json:"bookmark"`
-		ChannelID string    `json:"channelId"`
+		Bookmark  *bookmarks.Bookmark `json:"bookmark"`
+		ChannelID string              `json:"channelId"`
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
@@ -85,21 +90,21 @@ func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userI
 	bmark := req.Bookmark
 	channelID := req.ChannelID
 
-	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
+	bmarks, err := bookmarks.NewBookmarksWithUser(pluginapi, userID)
 	if err != nil {
 		return respondErr(w, http.StatusInternalServerError, err)
 	}
 
-	l, err := NewLabelsWithUser(p.API, userID).getLabels()
+	l, err := bookmarks.NewLabelsWithUser(pluginapi, userID)
 	if err != nil {
 		return respondErr(w, http.StatusInternalServerError, err)
 	}
-	ids := bmark.getLabelIDs()
+	ids := bmark.GetLabelIDs()
 
 	var newIDs []string
-	var label *Label
+	var label *bookmarks.Label
 	for _, id := range ids {
-		label, err = l.get(id)
+		label, err = l.Get(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
@@ -107,8 +112,8 @@ func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userI
 		// if doesn't exist, this is a name and needs to be added to the labels
 		// store.  also save the id to the bookmark, not the name
 		if label == nil {
-			var labelNew *Label
-			labelNew, err = l.addLabel(id)
+			var labelNew *bookmarks.Label
+			labelNew, err = l.AddLabel(id)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
@@ -120,7 +125,7 @@ func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userI
 
 	// update bmark with UUID values, not the names
 	bmark.LabelIDs = newIDs
-	err = bmarks.addBookmark(bmark)
+	err = bmarks.AddBookmark(bmark)
 	if err != nil {
 		return respondErr(w, http.StatusInternalServerError, err)
 	}
@@ -128,21 +133,21 @@ func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userI
 	var names []string
 	var name string
 	for _, id := range newIDs {
-		name, err = l.getNameFromID(id)
+		name, err = l.GetNameFromID(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		names = append(names, name)
 	}
 
-	text, err := p.getBmarkTextOneLine(bmark, names)
+	text, err := bmarks.GetBmarkTextOneLine(bmark, names)
 	if err != nil {
 		return respondErr(w, http.StatusInternalServerError, err)
 	}
 	message := "Saved Bookmark:\n" + text
 
 	post := &model.Post{
-		UserId:    p.getBotID(),
+		UserId:    p.GetBotID(),
 		ChannelId: channelID,
 		Message:   message,
 	}
@@ -172,13 +177,19 @@ func (p *Plugin) handleViewBookmarks(w http.ResponseWriter, r *http.Request, use
 	}
 	channelID := req.ChannelID
 
-	text, err := p.getBmarksEphemeralText(userID, nil)
+	pluginapi := pluginapi.New(p.API)
+	bmarks, err := bookmarks.NewBookmarksWithUser(pluginapi, userID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	text, err := bmarks.GetBmarksEphemeralText(userID, nil)
 	if err != nil {
 		return respondErr(w, http.StatusInternalServerError, err)
 	}
 
 	post := &model.Post{
-		UserId:    p.getBotID(),
+		UserId:    p.GetBotID(),
 		ChannelId: channelID,
 		Message:   text,
 	}
@@ -192,13 +203,14 @@ func (p *Plugin) handleGetBookmark(w http.ResponseWriter, r *http.Request, userI
 	query := r.URL.Query()
 	postID := query["postID"][0]
 
-	bmarks, err := NewBookmarksWithUser(p.API, userID).getBookmarks()
+	pluginapi := pluginapi.New(p.API)
+	bmarks, err := bookmarks.NewBookmarksWithUser(pluginapi, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	// return nil if bookmark does not exist
-	bmark, err := bmarks.getBookmark(postID)
+	bmark, err := bmarks.GetBookmark(postID)
 	if bmark == nil {
 		var bb []byte
 		_, err = w.Write(bb)
@@ -226,8 +238,8 @@ func (p *Plugin) handleGetBookmark(w http.ResponseWriter, r *http.Request, userI
 
 // handleAutoCompleteLabels returns all autocomplete labels
 func (p *Plugin) handleAutoCompleteLabels(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
-	l := NewLabelsWithUser(p.API, userID)
-	labels, err := l.getLabels()
+	pluginapi := pluginapi.New(p.API)
+	labels, err := bookmarks.NewLabelsWithUser(pluginapi, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -243,8 +255,8 @@ func (p *Plugin) handleAutoCompleteLabels(w http.ResponseWriter, r *http.Request
 
 // handleAutoCompleteBookmarks returns all autocomplete bookmark postIDs
 func (p *Plugin) handleAutoCompleteBookmarks(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
-	b := NewBookmarksWithUser(p.API, userID)
-	bmarks, err := b.getBookmarks()
+	pluginapi := pluginapi.New(p.API)
+	bmarks, err := bookmarks.NewBookmarksWithUser(pluginapi, userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -278,8 +290,8 @@ func respondJSON(w http.ResponseWriter, obj interface{}) (int, error) {
 
 // handleLabelsGet returns all labels
 func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
-	l := NewLabelsWithUser(p.API, userID)
-	labels, err := l.getLabels()
+	pluginapi := pluginapi.New(p.API)
+	labels, err := bookmarks.NewLabelsWithUser(pluginapi, userID)
 	if err != nil {
 		return respondErr(w, http.StatusInternalServerError, err)
 	}
@@ -298,15 +310,15 @@ func (p *Plugin) handleLabelsGet(w http.ResponseWriter, r *http.Request, userID 
 
 // handleLabelsAdd adds a label to the labels store
 func (p *Plugin) handleLabelsAdd(w http.ResponseWriter, r *http.Request, userID string) (int, error) {
+	pluginapi := pluginapi.New(p.API)
 	query := r.URL.Query()
 	labelName := query["labelName"][0]
-	l := NewLabelsWithUser(p.API, userID)
-	labels, err := l.getLabels()
+	labels, err := bookmarks.NewLabelsWithUser(pluginapi, userID)
 	if err != nil {
 		return respondErr(w, http.StatusInternalServerError, err)
 	}
 
-	label, err := labels.addLabel(labelName)
+	label, err := labels.AddLabel(labelName)
 	if err != nil {
 		return respondErr(w, http.StatusInternalServerError, err)
 	}

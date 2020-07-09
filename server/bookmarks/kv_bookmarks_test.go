@@ -1,20 +1,18 @@
-package main
+package bookmarks
 
 import (
 	"testing"
 	"time"
 
+	gomock "github.com/golang/mock/gomock"
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/pluginapi/mock_pluginapi"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 )
 
-func getTestBookmarks() *Bookmarks {
-	api := makeAPIMock()
-	api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
-	p := makePlugin(api)
-	bmarks := NewBookmarksWithUser(p.API, UserID)
+const UserID = "UserID"
 
+func getTestBookmarks() *Bookmarks {
 	b1 := &Bookmark{
 		PostID: "ID1",
 		Title:  "Title1 - New Bookmark - times are zero",
@@ -33,26 +31,32 @@ func getTestBookmarks() *Bookmarks {
 		ModifiedAt: model.GetMillis(),
 	}
 
-	_ = bmarks.add(b1)
-	_ = bmarks.add(b2)
-	_ = bmarks.add(b3)
+	bmarks := NewBookmarks(UserID)
+	bmarks.ByID[b1.PostID] = b1
+	bmarks.ByID[b2.PostID] = b2
+	bmarks.ByID[b3.PostID] = b3
 
 	return bmarks
 }
 
 func TestBookmarks_get(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockPluginAPI := mock_pluginapi.NewMockAPI(ctrl)
+
 	bmarks := getTestBookmarks()
+	bmarks.api = mockPluginAPI
+
 	assert.Equal(t, 3, len(bmarks.ByID))
 	bmark := bmarks.get("ID3")
-	assert.Equal(t, "", bmark.getTitle())
+	assert.Equal(t, "", bmark.GetTitle())
 }
 
 func TestBookmarks_add(t *testing.T) {
 	b4 := &Bookmark{PostID: "ID4", Title: "Title4"}
 	bmarks := getTestBookmarks()
 	assert.Equal(t, 3, len(bmarks.ByID))
-	err := bmarks.add(b4)
-	assert.Nil(t, err)
+	bmarks.ByID[b4.PostID] = b4
 	assert.Equal(t, 4, len(bmarks.ByID))
 }
 

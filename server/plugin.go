@@ -3,11 +3,12 @@ package main
 import (
 	"sync"
 
+	"github.com/gorilla/mux"
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/command"
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/pluginapi"
+	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
 
-	"github.com/gorilla/mux"
-
-	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
 
@@ -48,7 +49,9 @@ func (p *Plugin) OnActivate() error {
 	}
 	p.BotUserID = botID
 
-	return p.API.RegisterCommand(createBookmarksCommand())
+	// return p.API.RegisterCommand(createBookmarksCommand())
+	command.Register(p.API.RegisterCommand)
+	return nil
 }
 
 // GetSiteURL returns the SiteURL from the config settings
@@ -58,4 +61,35 @@ func (p *Plugin) GetSiteURL() string {
 		return ""
 	}
 	return *ptr
+}
+
+// ExecuteCommand executes a command that has been previously registered via the RegisterCommand API.
+func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
+	pluginapi := pluginapi.New(p.API)
+	command := command.Command{
+		Context:   c,
+		Args:      args,
+		ChannelID: args.ChannelId,
+		API:       pluginapi,
+	}
+
+	out := command.Handle()
+	// if err != nil {
+	// 	p.API.LogError(err.Error())
+	// 	return nil, model.NewAppError("bookmarks.ExecuteCommand", "Unable to execute command.", nil, err.Error(), http.StatusInternalServerError)
+	// }
+
+	// if out != "" {
+	// }
+
+	post := &model.Post{
+		UserId:    p.GetBotID(),
+		ChannelId: args.ChannelId,
+		Message:   out,
+	}
+	_ = p.API.SendEphemeralPost(args.UserId, post)
+
+	response := &model.CommandResponse{}
+
+	return response, nil
 }

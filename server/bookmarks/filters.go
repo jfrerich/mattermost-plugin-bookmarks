@@ -1,20 +1,23 @@
-package main
+package bookmarks
 
 import (
 	"regexp"
 
-	"github.com/mattermost/mattermost-server/v5/plugin"
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/pluginapi"
 )
 
-type BookmarksFilters struct {
+type Filters struct {
 	TitleText  string
 	LabelIDs   []string
 	LabelNames []string
 }
 
-// applyFilters will apply the available filters to an object of bookmarks
-func (b *Bookmarks) applyFilters(filters *BookmarksFilters) (*Bookmarks, error) {
-	newBmarks := NewBookmarksWithUser(b.api, b.userID)
+// ApplyFilters will apply the available filters to an object of bookmarks
+func (b *Bookmarks) ApplyFilters(filters *Filters) (*Bookmarks, error) {
+	// FIXME: This should not require setting the api again.
+	bmarks := NewBookmarks(b.userID)
+	bmarks.api = b.api
+
 	// iter through bookmarks
 	for _, bmark := range b.ByID {
 		filteredBmark := bmark.withLabelIDs(filters.LabelIDs)
@@ -23,11 +26,11 @@ func (b *Bookmarks) applyFilters(filters *BookmarksFilters) (*Bookmarks, error) 
 
 		if filteredBmark != nil {
 			// Do not save the bookmarks to the store. only hold in data structure
-			newBmarks.ByID[bmark.PostID] = filteredBmark
+			bmarks.ByID[bmark.PostID] = filteredBmark
 		}
 	}
 
-	return newBmarks, nil
+	return bmarks, nil
 }
 
 // withLabels returns a bookmark with given label IDs or nil
@@ -38,7 +41,7 @@ func (bm *Bookmark) withLabelIDs(ids []string) *Bookmark {
 	}
 
 	// iter through bmark label ids
-	for _, labelID := range bm.getLabelIDs() {
+	for _, labelID := range bm.GetLabelIDs() {
 		// iter through requested labelIDs
 		for _, id := range ids {
 			// return bookmark if has requested labelID
@@ -51,24 +54,23 @@ func (bm *Bookmark) withLabelIDs(ids []string) *Bookmark {
 }
 
 // withLabelNames returns a bookmark with given label names or nil
-func (bm *Bookmark) withLabelNames(names []string, api plugin.API, userID string) *Bookmark {
+func (bm *Bookmark) withLabelNames(names []string, api pluginapi.API, userID string) *Bookmark {
 	// return bookmark if no names requested or bmark is nil
 	if len(names) == 0 || bm == nil {
 		return bm
 	}
 
-	labels := NewLabelsWithUser(api, userID)
-	labels, _ = labels.getLabels()
+	labels, _ := NewLabelsWithUser(api, userID)
 	// if err != nil {
 	// 	return p.responsef(args, err.Error())
 	// }
 
 	// iter through bmark label ids
-	for _, labelID := range bm.getLabelIDs() {
+	for _, labelID := range bm.GetLabelIDs() {
 		// iter through requested label names
 		for _, name := range names {
 			// return bookmark if has requested label name
-			n, _ := labels.getNameFromID(labelID)
+			n, _ := labels.GetNameFromID(labelID)
 			if n == name {
 				return bm
 			}
@@ -84,7 +86,7 @@ func (bm *Bookmark) withTitleText(text string) *Bookmark {
 		return bm
 	}
 
-	title := bm.getTitle()
+	title := bm.GetTitle()
 	re := regexp.MustCompile(text)
 	// return bookmark if has requested text
 	if re.MatchString(title) {

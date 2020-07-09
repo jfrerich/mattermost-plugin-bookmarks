@@ -1,11 +1,24 @@
-package main
+package command
 
 import (
 	"fmt"
 	"strings"
 
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/pluginapi"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/mattermost/mattermost-server/v5/plugin"
+)
+
+const (
+	routeAPIPrefix             = "/api/v1"
+	routeAutocompleteLabels    = "/autocomplete/labels"
+	routeAutocompleteBookmarks = "/autocomplete/bookmarks"
+
+	add    = "add"
+	help   = "help"
+	label  = "label"
+	remove = "remove"
+	view   = "view"
 )
 
 const (
@@ -41,6 +54,22 @@ const (
 		viewCommandText +
 		removeCommandText
 )
+
+// Handler handles commands
+type Command struct {
+	Context   *plugin.Context
+	Args      *model.CommandArgs
+	ChannelID string
+	API       pluginapi.API
+}
+
+// RegisterFunc is a function that allows the runner to register commands with the mattermost server.
+type RegisterFunc func(*model.Command) error
+
+// Register should be called by the plugin to register all necessary commands
+func Register(registerFunc RegisterFunc) {
+	_ = registerFunc(createBookmarksCommand())
+}
 
 func getHelp(text string) string {
 	return strings.Replace(text, "|", "`", -1)
@@ -140,47 +169,43 @@ func createViewCommand() *model.AutocompleteData {
 	return view
 }
 
-func (p *Plugin) postCommandResponse(args *model.CommandArgs, text string) {
-	post := &model.Post{
-		UserId:    p.getBotID(),
-		ChannelId: args.ChannelId,
-		Message:   text,
-	}
-	_ = p.API.SendEphemeralPost(args.UserId, post)
+func (c *Command) responsef(commandArgs *model.CommandArgs, format string, args ...interface{}) string {
+	return fmt.Sprintf(format, args...)
 }
 
-func (p *Plugin) responsef(commandArgs *model.CommandArgs, format string, args ...interface{}) *model.CommandResponse {
-	p.postCommandResponse(commandArgs, fmt.Sprintf(format, args...))
-	return &model.CommandResponse{}
+func (c *Command) executeCommandHelp() string {
+	return c.responsef(c.Args, getHelp(helpCommandText))
 }
 
-func (p *Plugin) executeCommandHelp(args *model.CommandArgs) *model.CommandResponse {
-	return p.responsef(args, getHelp(helpCommandText))
+func (c *Command) executeCommandUnknown() string {
+	return c.responsef(c.Args, fmt.Sprintf("Unknown command: "+c.Args.Command))
 }
 
-// ExecuteCommand executes a command that has been previously registered via the RegisterCommand API.
-func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
-	split := strings.Fields(args.Command)
+// Handle should be called by the plugin when a command invocation is received from the Mattermost server.
+func (c *Command) Handle() string {
+	split := strings.Fields(c.Args.Command)
 	if len(split) < 2 {
-		return p.executeCommandHelp(args), nil
+		return c.executeCommandHelp()
 	}
+
+	var handler func() string
 
 	action := split[1]
-
-	//nolint:goconst
 	switch action {
-	case "add":
-		return p.executeCommandAdd(args), nil
-	case "label":
-		return p.executeCommandLabel(args), nil
-	case "remove":
-		return p.executeCommandRemove(args), nil
-	case "view":
-		return p.executeCommandView(args), nil
-	case "help":
-		return p.executeCommandHelp(args), nil
-
+	case add:
+		handler = c.executeCommandAdd
+	case label:
+		handler = c.executeCommandLabel
+	case remove:
+		handler = c.executeCommandRemove
+	case view:
+		handler = c.executeCommandView
+	case help:
+		handler = c.executeCommandHelp
 	default:
-		return p.responsef(args, fmt.Sprintf("Unknown command: "+args.Command)), nil
+		handler = c.executeCommandUnknown
 	}
+	out := handler()
+
+	return out
 }
