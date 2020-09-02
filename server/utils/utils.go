@@ -3,6 +3,7 @@ package utils
 import (
 	"regexp"
 
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/pluginapi"
 	"github.com/mattermost/mattermost-server/v5/plugin"
 )
 
@@ -28,4 +29,9 @@ func GetLegendText() string {
 	text += "`label` - **_Italicized & Bolded text signifies the bookmark has a saved title_**\n\n"
 	text += "***\n"
 	return text
+}
+
+// getSiteURL returns the SiteURL from the config settings
+func GetSiteURL(api pluginapi.API) string {
+	return *api.GetConfig().ServiceSettings.SiteURL
 }
