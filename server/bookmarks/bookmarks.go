@@ -367,24 +367,3 @@ func (b *Bookmarks) GetBmarkTextDetailed(bmark *Bookmark, labelNames []string, a
 
 	return text, nil
 }
-
-// getPermaLink returns a link to a postID
-func getPermaLink(siteURL, postID string) string {
-	return fmt.Sprintf("%v/_redirect/pl/%v", siteURL, postID)
-}
-
-// GetSiteURL returns the SiteURL from the config settings
-func GetSiteURL(api pluginapi.API) string {
-	ptr := api.GetConfig().ServiceSettings.SiteURL
-	// if ptr == nil {
-	// 	return ""
-	// }
-	return *ptr
-}
-
-// getIconLink returns a markdown link to a postID including a :link: icon
-func getIconLink(api pluginapi.API, postID string) string {
-	url := GetSiteURL(api)
-	iconLink := fmt.Sprintf("[:link:](%s)", getPermaLink(url, postID))
-	return iconLink
-}
