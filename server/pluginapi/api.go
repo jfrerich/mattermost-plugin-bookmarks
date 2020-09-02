@@ -11,7 +11,6 @@ type api struct {
 
 type API interface {
 	GetPost(postID string) (*model.Post, error)
-	GetConfig() *model.Config
 	KVSet(key string, value []byte) error
 	KVGet(key string) ([]byte, error)
 }
@@ -44,8 +43,4 @@ func (a *api) KVGet(key string) ([]byte, error) {
 		return nil, appErr
 	}
 	return value, nil
-}
-
-func (a *api) GetConfig() *model.Config {
-	return a.papi.GetConfig()
 }
