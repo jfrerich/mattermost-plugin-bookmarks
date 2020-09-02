@@ -9,6 +9,7 @@ workflows:
     jobs:
       - plugin-ci/lint:
           filters:
+            resource_class: xlarge
             tags:
               only: /^v.*/
       - plugin-ci/coverage:
