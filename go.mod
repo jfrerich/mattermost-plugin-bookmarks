@@ -4,6 +4,8 @@ go 1.13
 
 require (
 	github.com/go-ldap/ldap v3.0.3+incompatible // indirect
+	github.com/go-redis/redis v6.15.9+incompatible // indirect
+	github.com/golang/mock v1.2.0
 	github.com/gorilla/mux v1.7.4
 	github.com/mattermost/mattermost-server v5.11.1+incompatible
 	github.com/mattermost/mattermost-server/v5 v5.24.0

@@ -5,10 +5,9 @@
 package mock_bookmarks
 
 import (
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
 	bookmarks "github.com/jfrerich/mattermost-plugin-bookmarks/server/bookmarks"
+	reflect "reflect"
 )
 
 // MockIBookmarks is a mock of IBookmarks interface
@@ -32,20 +31,6 @@ func NewMockIBookmarks(ctrl *gomock.Controller) *MockIBookmarks {
 // EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockIBookmarks) EXPECT() *MockIBookmarksMockRecorder {
 	return m.recorder
-}
-
-// Add mocks base method
-func (m *MockIBookmarks) Add(arg0 *bookmarks.Bookmark) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Add", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Add indicates an expected call of Add
-func (mr *MockIBookmarksMockRecorder) Add(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockIBookmarks)(nil).Add), arg0)
 }
 
 // AddBookmark mocks base method

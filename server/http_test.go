@@ -168,15 +168,14 @@ func TestHandleAddBookmark(t *testing.T) {
 			jsonBmarks, err := json.Marshal(tt.bookmarks)
 			assert.Nil(t, err)
 
-			// siteURL := "https://myhost.com"
-			// api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
-			// mockPluginAPI.EXPECT().KVSet(mock.Anything, mock.Anything)
+			siteURL := "https://myhost.com"
 
 			api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
 			api.On("KVGet", bookmarks.GetBookmarksKey(UserID)).Return(jsonBmarks, nil)
 			api.On("KVGet", bookmarks.GetLabelsKey(UserID)).Return(nil, nil)
 			api.On("GetPost", tt.bookmark.PostID).Return(&model.Post{Message: "this is the post.Message"}, nil)
-			// api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
+
+			api.On("GetConfig", mock.Anything).Return(&model.Config{ServiceSettings: model.ServiceSettings{SiteURL: &siteURL}})
 			// mockPluginAPI.EXPECT().KVSet(bookmarks.GetBookmarksKey(UserID), gomock.Any)
 			// mockPluginAPI.EXPECT().KVSet("bookmarks_UserID", jsonBmark).Return(nil)
 			// mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()

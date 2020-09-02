@@ -33,6 +33,20 @@ func (m *MockAPI) EXPECT() *MockAPIMockRecorder {
 	return m.recorder
 }
 
+// GetConfig mocks base method
+func (m *MockAPI) GetConfig() *model.Config {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetConfig")
+	ret0, _ := ret[0].(*model.Config)
+	return ret0
+}
+
+// GetConfig indicates an expected call of GetConfig
+func (mr *MockAPIMockRecorder) GetConfig() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfig", reflect.TypeOf((*MockAPI)(nil).GetConfig))
+}
+
 // GetPost mocks base method
 func (m *MockAPI) GetPost(arg0 string) (*model.Post, error) {
 	m.ctrl.T.Helper()
