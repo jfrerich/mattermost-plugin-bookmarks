@@ -1,9 +1,10 @@
-package main
+package command
 
 import (
 	"strings"
 
-	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/bookmarks"
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/utils"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 )
@@ -41,63 +42,63 @@ func parseViewBookmarkArgs(args []string) (viewBookmarkOptions, error) {
 }
 
 // executeCommandView shows all bookmarks in an ephemeral post
-func (p *Plugin) executeCommandView(args *model.CommandArgs) *model.CommandResponse {
-	subCommand := strings.Fields(args.Command)
+func (c *Command) executeCommandView() string {
+	subCommand := strings.Fields(c.Args.Command)
 
-	bmarks, err := NewBookmarksWithUser(p.API, args.UserId).getBookmarks()
+	bmarks, err := bookmarks.NewBookmarksWithUser(c.API, c.Args.UserId)
 	if err != nil {
-		return p.responsef(args, "Unable to retrieve bookmarks for user %s", args.UserId)
+		return c.responsef(c.Args, "Unable to retrieve bookmarks for user %s", c.Args.UserId)
 	}
 
 	// bookmarks is nil if user has never added a bookmark.
 	// bookmarks.ByID will be empty if user created a bookmark and then deleted
 	// it and now has 0 bookmarks
 	if bmarks == nil || len(bmarks.ByID) == 0 {
-		return p.responsef(args, "You do not have any saved bookmarks")
+		return c.responsef(c.Args, "You do not have any saved bookmarks")
 	}
 
 	// user requests to view an individual bookmark
 	if len(subCommand) == 3 && !strings.HasPrefix(subCommand[2], "--") {
 		postID := subCommand[2]
-		postID = p.getPostIDFromLink(postID)
-		text, _ := p.commandViewPostID(postID, bmarks, args)
-		return p.responsef(args, text)
+		postID = utils.GetPostIDFromLink(postID)
+		text, _ := c.commandViewPostID(postID, bmarks)
+		return c.responsef(c.Args, text)
 	}
 
 	options, err := parseViewBookmarkArgs(subCommand)
 	if err != nil {
-		return p.responsef(args, "Unable to parse options, %s", err)
+		return c.responsef(c.Args, "Unable to parse options, %s", err)
 	}
 
-	var bmarkFilters BookmarksFilters
+	var bmarkFilters bookmarks.Filters
 	bmarkFilters.LabelNames = options.labels
 
-	text, err := p.getBmarksEphemeralText(args.UserId, &bmarkFilters)
+	text, err := bmarks.GetBmarksEphemeralText(c.Args.UserId, &bmarkFilters)
 	if err != nil {
-		return p.responsef(args, text)
+		return c.responsef(c.Args, text)
 	}
 
-	return p.responsef(args, text)
+	return c.responsef(c.Args, text)
 }
 
 // executeCommandView shows all bookmarks in an ephemeral post
-func (p *Plugin) commandViewPostID(postID string, bmarks *Bookmarks, args *model.CommandArgs) (string, error) {
-	postID = p.getPostIDFromLink(postID)
+func (c *Command) commandViewPostID(postID string, bmarks *bookmarks.Bookmarks) (string, error) {
+	postID = utils.GetPostIDFromLink(postID)
 
-	var bmark *Bookmark
-	bmark, err := bmarks.getBookmark(postID)
+	var bmark *bookmarks.Bookmark
+	bmark, err := bmarks.GetBookmark(postID)
 	if err != nil {
 		return "", err
 	}
 
 	var labelNames []string
-	labelNames, err = bmarks.getBmarkLabelNames(bmark)
+	labelNames, err = bmarks.GetBmarkLabelNames(bmark)
 	if err != nil {
 		return "", err
 	}
 
 	var text string
-	text, err = p.getBmarkTextDetailed(bmark, labelNames, args)
+	text, err = bmarks.GetBmarkTextDetailed(bmark, labelNames, c.Args)
 	if err != nil {
 		return "", errors.Wrap(err, "Unable to get bookmark text")
 	}
