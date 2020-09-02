@@ -269,7 +269,7 @@ func (b *Bookmarks) GetBmarkTextOneLine(bmark *Bookmark, labelNames []string) (s
 		codeBlockedNames = " " + utils.TitleFromPostLabel + codeBlockedNames
 	}
 
-	text := fmt.Sprintf("%s%s %s\n", getIconLink(b.api, bmark.PostID), codeBlockedNames, title)
+	text := fmt.Sprintf("%s%s %s\n", utils.GetIconLink(bmark.PostID), codeBlockedNames, title)
 
 	return text, nil
 }
@@ -358,7 +358,7 @@ func (b *Bookmarks) GetBmarkTextDetailed(bmark *Bookmark, labelNames []string, a
 		return "", appErr
 	}
 
-	iconLink := getIconLink(b.api, bmark.PostID)
+	iconLink := utils.GetIconLink(bmark.PostID)
 
 	text := fmt.Sprintf("%s\n#### Bookmark Title %s\n", codeBlockedNames, iconLink)
 	text += fmt.Sprintf("**%s**\n", title)
