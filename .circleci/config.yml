@@ -3,13 +3,14 @@ version: 2.1
 orbs:
   plugin-ci: mattermost/plugin-ci@volatile
 
+resource_class: large
+
 workflows:
   version: 2
   ci:
     jobs:
       - plugin-ci/lint:
           filters:
-            resource_class: xlarge
             tags:
               only: /^v.*/
       - plugin-ci/coverage:
