@@ -68,6 +68,13 @@ func TestExecuteCommandRemove(t *testing.T) {
 		jsonLabels, err := json.Marshal(labels)
 		assert.Nil(t, err)
 
+		config := &model.Config{
+			ServiceSettings: model.ServiceSettings{
+				SiteURL: model.NewString("https://myhost.com"),
+			},
+		}
+		mockPluginAPI.EXPECT().GetConfig().Return(config).AnyTimes()
+
 		mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 		mockPluginAPI.EXPECT().KVGet(bookmarks.GetLabelsKey(UserID)).Return(jsonLabels, nil).AnyTimes()
