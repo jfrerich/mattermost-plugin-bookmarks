@@ -269,7 +269,7 @@ func (b *Bookmarks) GetBmarkTextOneLine(bmark *Bookmark, labelNames []string) (s
 		codeBlockedNames = " " + utils.TitleFromPostLabel + codeBlockedNames
 	}
 
-	text := fmt.Sprintf("%s%s %s\n", utils.GetIconLink(bmark.PostID), codeBlockedNames, title)
+	text := fmt.Sprintf("%s%s %s\n", getIconLink(b.api, bmark.PostID), codeBlockedNames, title)
 
 	return text, nil
 }
@@ -358,7 +358,7 @@ func (b *Bookmarks) GetBmarkTextDetailed(bmark *Bookmark, labelNames []string, a
 		return "", appErr
 	}
 
-	iconLink := utils.GetIconLink(bmark.PostID)
+	iconLink := getIconLink(b.api, bmark.PostID)
 
 	text := fmt.Sprintf("%s\n#### Bookmark Title %s\n", codeBlockedNames, iconLink)
 	text += fmt.Sprintf("**%s**\n", title)
@@ -366,4 +366,25 @@ func (b *Bookmarks) GetBmarkTextDetailed(bmark *Bookmark, labelNames []string, a
 	text += post.Message
 
 	return text, nil
+}
+
+// getPermaLink returns a link to a postID
+func getPermaLink(siteURL, postID string) string {
+	return fmt.Sprintf("%v/_redirect/pl/%v", siteURL, postID)
+}
+
+// GetSiteURL returns the SiteURL from the config settings
+func GetSiteURL(api pluginapi.API) string {
+	ptr := api.GetConfig().ServiceSettings.SiteURL
+	// if ptr == nil {
+	// 	return ""
+	// }
+	return *ptr
+}
+
+// getIconLink returns a markdown link to a postID including a :link: icon
+func getIconLink(api pluginapi.API, postID string) string {
+	url := GetSiteURL(api)
+	iconLink := fmt.Sprintf("[:link:](%s)", getPermaLink(url, postID))
+	return iconLink
 }
