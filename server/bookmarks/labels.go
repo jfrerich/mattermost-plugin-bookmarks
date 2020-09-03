@@ -66,10 +66,7 @@ func LabelsFromJSON(bytes []byte) (*Labels, error) {
 
 // GetNameFromID returns the Name of a Label
 func (l *Labels) GetNameFromID(id string) (string, error) {
-	label, err := l.Get(id)
-	if err != nil {
-		return "", err
-	}
+	label, _ := l.ByID[id]
 	if label == nil {
 		return "", nil
 	}
@@ -120,8 +117,10 @@ func (l *Labels) AddLabel(labelName string) (*Label, error) {
 		Name: labelName,
 		ID:   labelID,
 	}
-	if err := l.Add(labelID, label); err != nil {
-		return nil, err
+
+	l.ByID[labelID] = label
+	if err := l.StoreLabels(); err != nil {
+		return nil, errors.Wrap(err, "failed to add label")
 	}
 
 	return label, nil
@@ -129,7 +128,9 @@ func (l *Labels) AddLabel(labelName string) (*Label, error) {
 
 // DeleteByID deletes a label from the store
 func (l *Labels) DeleteByID(labelID string) error {
-	if err := l.delete(labelID); err != nil {
+	delete(l.ByID, labelID)
+
+	if err := l.StoreLabels(); err != nil {
 		return err
 	}
 	return nil

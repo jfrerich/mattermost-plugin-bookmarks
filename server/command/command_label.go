@@ -115,9 +115,9 @@ func (c *Command) executeCommandLabelRename() string {
 	}
 
 	lfrom.Name = to
-	err = labels.Add(lfrom.ID, lfrom)
-	if err != nil {
-		return c.responsef(c.Args, err.Error())
+	labels.ByID[lfrom.ID] = lfrom
+	if err := labels.StoreLabels(); err != nil {
+		return c.responsef(c.Args, "failed to add label")
 	}
 
 	text := fmt.Sprintf("Renamed label from `%v` to `%v`", from, to)
