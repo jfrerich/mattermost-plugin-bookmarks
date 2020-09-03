@@ -70,7 +70,7 @@ func TestBookmarks_delete(t *testing.T) {
 	bmarks := getTestBookmarks()
 	bmarks.api = mockPluginAPI
 	assert.Equal(t, 3, len(bmarks.ByID))
-	bmarks.DeleteBookmark("ID2")
+	_ = bmarks.DeleteBookmark("ID2")
 	assert.Equal(t, 2, len(bmarks.ByID))
 }
 
@@ -90,7 +90,6 @@ func TestBookmarks_updateTimes(t *testing.T) {
 
 	// bmark has been added and times added
 	bmarks.updateTimes("ID1")
-	bmarks.GetBookmark("ID1")
 	assert.Greater(t, int(b1.ModifiedAt), 0)
 	assert.Equal(t, int(b1.ModifiedAt), int(b1.CreateAt))
 

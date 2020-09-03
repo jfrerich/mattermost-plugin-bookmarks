@@ -13,7 +13,7 @@ import (
 type IBookmarks interface {
 	GetBookmark(bmarkID string) (*Bookmark, error)
 	AddBookmark(bmark *Bookmark) error
-	DeleteBookmark(bmarkID string) (*Bookmark, error)
+	DeleteBookmark(bmarkID string) error
 	DeleteLabel(bmarkID string, labelID string) error
 	GetBookmarksWithLabelID(labelID string) (*Bookmarks, error)
 	GetBmarkTextOneLine(bmark *Bookmark, labelNames []string) (string, error)
