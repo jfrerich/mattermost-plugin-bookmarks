@@ -125,13 +125,3 @@ func (l *Labels) AddLabel(labelName string) (*Label, error) {
 
 	return label, nil
 }
-
-// DeleteByID deletes a label from the store
-func (l *Labels) DeleteByID(labelID string) error {
-	delete(l.ByID, labelID)
-
-	if err := l.StoreLabels(); err != nil {
-		return err
-	}
-	return nil
-}
