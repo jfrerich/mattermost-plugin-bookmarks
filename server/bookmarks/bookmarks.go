@@ -113,7 +113,7 @@ func (bm *Bookmark) AddLabelIDs(ids []string) {
 }
 
 func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
-	bmark := b.get(bmarkID)
+	bmark, _ := b.GetBookmark(bmarkID)
 	if bmark.CreateAt == 0 {
 		bmark.CreateAt = model.GetMillis()
 		bmark.ModifiedAt = bmark.CreateAt
@@ -126,8 +126,9 @@ func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
 func (b *Bookmarks) AddBookmark(bmark *Bookmark) error {
 	// user doesn't have any bookmarks add first bookmark and return
 	if len(b.ByID) == 0 {
-		if err := b.Add(bmark); err != nil {
-			return err
+		b.ByID[bmark.PostID] = bmark
+		if err := b.StoreBookmarks(); err != nil {
+			return errors.Wrap(err, "failed to add bookmark")
 		}
 		return nil
 	}
@@ -137,15 +138,18 @@ func (b *Bookmarks) AddBookmark(bmark *Bookmark) error {
 	if ok {
 		b.updateTimes(bmark.PostID)
 		b.updateLabels(bmark)
-		if err := b.Add(bmark); err != nil {
-			return err
+
+		b.ByID[bmark.PostID] = bmark
+		if err := b.StoreBookmarks(); err != nil {
+			return errors.Wrap(err, "failed to add bookmark")
 		}
 		return nil
 	}
 
 	// bookmark doesn't exist. Add it
-	if err := b.Add(bmark); err != nil {
-		return err
+	b.ByID[bmark.PostID] = bmark
+	if err := b.StoreBookmarks(); err != nil {
+		return errors.Wrap(err, "failed to add bookmark")
 	}
 	return nil
 }
@@ -189,7 +193,7 @@ func (b *Bookmarks) GetBookmarksWithLabelID(labelID string) (*Bookmarks, error) 
 		if bmark.hasLabels() {
 			for _, id := range bmark.GetLabelIDs() {
 				if labelID == id {
-					if err := bmarks.Add(bmark); err != nil {
+					if err := bmarks.AddBookmark(bmark); err != nil {
 						return nil, err
 					}
 				}
@@ -219,7 +223,7 @@ func (b *Bookmarks) DeleteLabel(bmarkID string, labelID string) error {
 
 	bmark.AddLabelIDs(newLabels)
 
-	if err := b.Add(bmark); err != nil {
+	if err := b.AddBookmark(bmark); err != nil {
 		return err
 	}
 
@@ -227,7 +231,7 @@ func (b *Bookmarks) DeleteLabel(bmarkID string, labelID string) error {
 }
 
 func (b *Bookmarks) updateLabels(bmark *Bookmark) *Bookmark {
-	bmarkOrig := b.get(bmark.PostID)
+	bmarkOrig, _ := b.GetBookmark(bmark.PostID)
 	bmarkOrig.AddLabelIDs(bmark.GetLabelIDs())
 	return bmark
 }

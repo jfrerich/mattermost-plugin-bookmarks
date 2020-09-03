@@ -60,27 +60,10 @@ func (b *Bookmarks) DeleteBookmark(bmarkID string) (*Bookmark, error) {
 		return nil, err
 	}
 
-	b.delete(bmarkID)
+	delete(b.ByID, bmarkID)
 	if err := b.StoreBookmarks(); err != nil {
 		return nil, err
 	}
 
 	return bmark, nil
-}
-
-func (b *Bookmarks) Add(bmark *Bookmark) error {
-	b.ByID[bmark.PostID] = bmark
-
-	if err := b.StoreBookmarks(); err != nil {
-		return errors.Wrap(err, "failed to add bookmark")
-	}
-	return nil
-}
-
-func (b *Bookmarks) get(bmarkID string) *Bookmark {
-	return b.ByID[bmarkID]
-}
-
-func (b *Bookmarks) delete(bmarkID string) {
-	delete(b.ByID, bmarkID)
 }
