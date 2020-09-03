@@ -13,22 +13,13 @@ import (
 type IBookmarks interface {
 	GetBookmark(bmarkID string) (*Bookmark, error)
 	AddBookmark(bmark *Bookmark) error
-	DeleteBookmark(bmarkID string) (*Bookmark, error)
+	DeleteBookmark(bmarkID string) error
 	DeleteLabel(bmarkID string, labelID string) error
 	GetBookmarksWithLabelID(labelID string) (*Bookmarks, error)
 	GetBmarkTextOneLine(bmark *Bookmark, labelNames []string) (string, error)
 	ApplyFilters(filters *Filters) (*Bookmarks, error)
 	ByPostCreateAt() ([]*Bookmark, error)
 	GetBmarkLabelNames(bmark *Bookmark) ([]string, error)
-}
-
-// Bookmark contains information about an individual bookmark
-type Bookmark struct {
-	PostID     string   `json:"postid"`              // PostID is the ID for the bookmarked post and doubles as the Bookmark ID
-	Title      string   `json:"title,omitempty"`     // Title given to the bookmark
-	CreateAt   int64    `json:"create_at"`           // The original creation time of the bookmark
-	ModifiedAt int64    `json:"update_at"`           // The original creation time of the bookmark
-	LabelIDs   []string `json:"label_ids,omitempty"` // Array of labels added to the bookmark
 }
 
 // Bookmarks contains a map of bookmarks
@@ -74,46 +65,15 @@ func (b *Bookmarks) GetBookmark(bmarkID string) (*Bookmark, error) {
 	if b == nil {
 		return nil, nil
 	}
-	_, ok := b.exists(bmarkID)
+	bmark, ok := b.exists(bmarkID)
 	if !ok {
 		return nil, errors.New(fmt.Sprintf("Bookmark `%v` does not exist", bmarkID))
 	}
-
-	for _, bmark := range b.ByID {
-		if bmark.PostID == bmarkID {
-			return bmark, nil
-		}
-	}
-
-	return nil, nil
-}
-
-func (bm *Bookmark) HasUserTitle() bool {
-	return bm.GetTitle() != ""
-}
-
-func (bm *Bookmark) hasLabels() bool {
-	return bm.GetLabelIDs() != nil
-}
-
-func (bm *Bookmark) GetTitle() string {
-	return bm.Title
-}
-
-func (bm *Bookmark) SetTitle(title string) {
-	bm.Title = title
-}
-
-func (bm *Bookmark) GetLabelIDs() []string {
-	return bm.LabelIDs
-}
-
-func (bm *Bookmark) AddLabelIDs(ids []string) {
-	bm.LabelIDs = ids
+	return bmark, nil
 }
 
 func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
-	bmark := b.get(bmarkID)
+	bmark, _ := b.GetBookmark(bmarkID)
 	if bmark.CreateAt == 0 {
 		bmark.CreateAt = model.GetMillis()
 		bmark.ModifiedAt = bmark.CreateAt
@@ -124,28 +84,17 @@ func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
 
 // addBookmark stores the bookmark in a map,
 func (b *Bookmarks) AddBookmark(bmark *Bookmark) error {
-	// user doesn't have any bookmarks add first bookmark and return
-	if len(b.ByID) == 0 {
-		if err := b.Add(bmark); err != nil {
-			return err
-		}
-		return nil
-	}
-
 	// bookmark already exists, update ModifiedAt and save
 	_, ok := b.exists(bmark.PostID)
 	if ok {
 		b.updateTimes(bmark.PostID)
 		b.updateLabels(bmark)
-		if err := b.Add(bmark); err != nil {
-			return err
-		}
-		return nil
 	}
 
-	// bookmark doesn't exist. Add it
-	if err := b.Add(bmark); err != nil {
-		return err
+	// Add or update the bookmark
+	b.ByID[bmark.PostID] = bmark
+	if err := b.StoreBookmarks(); err != nil {
+		return errors.Wrap(err, "failed to add bookmark")
 	}
 	return nil
 }
@@ -180,16 +129,16 @@ func (b *Bookmarks) ByPostCreateAt() ([]*Bookmark, error) {
 }
 
 // func (b *Bookmarks) GetBookmarksWithLabelID(labelID string) (IBookmarks, error) {
-func (b *Bookmarks) GetBookmarksWithLabelID(labelID string) (*Bookmarks, error) {
+func (b *Bookmarks) GetBookmarksWithLabelID(id string) (*Bookmarks, error) {
 	// FIXME: This should not require setting the api again.
 	bmarks := NewBookmarks(b.userID)
 	bmarks.api = b.api
 
 	for _, bmark := range b.ByID {
 		if bmark.hasLabels() {
-			for _, id := range bmark.GetLabelIDs() {
-				if labelID == id {
-					if err := bmarks.Add(bmark); err != nil {
+			for _, lid := range bmark.GetLabelIDs() {
+				if id == lid {
+					if err := bmarks.AddBookmark(bmark); err != nil {
 						return nil, err
 					}
 				}
@@ -207,9 +156,8 @@ func (b *Bookmarks) DeleteLabel(bmarkID string, labelID string) error {
 		return err
 	}
 
-	origLabels := bmark.GetLabelIDs()
-
 	var newLabels []string
+	origLabels := bmark.GetLabelIDs()
 	for _, ID := range origLabels {
 		if labelID == ID {
 			continue
@@ -218,8 +166,7 @@ func (b *Bookmarks) DeleteLabel(bmarkID string, labelID string) error {
 	}
 
 	bmark.AddLabelIDs(newLabels)
-
-	if err := b.Add(bmark); err != nil {
+	if err := b.AddBookmark(bmark); err != nil {
 		return err
 	}
 
@@ -227,7 +174,7 @@ func (b *Bookmarks) DeleteLabel(bmarkID string, labelID string) error {
 }
 
 func (b *Bookmarks) updateLabels(bmark *Bookmark) *Bookmark {
-	bmarkOrig := b.get(bmark.PostID)
+	bmarkOrig, _ := b.GetBookmark(bmark.PostID)
 	bmarkOrig.AddLabelIDs(bmark.GetLabelIDs())
 	return bmark
 }

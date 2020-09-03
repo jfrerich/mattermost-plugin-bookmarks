@@ -168,7 +168,7 @@ func TestDeleteBookmark(t *testing.T) {
 			// not testing store in this test.  mock to accept anything
 			mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-			_, err = tt.bmarks.DeleteBookmark(b2.PostID)
+			err = tt.bmarks.DeleteBookmark(b2.PostID)
 			if tt.wantErr {
 				assert.Equal(t, err.Error(), tt.wantErrMsg)
 				return

@@ -54,7 +54,7 @@ func (c *Command) executeCommandRemove() string {
 			return c.responsef(c.Args, err.Error())
 		}
 
-		_, err = bmarks.DeleteBookmark(bookmarkID)
+		err = bmarks.DeleteBookmark(bookmarkID)
 		if err != nil {
 			return c.responsef(c.Args, err.Error())
 		}

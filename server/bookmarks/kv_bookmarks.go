@@ -47,40 +47,16 @@ func BookmarksFromJSON(bytes []byte) (*Bookmarks, error) {
 }
 
 // DeleteBookmark deletes a bookmark from the store
-func (b *Bookmarks) DeleteBookmark(bmarkID string) (*Bookmark, error) {
-	var bmark *Bookmark
-
+func (b *Bookmarks) DeleteBookmark(bmarkID string) error {
 	_, ok := b.exists(bmarkID)
 	if !ok {
-		return bmark, errors.New(fmt.Sprintf("Bookmark `%v` does not exist", bmarkID))
+		return errors.New(fmt.Sprintf("Bookmark `%v` does not exist", bmarkID))
 	}
 
-	bmark, err := b.GetBookmark(bmarkID)
-	if err != nil {
-		return nil, err
-	}
-
-	b.delete(bmarkID)
-	if err := b.StoreBookmarks(); err != nil {
-		return nil, err
-	}
-
-	return bmark, nil
-}
-
-func (b *Bookmarks) Add(bmark *Bookmark) error {
-	b.ByID[bmark.PostID] = bmark
-
-	if err := b.StoreBookmarks(); err != nil {
-		return errors.Wrap(err, "failed to add bookmark")
-	}
-	return nil
-}
-
-func (b *Bookmarks) get(bmarkID string) *Bookmark {
-	return b.ByID[bmarkID]
-}
-
-func (b *Bookmarks) delete(bmarkID string) {
 	delete(b.ByID, bmarkID)
+	if err := b.StoreBookmarks(); err != nil {
+		return err
+	}
+
+	return nil
 }

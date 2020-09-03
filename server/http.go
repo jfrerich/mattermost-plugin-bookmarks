@@ -102,13 +102,8 @@ func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userI
 	ids := bmark.GetLabelIDs()
 
 	var newIDs []string
-	var label *bookmarks.Label
 	for _, id := range ids {
-		label, err = l.Get(id)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
+		label := l.ByID[id]
 		// if doesn't exist, this is a name and needs to be added to the labels
 		// store.  also save the id to the bookmark, not the name
 		if label == nil {

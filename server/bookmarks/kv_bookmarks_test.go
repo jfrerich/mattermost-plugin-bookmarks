@@ -48,7 +48,7 @@ func TestBookmarks_get(t *testing.T) {
 	bmarks.api = mockPluginAPI
 
 	assert.Equal(t, 3, len(bmarks.ByID))
-	bmark := bmarks.get("ID3")
+	bmark, _ := bmarks.GetBookmark("ID3")
 	assert.Equal(t, "", bmark.GetTitle())
 }
 
@@ -61,9 +61,16 @@ func TestBookmarks_add(t *testing.T) {
 }
 
 func TestBookmarks_delete(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockPluginAPI := mock_pluginapi.NewMockAPI(ctrl)
+
+	mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
 	bmarks := getTestBookmarks()
+	bmarks.api = mockPluginAPI
 	assert.Equal(t, 3, len(bmarks.ByID))
-	bmarks.delete("ID2")
+	_ = bmarks.DeleteBookmark("ID2")
 	assert.Equal(t, 2, len(bmarks.ByID))
 }
 
@@ -77,19 +84,18 @@ func TestBookmarks_updateTimes(t *testing.T) {
 	bmarks := getTestBookmarks()
 
 	// bmark has been initialized. times not yet added
-	b1 := bmarks.get("ID1")
+	b1, _ := bmarks.GetBookmark("ID1")
 	assert.Equal(t, 0, int(b1.CreateAt))
 	assert.Equal(t, 0, int(b1.ModifiedAt))
 
 	// bmark has been added and times added
 	bmarks.updateTimes("ID1")
-	bmarks.get("ID1")
 	assert.Greater(t, int(b1.ModifiedAt), 0)
 	assert.Equal(t, int(b1.ModifiedAt), int(b1.CreateAt))
 
 	// bmark was already saved and modified time updates
 	time.Sleep(time.Millisecond)
 	bmarks.updateTimes("ID2")
-	b2 := bmarks.get("ID2")
+	b2, _ := bmarks.GetBookmark("ID2")
 	assert.Greater(t, b2.ModifiedAt, b2.CreateAt)
 }

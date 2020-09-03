@@ -1,13 +1,11 @@
 package bookmarks
 
 import (
-	"bytes"
-	"encoding/base32"
 	"encoding/json"
 	"fmt"
 
 	"github.com/jfrerich/mattermost-plugin-bookmarks/server/pluginapi"
-	"github.com/pborman/uuid"
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/utils"
 	"github.com/pkg/errors"
 )
 
@@ -68,24 +66,20 @@ func LabelsFromJSON(bytes []byte) (*Labels, error) {
 
 // GetNameFromID returns the Name of a Label
 func (l *Labels) GetNameFromID(id string) (string, error) {
-	label, err := l.Get(id)
-	if err != nil {
-		return "", err
-	}
-	if label == nil {
+	label, ok := l.ByID[id]
+	if !ok {
 		return "", nil
 	}
-
 	return label.Name, nil
 }
 
 // GetLabelByName returns a label with the provided label name
-func (l *Labels) GetLabelByName(labelName string) *Label {
+func (l *Labels) GetLabelByName(name string) *Label {
 	if l == nil {
 		return nil
 	}
 	for _, label := range l.ByID {
-		if label.Name == labelName {
+		if label.Name == name {
 			return label
 		}
 	}
@@ -93,18 +87,18 @@ func (l *Labels) GetLabelByName(labelName string) *Label {
 }
 
 // GetIDFromName returns a label name with the corresponding label ID
-func (l *Labels) GetIDFromName(labelName string) (string, error) {
+func (l *Labels) GetIDFromName(name string) (string, error) {
 	if l == nil {
 		return "", errors.New("user does not have any labels")
 	}
 
 	// return the labelId if found
 	for id, label := range l.ByID {
-		if label.Name == labelName {
+		if label.Name == name {
 			return id, nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("Label: `%s` does not exist", labelName))
+	return "", errors.New(fmt.Sprintf("Label: `%s` does not exist", name))
 }
 
 // addLabel stores a label into the users label store
@@ -117,36 +111,16 @@ func (l *Labels) AddLabel(labelName string) (*Label, error) {
 		return nil, errors.New(fmt.Sprintf("Label with name `%s` already exists", label.Name))
 	}
 
-	labelID := NewID()
+	labelID := utils.NewID()
 	label = &Label{
 		Name: labelName,
 		ID:   labelID,
 	}
-	if err := l.Add(labelID, label); err != nil {
-		return nil, err
+
+	l.ByID[labelID] = label
+	if err := l.StoreLabels(); err != nil {
+		return nil, errors.Wrap(err, "failed to add label")
 	}
 
 	return label, nil
-}
-
-// DeleteByID deletes a label from the store
-func (l *Labels) DeleteByID(labelID string) error {
-	if err := l.delete(labelID); err != nil {
-		return err
-	}
-	return nil
-}
-
-var encoding = base32.NewEncoding("ybndrfg8ejkmcpqxot1uwisza345h769")
-
-// NewID is a globally unique identifier.  It is a [A-Z0-9] string 26
-// characters long.  It is a UUID version 4 Guid that is zbased32 encoded
-// with the padding stripped off.
-func NewID() string {
-	var b bytes.Buffer
-	encoder := base32.NewEncoder(encoding, &b)
-	_, _ = encoder.Write(uuid.NewRandom())
-	encoder.Close()
-	b.Truncate(26) // removes the '==' padding
-	return b.String()
 }
