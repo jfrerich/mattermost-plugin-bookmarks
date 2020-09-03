@@ -91,29 +91,14 @@ func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
 
 // addBookmark stores the bookmark in a map,
 func (b *Bookmarks) AddBookmark(bmark *Bookmark) error {
-	// user doesn't have any bookmarks add first bookmark and return
-	if len(b.ByID) == 0 {
-		b.ByID[bmark.PostID] = bmark
-		if err := b.StoreBookmarks(); err != nil {
-			return errors.Wrap(err, "failed to add bookmark")
-		}
-		return nil
-	}
-
 	// bookmark already exists, update ModifiedAt and save
 	_, ok := b.exists(bmark.PostID)
 	if ok {
 		b.updateTimes(bmark.PostID)
 		b.updateLabels(bmark)
-
-		b.ByID[bmark.PostID] = bmark
-		if err := b.StoreBookmarks(); err != nil {
-			return errors.Wrap(err, "failed to add bookmark")
-		}
-		return nil
 	}
 
-	// bookmark doesn't exist. Add it
+	// Add or update the bookmark
 	b.ByID[bmark.PostID] = bmark
 	if err := b.StoreBookmarks(); err != nil {
 		return errors.Wrap(err, "failed to add bookmark")
