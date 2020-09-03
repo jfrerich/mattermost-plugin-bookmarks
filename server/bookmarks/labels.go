@@ -1,13 +1,11 @@
 package bookmarks
 
 import (
-	"bytes"
-	"encoding/base32"
 	"encoding/json"
 	"fmt"
 
 	"github.com/jfrerich/mattermost-plugin-bookmarks/server/pluginapi"
-	"github.com/pborman/uuid"
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/utils"
 	"github.com/pkg/errors"
 )
 
@@ -117,7 +115,7 @@ func (l *Labels) AddLabel(labelName string) (*Label, error) {
 		return nil, errors.New(fmt.Sprintf("Label with name `%s` already exists", label.Name))
 	}
 
-	labelID := NewID()
+	labelID := utils.NewID()
 	label = &Label{
 		Name: labelName,
 		ID:   labelID,
@@ -135,18 +133,4 @@ func (l *Labels) DeleteByID(labelID string) error {
 		return err
 	}
 	return nil
-}
-
-var encoding = base32.NewEncoding("ybndrfg8ejkmcpqxot1uwisza345h769")
-
-// NewID is a globally unique identifier.  It is a [A-Z0-9] string 26
-// characters long.  It is a UUID version 4 Guid that is zbased32 encoded
-// with the padding stripped off.
-func NewID() string {
-	var b bytes.Buffer
-	encoder := base32.NewEncoder(encoding, &b)
-	_, _ = encoder.Write(uuid.NewRandom())
-	encoder.Close()
-	b.Truncate(26) // removes the '==' padding
-	return b.String()
 }
