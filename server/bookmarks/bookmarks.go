@@ -65,18 +65,11 @@ func (b *Bookmarks) GetBookmark(bmarkID string) (*Bookmark, error) {
 	if b == nil {
 		return nil, nil
 	}
-	_, ok := b.exists(bmarkID)
+	bmark, ok := b.exists(bmarkID)
 	if !ok {
 		return nil, errors.New(fmt.Sprintf("Bookmark `%v` does not exist", bmarkID))
 	}
-
-	for _, bmark := range b.ByID {
-		if bmark.PostID == bmarkID {
-			return bmark, nil
-		}
-	}
-
-	return nil, nil
+	return bmark, nil
 }
 
 func (b *Bookmarks) updateTimes(bmarkID string) *Bookmark {
