@@ -66,11 +66,10 @@ func LabelsFromJSON(bytes []byte) (*Labels, error) {
 
 // GetNameFromID returns the Name of a Label
 func (l *Labels) GetNameFromID(id string) (string, error) {
-	label, _ := l.ByID[id]
-	if label == nil {
+	label, ok := l.ByID[id]
+	if !ok {
 		return "", nil
 	}
-
 	return label.Name, nil
 }
 

@@ -156,9 +156,8 @@ func (b *Bookmarks) DeleteLabel(bmarkID string, labelID string) error {
 		return err
 	}
 
-	origLabels := bmark.GetLabelIDs()
-
 	var newLabels []string
+	origLabels := bmark.GetLabelIDs()
 	for _, ID := range origLabels {
 		if labelID == ID {
 			continue
@@ -167,7 +166,6 @@ func (b *Bookmarks) DeleteLabel(bmarkID string, labelID string) error {
 	}
 
 	bmark.AddLabelIDs(newLabels)
-
 	if err := b.AddBookmark(bmark); err != nil {
 		return err
 	}
