@@ -129,15 +129,15 @@ func (b *Bookmarks) ByPostCreateAt() ([]*Bookmark, error) {
 }
 
 // func (b *Bookmarks) GetBookmarksWithLabelID(labelID string) (IBookmarks, error) {
-func (b *Bookmarks) GetBookmarksWithLabelID(labelID string) (*Bookmarks, error) {
+func (b *Bookmarks) GetBookmarksWithLabelID(id string) (*Bookmarks, error) {
 	// FIXME: This should not require setting the api again.
 	bmarks := NewBookmarks(b.userID)
 	bmarks.api = b.api
 
 	for _, bmark := range b.ByID {
 		if bmark.hasLabels() {
-			for _, id := range bmark.GetLabelIDs() {
-				if labelID == id {
+			for _, lid := range bmark.GetLabelIDs() {
+				if id == lid {
 					if err := bmarks.AddBookmark(bmark); err != nil {
 						return nil, err
 					}

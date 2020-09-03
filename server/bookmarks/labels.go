@@ -74,12 +74,12 @@ func (l *Labels) GetNameFromID(id string) (string, error) {
 }
 
 // GetLabelByName returns a label with the provided label name
-func (l *Labels) GetLabelByName(labelName string) *Label {
+func (l *Labels) GetLabelByName(name string) *Label {
 	if l == nil {
 		return nil
 	}
 	for _, label := range l.ByID {
-		if label.Name == labelName {
+		if label.Name == name {
 			return label
 		}
 	}
@@ -87,18 +87,18 @@ func (l *Labels) GetLabelByName(labelName string) *Label {
 }
 
 // GetIDFromName returns a label name with the corresponding label ID
-func (l *Labels) GetIDFromName(labelName string) (string, error) {
+func (l *Labels) GetIDFromName(name string) (string, error) {
 	if l == nil {
 		return "", errors.New("user does not have any labels")
 	}
 
 	// return the labelId if found
 	for id, label := range l.ByID {
-		if label.Name == labelName {
+		if label.Name == name {
 			return id, nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("Label: `%s` does not exist", labelName))
+	return "", errors.New(fmt.Sprintf("Label: `%s` does not exist", name))
 }
 
 // addLabel stores a label into the users label store

@@ -29,8 +29,8 @@ func (l *Labels) StoreLabels() error {
 }
 
 // DeleteByID deletes a label from the store
-func (l *Labels) DeleteByID(labelID string) error {
-	delete(l.ByID, labelID)
+func (l *Labels) DeleteByID(id string) error {
+	delete(l.ByID, id)
 
 	if err := l.StoreLabels(); err != nil {
 		return err
