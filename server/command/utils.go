@@ -56,20 +56,24 @@ func getExecuteCommandTestBookmarks() *bookmarks.Bookmarks {
 }
 
 func getExecuteCommandTestLabels() *bookmarks.Labels {
-	l1 := &bookmarks.Label{
-		Name: "label1",
-	}
-	l2 := &bookmarks.Label{
-		Name: "label2",
-	}
-	l3 := &bookmarks.Label{
-		Name: "label8",
-	}
+	l1 := &bookmarks.Label{Name: "label1"}
+	l2 := &bookmarks.Label{Name: "label2"}
+	l3 := &bookmarks.Label{Name: "label8"}
 
-	labels := bookmarks.NewLabels(UserID)
-	labels.ByID["UUID1"] = l1
-	labels.ByID["UUID2"] = l2
-	labels.ByID["UUID3"] = l3
+	labels := bookmarks.NewLabels(UserID).(*bookmarks.Labels)
+	// labels = &bookmarks.Labels{
+	// 	ByID: map[string]*bookmarks.Label{
+	// 		l1.Name: l1,
+	// 		l2.Name: l2,
+	// 		l3.Name: l3,
+	// 	},
+	// }
+	//
+	labels.AddLabel(l1.Name)
+	labels.AddLabel(l2.Name)
+	labels.AddLabel(l3.Name)
+	// // labels.ByID["UUID2"] = l2
+	// labels.ByID["UUID3"] = l3
 	return labels
 }
 
@@ -113,9 +117,9 @@ func getExecuteCommandViewLabels() *bookmarks.Labels {
 	l3 := &bookmarks.Label{Name: "label3", ID: "UUID3"}
 
 	labels := bookmarks.NewLabels(UserID)
-	labels.ByID["UUID1"] = l1
-	labels.ByID["UUID2"] = l2
-	labels.ByID["UUID3"] = l3
+	labels.AddLabel(l1.Name)
+	labels.AddLabel(l2.Name)
+	labels.AddLabel(l3.Name)
 
-	return labels
+	return labels.(*bookmarks.Labels)
 }
