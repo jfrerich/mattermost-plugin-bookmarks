@@ -77,11 +77,11 @@ func getExecuteCommandTestLabels(t *testing.T) *bookmarks.Labels {
 	}
 
 	labels := bookmarks.NewLabels(UserID)
-	labels.AddLabel(l1.Name)
-	labels.AddLabel(l2.Name)
-	labels.AddLabel(l3.Name)
+	labels.ByID[l1.ID] = l1
+	labels.ByID[l2.ID] = l2
+	labels.ByID[l3.ID] = l3
 
-	return labels.(*bookmarks.Labels)
+	return labels
 }
 
 func TestHandleAddBookmark(t *testing.T) {

@@ -107,16 +107,19 @@ func getExecuteCommandViewBookmarks() *bookmarks.Bookmarks {
 }
 
 func getExecuteCommandViewLabels() *bookmarks.Labels {
-	l1 := &bookmarks.Label{Name: "label1"}
-	l2 := &bookmarks.Label{Name: "label2"}
-	l3 := &bookmarks.Label{Name: "label3"}
+	l1 := &bookmarks.Label{Name: "label1", ID: "UUID1"}
+	l2 := &bookmarks.Label{Name: "label2", ID: "UUID2"}
+	l3 := &bookmarks.Label{Name: "label3", ID: "UUID3"}
 
-	labels := bookmarks.NewLabels(UserID)
-	labels.ByID["UUID1"] = l1
-	labels.ByID["UUID2"] = l2
-	labels.ByID["UUID3"] = l3
+	labels := bookmarks.Labels{
+		ByID: map[string]*bookmarks.Label{
+			l1.ID: l1,
+			l2.ID: l2,
+			l3.ID: l3,
+		},
+	}
 
-	return labels
+	return &labels
 }
 
 // func getExecuteCommandTestBookmarks(t *testing.T) *bookmarks.Bookmarks {
