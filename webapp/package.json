@@ -58,7 +58,7 @@
     "jest-junit": "10.0.0",
     "node-sass": "4.14.1",
     "react-js-to-ts": "1.4.0",
-    "react-native": "0.62.2",
+    "react-native": "0.62.3",
     "sass-loader": "8.0.2",
     "style-loader": "1.2.1",
     "webpack": "4.43.0",
