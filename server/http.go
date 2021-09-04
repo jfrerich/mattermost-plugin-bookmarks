@@ -103,7 +103,7 @@ func (p *Plugin) handleAddBookmark(w http.ResponseWriter, r *http.Request, userI
 
 	var newIDs []string
 	for _, id := range ids {
-		label := l.ByID[id]
+		label := l.GetByIDs()[id]
 		// if doesn't exist, this is a name and needs to be added to the labels
 		// store.  also save the id to the bookmark, not the name
 		if label == nil {
@@ -240,7 +240,7 @@ func (p *Plugin) handleAutoCompleteLabels(w http.ResponseWriter, r *http.Request
 	}
 
 	out := []model.AutocompleteListItem{}
-	for _, label := range labels.ByID {
+	for _, label := range labels.GetByIDs() {
 		out = append(out, model.AutocompleteListItem{
 			Item: label.Name,
 		})

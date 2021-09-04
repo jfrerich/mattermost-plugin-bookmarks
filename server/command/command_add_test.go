@@ -17,6 +17,11 @@ import (
 const addPrefixMsg = "Added bookmark: [:link:](https://myhost.com/_redirect/pl/"
 
 func TestExecuteCommandAdd(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockPluginAPI := mock_pluginapi.NewMockAPI(ctrl)
+
 	p1IDmodel := &model.Post{
 		Message:  "this is the post.Message",
 		CreateAt: model.GetMillis(),
@@ -148,10 +153,6 @@ func TestExecuteCommandAdd(t *testing.T) {
 		},
 	}
 	for name, tt := range tests {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		mockPluginAPI := mock_pluginapi.NewMockAPI(ctrl)
-
 		config := &model.Config{
 			ServiceSettings: model.ServiceSettings{
 				SiteURL: model.NewString("https://myhost.com"),

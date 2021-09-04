@@ -74,8 +74,7 @@ func (c *Command) executeCommandAdd() string {
 
 	// user going to add labels names
 	if len(options.labels) != 0 {
-		var labels *bookmarks.Labels
-		labels, err = bookmarks.NewLabelsWithUser(c.API, c.Args.UserId)
+		labels, err := bookmarks.NewLabelsWithUser(c.API, c.Args.UserId)
 		if err != nil {
 			return c.responsef(c.Args, "Unable to get labels for user, %s", err)
 		}

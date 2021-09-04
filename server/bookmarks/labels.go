@@ -11,11 +11,13 @@ import (
 
 type ILabels interface {
 	StoreLabels() error
+	UpdateLabel(id string, label *Label) error
 	GetIDFromName(name string) (string, error)
 	AddLabel(labelName string) (*Label, error)
 	GetLabelByName(name string) *Label
 	GetNameFromID(id string) (string, error)
 	DeleteByID(id string) error
+	GetByIDs() map[string]*Label
 }
 
 // Labels contains a map of labels with the label name as the key
@@ -33,7 +35,7 @@ type Label struct {
 }
 
 // NewLabels returns an initialized Labels struct
-func NewLabels(userID string) ILabels {
+func NewLabels(userID string) *Labels {
 	return &Labels{
 		ByID:   make(map[string]*Label),
 		userID: userID,
@@ -127,10 +129,27 @@ func (l *Labels) AddLabel(labelName string) (*Label, error) {
 	}
 
 	l.ByID[labelID] = label
-	fmt.Println("1. IN HERE!")
 	if err := l.StoreLabels(); err != nil {
 		return nil, errors.Wrap(err, "failed to add label")
 	}
 
 	return label, nil
+}
+
+// UpdateLabel
+func (l *Labels) UpdateLabel(id string, label *Label) error {
+	l.ByID[id] = label
+
+	if err := l.StoreLabels(); err != nil {
+		return errors.New("failed to add label")
+	}
+	return nil
+}
+
+// UpdateLabel
+func (l *Labels) GetByIDs() map[string]*Label {
+	if l.ByID == nil {
+		l.ByID = make(map[string]*Label)
+	}
+	return l.ByID
 }

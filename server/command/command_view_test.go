@@ -123,8 +123,8 @@ func TestExecuteCommandView(t *testing.T) {
 				SiteURL: model.NewString("https://myhost.com"),
 			},
 		}
-		mockPluginAPI.EXPECT().GetConfig().Return(config).AnyTimes()
 		mockPluginAPI.EXPECT().GetPost(PostIDDoesNotExist).Return(nil, &model.AppError{Message: "An Error Occurred"}).AnyTimes()
+		mockPluginAPI.EXPECT().GetConfig().Return(config).AnyTimes()
 		mockPluginAPI.EXPECT().GetPost(p1ID).Return(p1IDmodel, nil).AnyTimes()
 		mockPluginAPI.EXPECT().GetPost(p2ID).Return(p2IDmodel, nil).AnyTimes()
 		mockPluginAPI.EXPECT().GetPost(p3ID).Return(p3IDmodel, nil).AnyTimes()
