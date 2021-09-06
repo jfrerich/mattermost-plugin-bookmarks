@@ -1,10 +1,7 @@
 import React from 'react';
 
 import {Store} from 'redux';
-
 import {PluginRegistry} from 'mattermost-webapp/plugins/registry';
-
-import {ChannelHeaderButtonIcon} from 'components/icons';
 
 import AddBookmarkModal from 'components/modals/add_bookmark';
 import AddBookmarkPostMenuAction from 'components/post_menu_actions/add_bookmark';
@@ -23,9 +20,7 @@ export default class Plugin {
         registry.registerPostDropdownMenuComponent(AddBookmarkPostMenuAction);
         registry.registerRootComponent(AddBookmarkModal);
 
-        registry.registerChannelHeaderButtonAction(
-            ChannelHeaderButtonIcon
-            ,
+        registry.registerChannelHeaderButtonAction(<i className='icon fa fa-bookmark'/>,
             (channel) => postEphemeralBookmarks(channel.id)(store.dispatch, store.getState),
             'Bookmarks',
             'View Bookmarks');
