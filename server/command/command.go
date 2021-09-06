@@ -72,7 +72,7 @@ func Register(registerFunc RegisterFunc) {
 }
 
 func getHelp(text string) string {
-	return strings.Replace(text, "|", "`", -1)
+	return strings.ReplaceAll(text, "|", "`")
 }
 
 func createBookmarksCommand() *model.Command {

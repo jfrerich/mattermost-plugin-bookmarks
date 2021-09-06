@@ -43,7 +43,7 @@ func NewBookmarksWithUser(api pluginapi.API, userID string) (*Bookmarks, error) 
 		return nil, errors.Wrapf(appErr, "Unable to get bookmarks for user %s", userID)
 	}
 
-	userBmarks, err := BookmarksFromJSON(bb)
+	userBmarks, err := FromJSON(bb)
 	if err != nil {
 		return nil, err
 	}

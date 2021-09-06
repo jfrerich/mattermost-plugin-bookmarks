@@ -27,7 +27,7 @@ func TestExecuteCommandRemove(t *testing.T) {
 		},
 		"User tries to delete a bookmark but has none": {
 			command:           "/bookmarks remove bmarkID",
-			expectedMsgPrefix: strings.TrimSpace(fmt.Sprintf("Bookmark `bmarkID` does not exist")),
+			expectedMsgPrefix: strings.TrimSpace("Bookmark `bmarkID` does not exist"),
 			expectedContains:  nil,
 		},
 		"User has bmarks tries to delete bookmark that doesnt exist": {

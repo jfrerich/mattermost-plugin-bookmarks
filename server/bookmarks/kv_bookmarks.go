@@ -30,9 +30,9 @@ func (b *Bookmarks) StoreBookmarks() error {
 	return nil
 }
 
-// BookmarksFromJSON returns unmarshalled bookmark or initialized bookmarks if
+// FromJSON returns unmarshalled bookmark or initialized bookmarks if
 // bytes are empty
-func BookmarksFromJSON(bytes []byte) (*Bookmarks, error) {
+func FromJSON(bytes []byte) (*Bookmarks, error) {
 	bmarks := &Bookmarks{
 		ByID: make(map[string]*Bookmark),
 	}
