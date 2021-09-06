@@ -67,7 +67,7 @@ type Command struct {
 type RegisterFunc func(*model.Command) error
 
 // Register should be called by the plugin to register all necessary commands
-func Register(registerFunc RegisterFunc) {
+func Register(registerFunc RegisterFunc, iconData) {
 	_ = registerFunc(createBookmarksCommand())
 }
 
