@@ -87,13 +87,14 @@ func createBookmarksCommand() *model.Command {
 	bookmarks.AddCommand(createHelpCommand())
 
 	return &model.Command{
-		Trigger:          commandTriggerBookmarks,
-		DisplayName:      commandTriggerBookmarks,
-		Description:      "Manage Mattermost messages!",
-		AutoComplete:     true,
-		AutocompleteData: bookmarks,
-		AutoCompleteHint: "[command]",
-		AutoCompleteDesc: "Available commands: add, label, remove, view, help",
+		Trigger:              commandTriggerBookmarks,
+		DisplayName:          commandTriggerBookmarks,
+		Description:          "Manage Mattermost messages!",
+		AutoComplete:         true,
+		AutocompleteData:     bookmarks,
+		AutoCompleteHint:     "[command]",
+		AutoCompleteDesc:     "Available commands: add, label, remove, view, help",
+		AutocompleteIconData: iconData,
 	}
 }
 

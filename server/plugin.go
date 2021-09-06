@@ -7,6 +7,7 @@ import (
 	"github.com/jfrerich/mattermost-plugin-bookmarks/server/command"
 	"github.com/jfrerich/mattermost-plugin-bookmarks/server/pluginapi"
 	"github.com/mattermost/mattermost-server/v5/model"
+	"github.com/mattermost/mattermost-server/v5/plugin"
 	"github.com/pkg/errors"
 
 	"github.com/mattermost/mattermost-server/v5/plugin"
@@ -48,6 +49,8 @@ func (p *Plugin) OnActivate() error {
 		return errors.Wrap(err, "failed to ensure Bookmarks bot")
 	}
 	p.BotUserID = botID
+
+	iconData, err := command.GetIconData(p.API, "assets/profile.svg")
 
 	// return p.API.RegisterCommand(createBookmarksCommand())
 	command.Register(p.API.RegisterCommand)
