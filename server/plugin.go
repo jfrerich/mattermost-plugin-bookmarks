@@ -4,8 +4,12 @@ import (
 	"sync"
 
 	"github.com/gorilla/mux"
+	"github.com/jfrerich/mattermost-plugin-bookmarks/server/app"
 	"github.com/jfrerich/mattermost-plugin-bookmarks/server/command"
 	"github.com/jfrerich/mattermost-plugin-bookmarks/server/pluginapi"
+	pluginapi2 "github.com/mattermost/mattermost-plugin-api"
+
+	"github.com/mattermost/mattermost-plugin-apps/apps/mmclient"
 	"github.com/mattermost/mattermost-server/v5/model"
 	"github.com/pkg/errors"
 
@@ -51,6 +55,15 @@ func (p *Plugin) OnActivate() error {
 
 	// return p.API.RegisterCommand(createBookmarksCommand())
 	command.Register(p.API.RegisterCommand)
+
+	appsPluginClient := mmclient.NewAppsPluginAPIClientFromPluginAPI(&pluginapi2.NewClient(p.API, p.Driver).Plugin)
+	manifest := app.GetManifest()
+
+	err = appsPluginClient.InstallApp(manifest)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
