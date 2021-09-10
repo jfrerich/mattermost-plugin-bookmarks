@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 	"testing"
 
 	gomock "github.com/golang/mock/gomock"
@@ -18,6 +19,10 @@ func TestExecuteCommandLabel(t *testing.T) {
 	defer ctrl.Finish()
 	mockPluginAPI := mock_pluginapi.NewMockAPI(ctrl)
 
+	var wg sync.WaitGroup
+	wg.Add(1)
+	defer wg.Wait()
+
 	tests := map[string]struct {
 		command             string
 		bookmarks           *bookmarks.Bookmarks
@@ -26,14 +31,14 @@ func TestExecuteCommandLabel(t *testing.T) {
 		expectedContains    []string
 		expectedNotContains []string
 	}{
-		// "User does not provide label sub-command": {
-		// 	command:           "/bookmarks label",
-		// 	labels:            nil,
-		// 	expectedMsgPrefix: strings.TrimSpace("Missing "),
-		// 	expectedContains:  []string{"Missing label sub-command", "bookmarks label add"},
-		// },
-		//
-		// // ADD
+		"User does not provide label sub-command": {
+			command:           "/bookmarks label",
+			labels:            nil,
+			expectedMsgPrefix: strings.TrimSpace("Missing "),
+			expectedContains:  []string{"Missing label sub-command", "bookmarks label add"},
+		},
+
+		// ADD
 		// "ADD User does not provide label names": {
 		// 	command:           "/bookmarks label add",
 		// 	labels:            nil,
@@ -58,7 +63,7 @@ func TestExecuteCommandLabel(t *testing.T) {
 		// 	expectedMsgPrefix: "",
 		// 	expectedContains:  []string{"Added Label: NewLabelName"},
 		// },
-		//
+
 		// // RENAME - successfully renames a label
 		// "RENAME User provides only one label": {
 		// 	command:           "/bookmarks label rename label1",
@@ -115,41 +120,42 @@ func TestExecuteCommandLabel(t *testing.T) {
 		// 	expectedMsgPrefix: "",
 		// 	expectedContains:  []string{"Label: `labeldoesnotexist` does not exist"},
 		// },
-		"REMOVE User successfully removes a label that exists": {
-			command:           "/bookmarks label remove label1",
-			bookmarks:         &bookmarks.Bookmarks{ByID: nil},
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "",
-			expectedContains:  []string{"Removed label: `label1`"},
-		},
-		"REMOVE User tries to remove a label that exists in a bookmark": {
-			command:           "/bookmarks label remove label1",
-			labels:            getExecuteCommandTestLabels(),
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: "There are 2 bookmarks with the label: `label1`. Use the `--force` flag remove the label from the bookmarks.",
-			expectedContains:  nil,
-		},
-		"REMOVE User tries to remove a label that exists in a bookmark using the force flag": {
-			command:           "/bookmarks label remove label1 --force",
-			labels:            getExecuteCommandTestLabels(),
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: "Removed label: `label1`",
-			expectedContains:  nil,
-		},
-
-		// VIEW
-		"VIEW User doesn't have any labels": {
-			command:           "/bookmarks label view",
-			labels:            bookmarks.NewLabels(UserID).(*bookmarks.Labels),
-			expectedMsgPrefix: "You do not have any saved labels",
-			expectedContains:  nil,
-		},
-		"VIEW User has 2 label": {
-			command:           "/bookmarks label view",
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "",
-			expectedContains:  []string{"#### Labels List", "label1", "label2"},
-		},
+		// "REMOVE User successfully removes a label that exists": {
+		// 	command:           "/bookmarks label remove label1",
+		// 	bookmarks:         &bookmarks.Bookmarks{ByID: nil},
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	expectedMsgPrefix: "",
+		// 	expectedContains:  []string{"Removed label: `label1`"},
+		// },
+		// "REMOVE User tries to remove a label that exists in a bookmark": {
+		// 	command:           "/bookmarks label remove label1",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	bookmarks:         getExecuteCommandTestBookmarks(),
+		// 	expectedMsgPrefix: "There are 2 bookmarks with the label: `label1`. Use the `--force` flag remove the label from the bookmarks.",
+		// 	expectedContains:  nil,
+		// },
+		// "REMOVE User tries to remove a label that exists in a bookmark using the force flag": {
+		// 	command:           "/bookmarks label remove label1 --force",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	bookmarks:         getExecuteCommandTestBookmarks(),
+		// 	expectedMsgPrefix: "Removed label: `label1`",
+		// 	expectedContains:  nil,
+		// },
+		//
+		// // VIEW
+		// "VIEW User doesn't have any labels": {
+		// 	command: "/bookmarks label view",
+		// 	// labels:            bookmarks.NewLabels(UserID).(*bookmarks.Labels),
+		// 	labels:            bookmarks.NewLabels(UserID),
+		// 	expectedMsgPrefix: "You do not have any saved labels",
+		// 	expectedContains:  nil,
+		// },
+		// "VIEW User has 2 label": {
+		// 	command:           "/bookmarks label view",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	expectedMsgPrefix: "",
+		// 	expectedContains:  []string{"#### Labels List", "label1", "label2"},
+		// },
 	}
 	for name, tt := range tests {
 
@@ -160,7 +166,7 @@ func TestExecuteCommandLabel(t *testing.T) {
 		// ttlabelsD, _ := json.MarshalIndent(tt.labels, "", "    ")
 		// fmt.Printf("tt.labels = %+v\n", string(ttlabelsD))
 
-		jsonBmarks, err := json.Marshal(tt.bookmarks)
+		// jsonBmarks, err := json.Marshal(tt.bookmarks)
 		jsonLabels, err := json.Marshal(tt.labels)
 
 		// bmarksKey := bookmarks.GetBookmarksKey(UserID)
@@ -168,9 +174,13 @@ func TestExecuteCommandLabel(t *testing.T) {
 
 		t.Run(name, func(t *testing.T) {
 
-			mockPluginAPI.EXPECT().KVGet(bookmarks.GetBookmarksKey(UserID)).Return(jsonBmarks, nil).AnyTimes()
-			mockPluginAPI.EXPECT().KVGet(bookmarks.GetLabelsKey(UserID)).Return(jsonLabels, nil)
-			mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+			// mockPluginAPI.EXPECT().KVGet(bookmarks.GetBookmarksKey(UserID)).Do(func() { wg.Done() }).Return(jsonBmarks, nil).AnyTimes()
+			mockPluginAPI.EXPECT().KVGet(bookmarks.GetLabelsKey(UserID)).Do(func() { wg.Done() }).Return(jsonLabels, nil)
+			// mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Do(func() { wg.Done() }).Return(nil).AnyTimes()
+
+			// mockPluginAPI.EXPECT().KVGet(bookmarks.GetBookmarksKey(UserID)).Return(jsonBmarks, nil).AnyTimes()
+			// mockPluginAPI.EXPECT().KVGet(bookmarks.GetLabelsKey(UserID)).Return(jsonLabels, nil)
+			// mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 			assert.Nil(t, err)
 			testCommand := Command{
