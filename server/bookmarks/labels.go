@@ -9,6 +9,17 @@ import (
 	"github.com/pkg/errors"
 )
 
+type ILabels interface {
+	StoreLabels() error
+	UpdateLabel(id string, label *Label) error
+	GetIDFromName(name string) (string, error)
+	AddLabel(labelName string) (*Label, error)
+	GetLabelByName(name string) *Label
+	GetNameFromID(id string) (string, error)
+	DeleteByID(id string) error
+	GetByIDs() map[string]*Label
+}
+
 // Labels contains a map of labels with the label name as the key
 type Labels struct {
 	ByID   map[string]*Label
@@ -123,4 +134,22 @@ func (l *Labels) AddLabel(labelName string) (*Label, error) {
 	}
 
 	return label, nil
+}
+
+// UpdateLabel
+func (l *Labels) UpdateLabel(id string, label *Label) error {
+	l.ByID[id] = label
+
+	if err := l.StoreLabels(); err != nil {
+		return errors.New("failed to add label")
+	}
+	return nil
+}
+
+// UpdateLabel
+func (l *Labels) GetByIDs() map[string]*Label {
+	if l.ByID == nil {
+		l.ByID = make(map[string]*Label)
+	}
+	return l.ByID
 }

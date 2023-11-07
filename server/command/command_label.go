@@ -115,7 +115,8 @@ func (c *Command) executeCommandLabelRename() string {
 	}
 
 	lfrom.Name = to
-	labels.ByID[lfrom.ID] = lfrom
+
+	_ = labels.UpdateLabel(lfrom.ID, lfrom)
 	if err := labels.StoreLabels(); err != nil {
 		return c.responsef(c.Args, "failed to add label")
 	}
@@ -136,7 +137,7 @@ func (c *Command) executeCommandLabelRemove() string {
 	if err != nil {
 		return c.responsef(c.Args, err.Error())
 	}
-	if labels == nil || len(labels.ByID) == 0 {
+	if labels == nil {
 		return c.responsef(c.Args, "You do not have any saved labels")
 	}
 
@@ -203,12 +204,12 @@ func (c *Command) executeCommandLabelView() string {
 	if err != nil {
 		return c.responsef(c.Args, err.Error())
 	}
-	if labels == nil || len(labels.ByID) == 0 {
+	if len(labels.GetByIDs()) == 0 {
 		return c.responsef(c.Args, "You do not have any saved labels")
 	}
 
 	text := "#### Labels List\n"
-	for _, label := range labels.ByID {
+	for _, label := range labels.GetByIDs() {
 		v := fmt.Sprintf("`%s`\n", label.Name)
 		text += v
 	}

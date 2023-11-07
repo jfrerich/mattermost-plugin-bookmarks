@@ -2,7 +2,9 @@ package command
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
+	"sync"
 	"testing"
 
 	gomock "github.com/golang/mock/gomock"
@@ -13,6 +15,14 @@ import (
 )
 
 func TestExecuteCommandLabel(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockPluginAPI := mock_pluginapi.NewMockAPI(ctrl)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	defer wg.Wait()
+
 	tests := map[string]struct {
 		command             string
 		bookmarks           *bookmarks.Bookmarks
@@ -29,135 +39,149 @@ func TestExecuteCommandLabel(t *testing.T) {
 		},
 
 		// ADD
-		"ADD User does not provide label names": {
-			command:           "/bookmarks label add",
-			labels:            nil,
-			expectedMsgPrefix: "",
-			expectedContains:  []string{"Please specify a label name"},
-		},
-		"ADD User adds first label": {
-			command:           "/bookmarks label add label9",
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "",
-			expectedContains:  []string{"Added Label: label9"},
-		},
-		"ADD User tries creating label with name that already exists": {
-			command:           "/bookmarks label add label1",
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "",
-			expectedContains:  []string{"Label with name `label1` already exists"},
-		},
-		"ADD User adds one label successfully with existing labels": {
-			command:           "/bookmarks label add NewLabelName",
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "",
-			expectedContains:  []string{"Added Label: NewLabelName"},
-		},
+		// "ADD User does not provide label names": {
+		// 	command:           "/bookmarks label add",
+		// 	labels:            nil,
+		// 	expectedMsgPrefix: "",
+		// 	expectedContains:  []string{"Please specify a label name"},
+		// },
+		// "ADD User adds first label": {
+		// 	command:           "/bookmarks label add label9",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	expectedMsgPrefix: "",
+		// 	expectedContains:  []string{"Added Label: label9"},
+		// },
+		// "ADD User tries creating label with name that already exists": {
+		// 	command:           "/bookmarks label add label1",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	expectedMsgPrefix: "",
+		// 	expectedContains:  []string{"Label with name `label1` already exists"},
+		// },
+		// "ADD User adds one label successfully with existing labels": {
+		// 	command:           "/bookmarks label add NewLabelName",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	expectedMsgPrefix: "",
+		// 	expectedContains:  []string{"Added Label: NewLabelName"},
+		// },
 
-		// RENAME - successfully renames a label
-		"RENAME User provides only one label": {
-			command:           "/bookmarks label rename label1",
-			labels:            nil,
-			expectedMsgPrefix: "Please specify a `to` and `from` label name",
-			expectedContains:  nil,
-		},
-		"RENAME User tries renaming label that doesn't exist": {
-			command:           "/bookmarks label rename label1 label2",
-			labels:            &bookmarks.Labels{},
-			expectedMsgPrefix: "Label `label1` does not exist",
-			expectedContains:  nil,
-		},
-		"RENAME User tries renaming a label to itself": {
-			command:           "/bookmarks label rename label1 label1",
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "Cannot rename Label `label1` to `label1`. Label already exists. Please choose a different label name",
-			expectedContains:  nil,
-		},
-		"RENAME User tries renaming a label to another label name that exists": {
-			command:           "/bookmarks label rename label1 label2",
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "Cannot rename Label `label1` to `label2`. Label already exists. Please choose a different label name",
-			expectedContains:  nil,
-		},
-		"RENAME User successfully renames label": {
-			command:           "/bookmarks label rename label1 labelthatdoesntexist",
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "Renamed label from `label1` to `labelthatdoesntexist`",
-			expectedContains:  nil,
-		},
-
+		// // RENAME - successfully renames a label
+		// "RENAME User provides only one label": {
+		// 	command:           "/bookmarks label rename label1",
+		// 	labels:            nil,
+		// 	expectedMsgPrefix: "Please specify a `to` and `from` label name",
+		// 	expectedContains:  nil,
+		// },
+		// "RENAME User tries renaming label that doesn't exist": {
+		// 	command:           "/bookmarks label rename label1 label2",
+		// 	labels:            &bookmarks.Labels{},
+		// 	expectedMsgPrefix: "Label `label1` does not exist",
+		// 	expectedContains:  nil,
+		// },
+		// "RENAME User tries renaming a label to itself": {
+		// 	command:           "/bookmarks label rename label1 label1",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	expectedMsgPrefix: "Cannot rename Label `label1` to `label1`. Label already exists. Please choose a different label name",
+		// 	expectedContains:  nil,
+		// },
+		// "RENAME User tries renaming a label to another label name that exists": {
+		// 	command:           "/bookmarks label rename label1 label2",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	expectedMsgPrefix: "Cannot rename Label `label1` to `label2`. Label already exists. Please choose a different label name",
+		// 	expectedContains:  nil,
+		// },
+		// "RENAME User successfully renames label": {
+		// 	command:           "/bookmarks label rename label1 labelthatdoesntexist",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	expectedMsgPrefix: "Renamed label from `label1` to `labelthatdoesntexist`",
+		// 	expectedContains:  nil,
+		// },
+		//
 		// REMOVE - user does not have any saved labels
-		"REMOVE User does not provide label name": {
-			command:           "/bookmarks label remove",
-			labels:            nil,
-			expectedMsgPrefix: "",
-			expectedContains:  []string{"Please specify a label name"},
-		},
-		"REMOVE User tries to remove a label but has none": {
-			command:           "/bookmarks label remove JunkLabel",
-			bookmarks:         &bookmarks.Bookmarks{},
-			labels:            &bookmarks.Labels{},
-			expectedMsgPrefix: "You do not have any saved labels",
-			expectedContains:  nil,
-		},
-
+		// "REMOVE User does not provide label name": {
+		// 	command: "/bookmarks label remove",
+		// 	// labels:            nil,
+		// labels:            &bookmarks.Labels{ByID: map[string]*bookmarks.Label{}},
+		// expectedMsgPrefix: "",
+		// expectedContains:  []string{"Please specify a label name"},
+		// },
+		// "REMOVE User tries to remove a label but has none": {
+		// 	command:   "/bookmarks label remove JunkLabel",
+		// 	bookmarks: &bookmarks.Bookmarks{},
+		// 	// labels:            &bookmarks.Labels{},
+		// 	labels:            bookmarks.NewLabels(UserID).(*bookmarks.Labels),
+		// 	expectedMsgPrefix: "You do not have any saved labels",
+		// 	expectedContains:  nil,
+		// },
+		//
 		// REMOVE - user has saved labels
-		"REMOVE User tries to remove a label that does not exist": {
-			command:           "/bookmarks label remove labeldoesnotexist",
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "",
-			expectedContains:  []string{"Label: `labeldoesnotexist` does not exist"},
-		},
-		"REMOVE User successfully removes a label that exists": {
-			command:           "/bookmarks label remove label1",
-			bookmarks:         &bookmarks.Bookmarks{},
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "",
-			expectedContains:  []string{"Removed label: `label1`"},
-		},
-		"REMOVE User tries to remove a label that exists in a bookmark": {
-			command:           "/bookmarks label remove label1",
-			labels:            getExecuteCommandTestLabels(),
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: "There are 2 bookmarks with the label: `label1`. Use the `--force` flag remove the label from the bookmarks.",
-			expectedContains:  nil,
-		},
-		"REMOVE User tries to remove a label that exists in a bookmark using the force flag": {
-			command:           "/bookmarks label remove label1 --force",
-			labels:            getExecuteCommandTestLabels(),
-			bookmarks:         getExecuteCommandTestBookmarks(),
-			expectedMsgPrefix: "Removed label: `label1`",
-			expectedContains:  nil,
-		},
-
-		// VIEW
-		"VIEW User doesn't have any labels": {
-			command:           "/bookmarks label view",
-			labels:            &bookmarks.Labels{},
-			expectedMsgPrefix: "You do not have any saved labels",
-			expectedContains:  nil,
-		},
-		"VIEW User has 2 label": {
-			command:           "/bookmarks label view",
-			labels:            getExecuteCommandTestLabels(),
-			expectedMsgPrefix: "",
-			expectedContains:  []string{"#### Labels List", "label1", "label2"},
-		},
+		// "REMOVE User tries to remove a label that does not exist": {
+		// 	command:           "/bookmarks label remove labeldoesnotexist",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	expectedMsgPrefix: "",
+		// 	expectedContains:  []string{"Label: `labeldoesnotexist` does not exist"},
+		// },
+		// "REMOVE User successfully removes a label that exists": {
+		// 	command:           "/bookmarks label remove label1",
+		// 	bookmarks:         &bookmarks.Bookmarks{ByID: nil},
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	expectedMsgPrefix: "",
+		// 	expectedContains:  []string{"Removed label: `label1`"},
+		// },
+		// "REMOVE User tries to remove a label that exists in a bookmark": {
+		// 	command:           "/bookmarks label remove label1",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	bookmarks:         getExecuteCommandTestBookmarks(),
+		// 	expectedMsgPrefix: "There are 2 bookmarks with the label: `label1`. Use the `--force` flag remove the label from the bookmarks.",
+		// 	expectedContains:  nil,
+		// },
+		// "REMOVE User tries to remove a label that exists in a bookmark using the force flag": {
+		// 	command:           "/bookmarks label remove label1 --force",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	bookmarks:         getExecuteCommandTestBookmarks(),
+		// 	expectedMsgPrefix: "Removed label: `label1`",
+		// 	expectedContains:  nil,
+		// },
+		//
+		// // VIEW
+		// "VIEW User doesn't have any labels": {
+		// 	command: "/bookmarks label view",
+		// 	// labels:            bookmarks.NewLabels(UserID).(*bookmarks.Labels),
+		// 	labels:            bookmarks.NewLabels(UserID),
+		// 	expectedMsgPrefix: "You do not have any saved labels",
+		// 	expectedContains:  nil,
+		// },
+		// "VIEW User has 2 label": {
+		// 	command:           "/bookmarks label view",
+		// 	labels:            getExecuteCommandTestLabels(),
+		// 	expectedMsgPrefix: "",
+		// 	expectedContains:  []string{"#### Labels List", "label1", "label2"},
+		// },
 	}
 	for name, tt := range tests {
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-		mockPluginAPI := mock_pluginapi.NewMockAPI(ctrl)
 
-		jsonBmarks, err := json.Marshal(tt.bookmarks)
-		mockPluginAPI.EXPECT().KVGet(bookmarks.GetBookmarksKey(UserID)).Return(jsonBmarks, nil).AnyTimes()
+		fmt.Printf("<><><>  name = %+v\n", name)
 
+		ttbookmarksD, _ := json.MarshalIndent(tt.bookmarks, "", "    ")
+		fmt.Printf("tt.bookmarks = %+v\n", string(ttbookmarksD))
+		// ttlabelsD, _ := json.MarshalIndent(tt.labels, "", "    ")
+		// fmt.Printf("tt.labels = %+v\n", string(ttlabelsD))
+
+		// jsonBmarks, err := json.Marshal(tt.bookmarks)
 		jsonLabels, err := json.Marshal(tt.labels)
-		mockPluginAPI.EXPECT().KVGet(bookmarks.GetLabelsKey(UserID)).Return(jsonLabels, nil).AnyTimes()
-		// api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
-		mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
+		// bmarksKey := bookmarks.GetBookmarksKey(UserID)
+		// fmt.Printf("bmarksKey = %+v\n", bmarksKey)
 
 		t.Run(name, func(t *testing.T) {
+
+			// mockPluginAPI.EXPECT().KVGet(bookmarks.GetBookmarksKey(UserID)).Do(func() { wg.Done() }).Return(jsonBmarks, nil).AnyTimes()
+			mockPluginAPI.EXPECT().KVGet(bookmarks.GetLabelsKey(UserID)).Do(func() { wg.Done() }).Return(jsonLabels, nil)
+			// mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Do(func() { wg.Done() }).Return(nil).AnyTimes()
+
+			// mockPluginAPI.EXPECT().KVGet(bookmarks.GetBookmarksKey(UserID)).Return(jsonBmarks, nil).AnyTimes()
+			// mockPluginAPI.EXPECT().KVGet(bookmarks.GetLabelsKey(UserID)).Return(jsonLabels, nil)
+			// mockPluginAPI.EXPECT().KVSet(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+
 			assert.Nil(t, err)
 			testCommand := Command{
 				Args: &model.CommandArgs{

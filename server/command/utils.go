@@ -56,21 +56,20 @@ func getExecuteCommandTestBookmarks() *bookmarks.Bookmarks {
 }
 
 func getExecuteCommandTestLabels() *bookmarks.Labels {
-	l1 := &bookmarks.Label{
-		Name: "label1",
-	}
-	l2 := &bookmarks.Label{
-		Name: "label2",
-	}
-	l3 := &bookmarks.Label{
-		Name: "label8",
+
+	l1 := bookmarks.Label{Name: "label1", ID: "UUID1"}
+	l2 := bookmarks.Label{Name: "label2", ID: "UUID2"}
+	l3 := bookmarks.Label{Name: "label8", ID: "UUID3"}
+
+	labels := bookmarks.Labels{
+		ByID: map[string]*bookmarks.Label{
+			l1.ID: &l1,
+			l2.ID: &l2,
+			l3.ID: &l3,
+		},
 	}
 
-	labels := bookmarks.NewLabels(UserID)
-	labels.ByID["UUID1"] = l1
-	labels.ByID["UUID2"] = l2
-	labels.ByID["UUID3"] = l3
-	return labels
+	return &labels
 }
 
 func getExecuteCommandViewBookmarks() *bookmarks.Bookmarks {
@@ -112,10 +111,67 @@ func getExecuteCommandViewLabels() *bookmarks.Labels {
 	l2 := &bookmarks.Label{Name: "label2", ID: "UUID2"}
 	l3 := &bookmarks.Label{Name: "label3", ID: "UUID3"}
 
-	labels := bookmarks.NewLabels(UserID)
-	labels.ByID["UUID1"] = l1
-	labels.ByID["UUID2"] = l2
-	labels.ByID["UUID3"] = l3
+	labels := bookmarks.Labels{
+		ByID: map[string]*bookmarks.Label{
+			l1.ID: l1,
+			l2.ID: l2,
+			l3.ID: l3,
+		},
+	}
 
-	return labels
+	return &labels
 }
+
+// func getExecuteCommandTestBookmarks(t *testing.T) *bookmarks.Bookmarks {
+// 	// api := makeAPIMock()
+// 	// api.On("KVSet", mock.Anything, mock.Anything).Return(nil)
+//
+// 	ctrl := gomock.NewController(t)
+// 	defer ctrl.Finish()
+// 	mockPluginAPI := mock_pluginapi.NewMockAPI(ctrl)
+//
+// 	// p := makePlugin(api)
+// 	// pluginapi := makeAPIMock()
+// 	bmarks, err := bookmarks.NewBookmarksWithUser(mockPluginAPI, UserID)
+// 	assert.Nil(t, err)
+//
+// 	b1 := &bookmarks.Bookmark{
+// 		PostID:   p1ID,
+// 		Title:    b1Title,
+// 		LabelIDs: []string{"UUID1", "UUID2"},
+// 	}
+// 	b2 := &bookmarks.Bookmark{
+// 		PostID:     p2ID,
+// 		Title:      b2Title,
+// 		CreateAt:   model.GetMillis() + 5,
+// 		ModifiedAt: model.GetMillis(),
+// 		LabelIDs:   []string{"UUID1", "UUID2"},
+// 	}
+// 	b3 := &bookmarks.Bookmark{
+// 		PostID:     p3ID,
+// 		Title:      b3Title,
+// 		CreateAt:   model.GetMillis() + 2,
+// 		ModifiedAt: model.GetMillis(),
+// 	}
+// 	b4 := &bookmarks.Bookmark{
+// 		PostID:     p4ID,
+// 		CreateAt:   model.GetMillis() + 3,
+// 		ModifiedAt: model.GetMillis(),
+// 	}
+//
+// 	_ = bmarks.Add(b1)
+// 	_ = bmarks.Add(b2)
+// 	_ = bmarks.Add(b3)
+// 	_ = bmarks.Add(b4)
+//
+// 	l1 := &bookmarks.Label{
+// 		Name: "label1",
+// 	}
+//
+// 	labels := bookmarks.NewLabels(UserID)
+// 	_ = labels.Add("UUID1", l1)
+//
+// 	// return bmarks.(*bookmarks.Bookmarks)
+// 	return bmarks
+// }
+//
